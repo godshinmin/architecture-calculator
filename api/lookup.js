@@ -1,6 +1,6 @@
 // api/lookup.js
-// 건축물대장 정보 자동조회 백엔드 함수
-// Vercel Functions에서 실행됨. API 키는 환경변수 BUILDING_API_KEY에 저장.
+// 건축물대장 통합 조회 백엔드 함수
+// 표제부 + 층별개요 두 API를 병렬 호출해서 모든 정보 한 번에 반환
 
 module.exports = async function handler(req, res) {
     const { sigunguCd, bjdongCd, platGbCd = '0', bun, ji = '0000' } = req.query;
@@ -11,82 +11,113 @@ module.exports = async function handler(req, res) {
 
     const serviceKey = process.env.BUILDING_API_KEY;
     if (!serviceKey) {
-        return res.status(500).json({
-            error: '서버에 API 키가 설정되지 않았습니다. Vercel 환경변수 BUILDING_API_KEY를 등록하세요.'
-        });
+        return res.status(500).json({ error: '서버에 API 키가 설정되지 않았습니다.' });
     }
 
-    // 키가 이미 URL 인코딩된 형태(%2F, %2B 등)인지 자동 감지
-    // 인코딩된 키면 그대로, 아니면 인코딩 적용 → 양쪽 다 작동
+    // Encoding/Decoding 키 자동 처리
     const isAlreadyEncoded = /%[0-9A-Fa-f]{2}/.test(serviceKey);
     const keyForUrl = isAlreadyEncoded ? serviceKey : encodeURIComponent(serviceKey);
 
-    // 국토교통부 건축HUB 건축물대장 표제부 조회 API
-    const apiUrl = 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo'
-        + '?serviceKey=' + keyForUrl
-        + '&sigunguCd=' + sigunguCd
-        + '&bjdongCd=' + bjdongCd
-        + '&platGbCd=' + platGbCd
-        + '&bun=' + bun
-        + '&ji=' + ji
-        + '&_type=json&numOfRows=10';
+    const commonParams = `&sigunguCd=${sigunguCd}&bjdongCd=${bjdongCd}&platGbCd=${platGbCd}&bun=${bun}&ji=${ji}&_type=json&numOfRows=100`;
+    const titleUrl = `https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo?serviceKey=${keyForUrl}${commonParams}`;
+    const floorUrl = `https://apis.data.go.kr/1613000/BldRgstHubService/getBrFlrOulnInfo?serviceKey=${keyForUrl}${commonParams}`;
 
     try {
-        const apiResp = await fetch(apiUrl);
-        const text = await apiResp.text();
+        // 표제부 + 층별개요 병렬 호출
+        const [titleResp, floorResp] = await Promise.all([
+            fetch(titleUrl).then(r => r.text()),
+            fetch(floorUrl).then(r => r.text()).catch(() => null)
+        ]);
 
-        let data;
+        let titleData;
         try {
-            data = JSON.parse(text);
-        } catch (parseErr) {
+            titleData = JSON.parse(titleResp);
+        } catch (e) {
             return res.status(500).json({
-                error: 'API 응답 형식 오류. 인증키를 확인해주세요.',
+                error: '표제부 API 응답 형식 오류. 인증키를 확인해주세요.',
                 hint: '공공데이터포털에서 인증키를 다시 복사하거나 재발급해보세요.',
-                raw: text.substring(0, 500)
+                raw: titleResp.substring(0, 300)
             });
         }
 
-        const resultCode = data?.response?.header?.resultCode;
-        const resultMsg = data?.response?.header?.resultMsg;
-
-        if (resultCode && resultCode !== '00') {
+        const titleCode = titleData?.response?.header?.resultCode;
+        const titleMsg = titleData?.response?.header?.resultMsg;
+        if (titleCode && titleCode !== '00') {
             return res.status(400).json({
                 error: '공공데이터 API 오류',
-                code: resultCode,
-                message: resultMsg,
-                hint: resultCode === '30' ? 'SERVICE_KEY 인증 실패. 키가 정확한지, 활용신청이 승인됐는지 확인하세요.' : ''
+                code: titleCode,
+                message: titleMsg,
+                hint: titleCode === '30' ? 'SERVICE_KEY 인증 실패. 키 정확성·활용신청 승인 여부 확인.' : ''
             });
         }
 
-        const items = data?.response?.body?.items?.item;
-        const item = Array.isArray(items) ? items[0] : items;
-
-        if (!item) {
-            return res.status(404).json({
-                error: '해당 주소의 건축물대장 정보를 찾을 수 없습니다.',
-                hint: '주소를 다시 확인하거나 지번주소가 정확한지 확인해주세요.'
-            });
+        const titleItems = titleData?.response?.body?.items?.item;
+        const titleItem = Array.isArray(titleItems) ? titleItems[0] : titleItems;
+        if (!titleItem) {
+            return res.status(404).json({ error: '해당 주소의 건축물대장 정보를 찾을 수 없습니다.' });
         }
+
+        // 층별 정보 파싱 (실패해도 기본 정보는 반환)
+        let floors = [];
+        if (floorResp) {
+            try {
+                const floorData = JSON.parse(floorResp);
+                const items = floorData?.response?.body?.items?.item;
+                const arr = Array.isArray(items) ? items : (items ? [items] : []);
+                floors = arr.map(f => ({
+                    flrGbCd: f.flrGbCdNm || f.flrGbCd,
+                    flrNo: f.flrNo,
+                    flrNoNm: f.flrNoNm || (f.flrNo + '층'),
+                    strct: f.strctCdNm || f.strct,
+                    mainPurps: f.mainPurpsCdNm || f.mainPurps,
+                    area: f.area
+                }));
+                // 지상 위층→아래층, 지하 아래층→위층
+                floors.sort((a, b) => {
+                    if (a.flrGbCd !== b.flrGbCd) return a.flrGbCd === '지상' ? -1 : 1;
+                    const an = parseInt(a.flrNo) || 0;
+                    const bn = parseInt(b.flrNo) || 0;
+                    return a.flrGbCd === '지상' ? bn - an : an - bn;
+                });
+            } catch (e) {
+                // 층별 파싱 실패 시 무시
+            }
+        }
+
+        // 주차대수 합산
+        const parking = {
+            indrAuto: parseInt(titleItem.indrAutoUtcnt) || 0,
+            oudrAuto: parseInt(titleItem.oudrAutoUtcnt) || 0,
+            indrMech: parseInt(titleItem.indrMechUtcnt) || 0,
+            oudrMech: parseInt(titleItem.oudrMechUtcnt) || 0
+        };
+        parking.total = parking.indrAuto + parking.oudrAuto + parking.indrMech + parking.oudrMech;
 
         return res.status(200).json({
-            mainPurps: item.mainPurpsCdNm || item.mainPurps,
-            totArea: item.totArea,
-            platArea: item.platArea,
-            archArea: item.archArea,
-            grndFlrCnt: item.grndFlrCnt,
-            ugrndFlrCnt: item.ugrndFlrCnt,
-            bcRat: item.bcRat,
-            vlRat: item.vlRat,
-            strct: item.strctCdNm || item.strct,
-            useAprDay: item.useAprDay,
-            bldNm: item.bldNm,
-            newPlatPlc: item.newPlatPlc
+            // 기본 정보
+            bldNm: titleItem.bldNm,
+            newPlatPlc: titleItem.newPlatPlc,
+            platPlc: titleItem.platPlc,
+            useAprDay: titleItem.useAprDay,
+            // 면적·층수
+            platArea: titleItem.platArea,
+            archArea: titleItem.archArea,
+            totArea: titleItem.totArea,
+            grndFlrCnt: titleItem.grndFlrCnt,
+            ugrndFlrCnt: titleItem.ugrndFlrCnt,
+            // 비율
+            bcRat: titleItem.bcRat,
+            vlRat: titleItem.vlRat,
+            // 구조·용도
+            strct: titleItem.strctCdNm || titleItem.strct,
+            mainPurps: titleItem.mainPurpsCdNm || titleItem.mainPurps,
+            // 주차
+            parking: parking,
+            // 층별 정보 배열
+            floors: floors
         });
 
     } catch (err) {
-        return res.status(500).json({
-            error: '건축물대장 API 호출 실패',
-            detail: err.message
-        });
+        return res.status(500).json({ error: '건축물대장 API 호출 실패', detail: err.message });
     }
 };
