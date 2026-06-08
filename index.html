@@ -46,6 +46,23 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
 .remove-card-btn:hover { background:#fde8e8; }
 .permit-mini { margin-top:12px; }
+.building-info-panel { display:none; background:white; border:1.5px solid #1976d2; border-radius:12px; padding:20px; margin:16px 0; box-shadow:0 4px 12px rgba(25,118,210,0.08); }
+.building-info-panel.shown { display:block; animation:fadeIn 0.3s; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.building-info-panel h3 { color:#1976d2; margin-bottom:14px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.building-info-panel h4 { margin:16px 0 8px; font-size:13px; font-weight:600; color:#555; }
+.info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px 16px; margin-bottom:14px; }
+.info-grid > div { display:flex; flex-direction:column; gap:2px; }
+.info-grid label { font-size:11px; color:#888; font-weight:400; }
+.info-grid span { font-size:14px; color:#2c2c2a; font-weight:500; }
+.info-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid #eee; font-size:13px; }
+.info-row label { color:#888; }
+.info-row span { color:#2c2c2a; font-weight:500; }
+.floor-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+.floor-table th, .floor-table td { padding:8px 6px; border-bottom:1px solid #e8e8e6; text-align:left; }
+.floor-table th { background:#f5f8fc; font-weight:500; color:#666; font-size:12px; }
+.floor-table tr:hover td { background:#fafbfc; }
+.floor-table td.num { text-align:right; }
 .postcode-modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
 .postcode-modal.open { display:flex; }
 .postcode-modal-content { background:white; border-radius:12px; width:100%; max-width:500px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
@@ -182,6 +199,7 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
             </div>
             <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="illegal-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('illegal')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
+            <div id="illegal-building-info" class="building-info-panel"></div>
         </div>
         <div class="form-section">
             <h3>건축물 층수</h3>
@@ -238,6 +256,7 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
             <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="usage-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('usage')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
             <p class="helper-text" style="margin-top:8px;">조회 시 첫 변경 항목의 면적이 자동 입력됩니다.</p>
+            <div id="usage-building-info" class="building-info-panel"></div>
             <div class="form-field"><label>소재지</label><select id="usage-region"><option>서울</option><option>경기</option><option>인천</option><option>기타</option></select></div>
         </div>
         <div class="form-section">
@@ -293,6 +312,7 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
             </div>
             <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="repair-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('repair')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
+            <div id="repair-building-info" class="building-info-panel"></div>
         </div>
         <div class="form-section">
             <h3>건물 상세정보</h3>
@@ -396,12 +416,11 @@ function ensurePostcodeLoaded(callback){
         callback();
         return;
     }
-    // 스크립트가 아직 로드 안 됐으면 동적으로 다시 시도
     const existing = document.querySelector('script[src*="postcode.v2.js"]');
     if(existing){
         existing.addEventListener('load', callback);
         existing.addEventListener('error', function(){
-            alert('⚠️ 주소 검색 서비스 로드 실패\n\n인터넷 연결을 확인하거나, 파일을 더블클릭이 아닌 호스팅된 URL에서 여세요.\n(file:// 로 열면 일부 브라우저가 외부 스크립트를 차단합니다)');
+            alert('⚠️ 주소 검색 서비스 로드 실패\n인터넷 연결을 확인하세요.');
         });
         return;
     }
@@ -409,43 +428,58 @@ function ensurePostcodeLoaded(callback){
     script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
     script.onload = callback;
     script.onerror = function(){
-        alert('⚠️ 주소 검색 서비스를 불러올 수 없습니다.\n\n· 인터넷 연결 확인\n· 파일을 더블클릭이 아닌 호스팅된 URL(예: Vercel 배포 후)에서 여세요\n· 일부 브라우저는 file:// 환경에서 외부 스크립트를 차단합니다');
+        alert('⚠️ 주소 검색 서비스를 불러올 수 없습니다.');
     };
     document.head.appendChild(script);
+}
+
+function handlePostcodeData(data){
+    const t = currentLookupType;
+    const addrEl = document.getElementById(t+'-address');
+    addrEl.value = data.address || data.jibunAddress || '';
+    const jibun = data.jibunAddress || '';
+    addrEl.dataset.sigungu = data.sigunguCode || '';
+    addrEl.dataset.bjdong = (data.bcode || '').substring(5);
+    addrEl.dataset.platgb = jibun.includes('산 ') ? '1' : '0';
+    const bunjiMatch = jibun.match(/(\d+)(?:-(\d+))?$/);
+    addrEl.dataset.bun = (bunjiMatch && bunjiMatch[1] ? bunjiMatch[1] : '0').padStart(4,'0');
+    addrEl.dataset.ji = (bunjiMatch && bunjiMatch[2] ? bunjiMatch[2] : '0').padStart(4,'0');
+    const detailEl = document.getElementById(t+'-detail');
+    if(detailEl) detailEl.focus();
 }
 
 function lookupBuilding(type){
     ensurePostcodeLoaded(function(){
         currentLookupType = type;
-        const modal = document.getElementById('postcode-modal');
-        const embed = document.getElementById('postcode-embed');
-        embed.innerHTML = '';
-        modal.classList.add('open');
-        new daum.Postcode({
-            oncomplete: function(data){
-                const t = currentLookupType;
-                const addrEl = document.getElementById(t+'-address');
-                addrEl.value = data.address || data.jibunAddress || '';
-                const jibun = data.jibunAddress || '';
-                addrEl.dataset.sigungu = data.sigunguCode || '';
-                addrEl.dataset.bjdong = (data.bcode || '').substring(5);
-                addrEl.dataset.platgb = jibun.includes('산 ') ? '1' : '0';
-                const bunjiMatch = jibun.match(/(\d+)(?:-(\d+))?$/);
-                addrEl.dataset.bun = (bunjiMatch && bunjiMatch[1] ? bunjiMatch[1] : '0').padStart(4,'0');
-                addrEl.dataset.ji = (bunjiMatch && bunjiMatch[2] ? bunjiMatch[2] : '0').padStart(4,'0');
-                closePostcodeModal();
-                const detailEl = document.getElementById(t+'-detail');
-                if(detailEl) detailEl.focus();
-            },
-            width: '100%',
-            height: '100%'
-        }).embed(embed);
+        // PC = 팝업 새 창 (iframe 차단 회피), 모바일/태블릿 = 임베드 모달
+        const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+        if(isMobile){
+            const modal = document.getElementById('postcode-modal');
+            const embed = document.getElementById('postcode-embed');
+            embed.innerHTML = '';
+            modal.classList.add('open');
+            new daum.Postcode({
+                oncomplete: function(data){
+                    handlePostcodeData(data);
+                    closePostcodeModal();
+                },
+                width: '100%',
+                height: '100%'
+            }).embed(embed);
+        } else {
+            // 데스크탑: 새 창 팝업 방식 (가장 호환성 좋음)
+            new daum.Postcode({
+                oncomplete: handlePostcodeData
+            }).open();
+        }
     });
 }
 
 function closePostcodeModal(){
-    document.getElementById('postcode-modal').classList.remove('open');
-    document.getElementById('postcode-embed').innerHTML = '';
+    const modal = document.getElementById('postcode-modal');
+    if(modal) modal.classList.remove('open');
+    const embed = document.getElementById('postcode-embed');
+    if(embed) embed.innerHTML = '';
 }
 
 function fetchBuilding(type){
@@ -488,14 +522,13 @@ async function fetchBuildingInfo(params, type){
 }
 
 function applyBuildingInfo(info, type){
-    const filled = [];
+    // === 폼 자동 채움 ===
     if(info.totArea){
         if(type === 'usage'){
             const firstCard = document.querySelector('.change-card');
             if(firstCard){
                 firstCard.querySelector('.change-area').value = info.totArea;
             }
-            filled.push('전체 연면적 '+info.totArea+'㎡ (첫 변경 항목 면적에 자동 입력)');
         } else {
             const el = document.getElementById(type+'-area');
             if(el){
@@ -503,22 +536,69 @@ function applyBuildingInfo(info, type){
                 const pyeongEl = document.getElementById(type+'-pyeong');
                 if(pyeongEl) pyeongEl.textContent = (info.totArea/3.3).toFixed(1)+'평';
             }
-            filled.push('연면적 '+info.totArea+'㎡');
         }
     }
     if(type==='illegal'){
-        if(info.grndFlrCnt){ document.getElementById('illegal-floor').value = info.grndFlrCnt; filled.push('지상 '+info.grndFlrCnt+'층'); }
-        if(info.ugrndFlrCnt){ document.getElementById('illegal-basement').value = info.ugrndFlrCnt; filled.push('지하 '+info.ugrndFlrCnt+'층'); }
+        if(info.grndFlrCnt){
+            const fl = document.getElementById('illegal-floor');
+            if(fl) fl.value = info.grndFlrCnt;
+        }
+        if(info.ugrndFlrCnt){
+            const bs = document.getElementById('illegal-basement');
+            if(bs) bs.value = info.ugrndFlrCnt;
+        }
     }
-    if(info.mainPurps) filled.push('주용도: '+info.mainPurps);
-    if(info.platArea) filled.push('대지면적 '+info.platArea+'㎡');
-    if(info.archArea) filled.push('건축면적 '+info.archArea+'㎡');
-    if(info.bcRat) filled.push('건폐율 '+info.bcRat+'%');
-    if(info.vlRat) filled.push('용적률 '+info.vlRat+'%');
-    if(info.strct) filled.push('주구조: '+info.strct);
-    if(info.useAprDay) filled.push('사용승인일: '+info.useAprDay);
-    if(info.bldNm) filled.push('건물명: '+info.bldNm);
-    alert('✅ 건축물대장 조회 완료\n\n'+filled.join('\n'));
+
+    // === 건물 정보 패널 렌더링 ===
+    const panel = document.getElementById(type+'-building-info');
+    if(!panel) return;
+
+    const fv = function(v, unit){ return v ? (v + (unit||'')) : '-'; };
+    const p = info.parking || {};
+    const parkingText = (p.total > 0)
+        ? '총 ' + p.total + '대 (옥내자주 ' + (p.indrAuto||0) + ' · 옥외자주 ' + (p.oudrAuto||0) + ' · 옥내기계 ' + (p.indrMech||0) + ' · 옥외기계 ' + (p.oudrMech||0) + ')'
+        : '정보 없음';
+
+    let html = '<h3>📋 조회된 건축물대장 정보</h3>';
+
+    html += '<div class="info-grid">';
+    html += '<div><label>건물명</label><span>' + fv(info.bldNm) + '</span></div>';
+    html += '<div><label>사용승인일</label><span>' + fv(info.useAprDay) + '</span></div>';
+    html += '<div><label>주용도</label><span>' + fv(info.mainPurps) + '</span></div>';
+    html += '<div><label>주구조</label><span>' + fv(info.strct) + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="info-grid" style="border-top:1px solid #eee;padding-top:14px;">';
+    html += '<div><label>대지면적</label><span>' + fv(info.platArea,'㎡') + '</span></div>';
+    html += '<div><label>건축면적</label><span>' + fv(info.archArea,'㎡') + '</span></div>';
+    html += '<div><label>연면적</label><span>' + fv(info.totArea,'㎡') + '</span></div>';
+    html += '<div><label>건폐율</label><span>' + fv(info.bcRat,'%') + '</span></div>';
+    html += '<div><label>용적률</label><span>' + fv(info.vlRat,'%') + '</span></div>';
+    html += '<div><label>층수</label><span>지상 ' + (info.grndFlrCnt||0) + ' / 지하 ' + (info.ugrndFlrCnt||0) + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="info-row"><label>주차대수</label><span>' + parkingText + '</span></div>';
+
+    if(info.floors && info.floors.length){
+        html += '<h4>층별 정보 (' + info.floors.length + '개 층)</h4>';
+        html += '<table class="floor-table"><thead><tr><th>층</th><th>구조</th><th>주용도</th><th>면적</th></tr></thead><tbody>';
+        info.floors.forEach(function(f){
+            html += '<tr>';
+            html += '<td>' + (f.flrNoNm || f.flrNo + '층') + '</td>';
+            html += '<td>' + (f.strct || '-') + '</td>';
+            html += '<td>' + (f.mainPurps || '-') + '</td>';
+            html += '<td class="num">' + (f.area ? f.area + '㎡' : '-') + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+    }
+
+    panel.innerHTML = html;
+    panel.classList.add('shown');
+
+    setTimeout(function(){
+        panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 100);
 }
 
 // 화면 전환
