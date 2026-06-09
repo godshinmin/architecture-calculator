@@ -41,9 +41,16 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .btn-row { display:flex; gap:10px; margin-top:20px; }
 .btn-row .back-btn { flex:1; padding:16px; margin:0; font-size:14px; font-weight:500; }
 .btn-row .next-btn { flex:1.5; margin:0; }
-.add-btn { width:100%; padding:14px; background:white; border:1.5px dashed #1e3a5f; color:#1e3a5f; border-radius:8px; cursor:pointer; font-size:15px; font-weight:500; margin-bottom:20px; }
+.add-btn { width:100%; padding:14px; background:white; border:1.5px dashed #1e3a5f; color:#1e3a5f; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; margin-bottom:20px; }
 .add-btn:hover { background:#eef2f8; }
-.change-card h3 { display:flex; justify-content:space-between; align-items:center; }
+.usage-helper { background:#1e3a5f; color:white; padding:20px 22px; border-radius:12px; margin-bottom:22px; text-align:center; font-weight:700; font-size:16px; line-height:1.65; letter-spacing:-0.3px; box-shadow:0 4px 12px rgba(30,58,95,0.15); }
+.usage-helper small { display:block; margin-top:6px; font-size:13px; opacity:0.85; font-weight:500; }
+.change-card { background:white; border:1.5px solid #1e3a5f; border-radius:12px; padding:22px; margin-bottom:14px; box-shadow:0 4px 12px rgba(30,58,95,0.08); }
+.change-card h3 { color:#1e3a5f; font-size:20px; font-weight:800; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; letter-spacing:-0.3px; }
+.change-card label { font-weight:700; color:#1e3a5f; font-size:13px; }
+.change-card .form-field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.change-card input[readonly] { background:#f5f7fa; color:#2c2c2a; font-weight:600; cursor:default; }
+.change-card .change-area.over { border-color:#c0392b !important; background:#fff5f5; }
 .remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
 .remove-card-btn:hover { background:#fde8e8; }
 .permit-mini { margin-top:12px; }
@@ -268,9 +275,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <p class="step-label">STEP 2 / 3 · 변경 항목</p>
     <h1 class="calculator-title">용도변경 견적</h1>
     <div class="form-wrap">
-        <p class="helper-text" style="margin-bottom:14px; text-align:center;">여러 층을 각기 다른 용도로 변경할 수 있어요. 항목별로 신고/허가/기재변경이 자동 판별됩니다.</p>
+        <div class="usage-helper">여러 층을 각기 다른 용도로 변경할 수 있어요<small>항목별로 신고/허가/기재변경이 자동 판별됩니다</small></div>
         <div id="usage-changes-container"></div>
-        <button type="button" class="add-btn" onclick="addUsageChange()">+ 변경 항목 추가</button>
         <div class="btn-row">
             <button class="back-btn" onclick="showScreen('usage-step1')">← 다시 선택</button>
             <button class="next-btn" onclick="goToEstimate('usage')">가견적 확인하기 →</button>
@@ -527,30 +533,14 @@ function applySelectedFloorsToUsage(){
         alert('변경할 층을 1개 이상 체크해주세요.');
         return;
     }
-    // 기존 변경 카드 모두 비우기
     document.getElementById('usage-changes-container').innerHTML = '';
     usageChangeCounter = 0;
-    // 선택된 층마다 카드 생성
     checks.forEach(function(chk){
-        addUsageChange();
-        const cards = document.querySelectorAll('.change-card');
-        const card = cards[cards.length - 1];
-        card.querySelector('.change-floor').value = chk.dataset.floorName || '';
-        card.querySelector('.change-area').value = chk.dataset.area || 0;
-        const purpose = chk.dataset.purpose;
-        if(purpose){
-            const select = card.querySelector('.change-current');
-            // 정확 일치 또는 부분 일치로 현재 용도 자동 선택
-            for(let i = 0; i < select.options.length; i++){
-                const opt = select.options[i];
-                if(opt.text === purpose || opt.text.indexOf(purpose) >= 0 || purpose.indexOf(opt.text) >= 0){
-                    select.value = opt.value || opt.text;
-                    break;
-                }
-            }
-        }
-        const idx = parseInt(card.dataset.idx);
-        updateChangeBadge(idx);
+        addUsageChange({
+            floorName: chk.dataset.floorName || '',
+            area: parseFloat(chk.dataset.area) || 0,
+            purpose: chk.dataset.purpose || ''
+        });
     });
     showScreen('usage-step2');
     setTimeout(function(){
@@ -691,10 +681,15 @@ function pickViolation(v){ STATE.illegalViolation=v; document.getElementById('il
 function selectUsage(){
     document.getElementById('usage-changes-container').innerHTML = '';
     usageChangeCounter = 0;
-    addUsageChange();
     showScreen('usage-step1');
 }
-function usageNext(){ showScreen('usage-step2'); }
+function usageNext(){
+    // 카드가 없으면 빈 카드 1개 자동 생성 (자동조회 안 한 fallback)
+    if(document.querySelectorAll('.change-card').length === 0){
+        addUsageChange();
+    }
+    showScreen('usage-step2');
+}
 
 function selectRemodel(t){
     STATE.remodelType=t;
@@ -731,30 +726,52 @@ function usageOptionsHtml(){
 function judgeUsageRaw(cur, nw){
     const g1=FACILITY_GROUP[cur], g2=FACILITY_GROUP[nw];
     const groupName = {1:'자동차 관련',2:'산업 등',3:'전기통신',4:'문화집회',5:'영업',6:'교육 및 복지',7:'근린생활',8:'주거업무',9:'그 밖의'};
+    if(!cur || !nw) return {cls:'nochange',title:'용도 미입력',sub:''};
     if(cur===nw) return {cls:'nochange',title:'변경 없음',sub:'동일 용도'};
+    if(!g1 || !g2) return {cls:'nochange',title:'용도 매칭 필요',sub:cur+' → '+nw+' (시설군 자동 판별 불가)'};
     const dir = g1+'군('+groupName[g1]+') → '+g2+'군('+groupName[g2]+')';
     if(g1===g2) return {cls:'daejang',title:'기재내용 변경',sub:dir+' · 같은 시설군'};
     if(g1>g2) return {cls:'heoga',title:'용도변경 허가',sub:dir+' · 상향'};
     return {cls:'singo',title:'용도변경 신고',sub:dir+' · 하향'};
 }
 
-function addUsageChange(){
+function validateChangeArea(input){
+    const max = parseFloat(input.getAttribute('max'));
+    const val = parseFloat(input.value) || 0;
+    if(max && val > max){
+        input.value = max;
+        input.classList.add('over');
+        setTimeout(function(){ input.classList.remove('over'); }, 800);
+    }
+}
+
+function addUsageChange(floorData){
     const idx = usageChangeCounter++;
     const container = document.getElementById('usage-changes-container');
     const opts = usageOptionsHtml();
+    const hasFloor = !!floorData;
+    const data = floorData || {floorName:'변경 항목', area:0, purpose:''};
+    const ro = hasFloor ? 'readonly' : '';
+    const maxAttr = (hasFloor && data.area) ? ('max="' + data.area + '"') : '';
+
     const wrap = document.createElement('div');
-    wrap.className = 'form-section change-card';
+    wrap.className = 'change-card';
     wrap.dataset.idx = idx;
-    wrap.innerHTML = '<h3><span class="card-title">변경 항목 #'+(idx+1)+'</span><button type="button" class="remove-card-btn" onclick="removeUsageChange('+idx+')">× 삭제</button></h3>'
+    wrap.dataset.currentPurpose = data.purpose || '';
+
+    wrap.innerHTML =
+        '<h3><span class="card-title">' + (data.floorName || '변경 항목') + '</span>'
+        + '<button type="button" class="remove-card-btn" onclick="removeUsageChange(' + idx + ')">× 삭제</button></h3>'
         + '<div class="form-field-row">'
-        + '<div class="form-field"><label>변경 층</label><input type="text" class="change-floor" placeholder="예: 2층"></div>'
-        + '<div class="form-field"><label>변경 면적 (㎡)</label><input type="number" class="change-area" value="0" min="0"></div>'
+        + '<div class="form-field"><label>층 면적 <span style="font-weight:400; color:#888;">(건축물대장)</span></label><input type="text" class="floor-area" value="' + (data.area ? data.area + ' ㎡' : '') + '" ' + ro + '></div>'
+        + '<div class="form-field"><label>변경 면적 (㎡)</label><input type="number" class="change-area" value="' + (data.area || 0) + '" min="0" ' + maxAttr + ' oninput="validateChangeArea(this)"></div>'
         + '</div>'
-        + '<div class="form-field"><label>현재 용도</label><select class="change-current" onchange="updateChangeBadge('+idx+')">'+opts+'</select></div>'
-        + '<div class="form-field"><label>변경 용도</label><select class="change-new" onchange="updateChangeBadge('+idx+')">'+opts+'</select></div>'
+        + '<div class="form-field-row">'
+        + '<div class="form-field"><label>현재 용도 <span style="font-weight:400; color:#888;">(건축물대장)</span></label><input type="text" class="current-purpose-input" value="' + (data.purpose || '') + '" ' + ro + '></div>'
+        + '<div class="form-field"><label>변경 용도</label><select class="change-new" onchange="updateChangeBadge(' + idx + ')">' + opts + '</select></div>'
+        + '</div>'
         + '<div class="permit-mini"></div>';
     container.appendChild(wrap);
-    wrap.querySelector('.change-current').value = '단독주택';
     wrap.querySelector('.change-new').value = '일반음식점';
     updateChangeBadge(idx);
     renumberCards();
@@ -769,7 +786,6 @@ function removeUsageChange(idx){
 function renumberCards(){
     const cards = document.querySelectorAll('.change-card');
     cards.forEach(function(c, i){
-        c.querySelector('.card-title').textContent = '변경 항목 #'+(i+1);
         const btn = c.querySelector('.remove-card-btn');
         if(btn) btn.style.display = (cards.length === 1) ? 'none' : '';
     });
@@ -778,19 +794,20 @@ function renumberCards(){
 function updateChangeBadge(idx){
     const card = document.querySelector('.change-card[data-idx="'+idx+'"]');
     if(!card) return;
-    const cur = card.querySelector('.change-current').value;
+    const cur = card.dataset.currentPurpose || card.querySelector('.current-purpose-input').value;
     const nw = card.querySelector('.change-new').value;
     const j = judgeUsageRaw(cur, nw);
-    card.querySelector('.permit-mini').innerHTML = '<div class="permit-badge '+j.cls+'">'+j.title+'<small>'+j.sub+'</small></div>';
+    card.querySelector('.permit-mini').innerHTML = '<div class="permit-badge '+j.cls+'">'+j.title+(j.sub?'<small>'+j.sub+'</small>':'')+'</div>';
 }
 
 function getUsageChanges(){
     const cards = document.querySelectorAll('.change-card');
     return Array.from(cards).map(function(c){
+        const title = c.querySelector('.card-title');
         return {
-            floor: c.querySelector('.change-floor').value,
+            floor: title ? title.textContent : '',
             area: parseFloat(c.querySelector('.change-area').value)||0,
-            current: c.querySelector('.change-current').value,
+            current: c.dataset.currentPurpose || c.querySelector('.current-purpose-input').value,
             new: c.querySelector('.change-new').value
         };
     });
