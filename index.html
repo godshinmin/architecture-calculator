@@ -50,6 +50,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .change-card label { font-weight:800; color:#000; font-size:14px; }
 .change-card .form-field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
 .change-card input[readonly] { background:#f5f7fa; color:#2c2c2a; font-weight:600; cursor:default; }
+.change-card .change-area, .change-card .change-new { border:1.5px solid #1e3a5f; background:#f0f4fb; color:#1e3a5f; font-weight:700; }
+.change-card .change-area:focus, .change-card .change-new:focus { outline:3px solid rgba(30,58,95,0.15); border-color:#142a47; background:white; }
 .change-card .change-area.over { border-color:#c0392b !important; background:#fff5f5; }
 .remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
 .remove-card-btn:hover { background:#fde8e8; }
@@ -108,7 +110,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .address-row input { flex:1; }
 .lookup-btn { padding:0 16px; background:#1e3a5f; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap; }
 .lookup-btn:hover { background:#142a47; }
-.calculator-title { font-size:24px; font-weight:500; margin-bottom:24px; text-align:center; }
+.calculator-title { font-size:28px; font-weight:800; margin-bottom:24px; text-align:center; color:#1e3a5f; letter-spacing:-0.5px; }
 .form-section { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; margin-bottom:20px; }
 .form-section h3 { font-size:17px; font-weight:500; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; }
 .form-field { margin-bottom:20px; }
@@ -174,8 +176,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <!-- ===== 위반건축물 STEP1 ===== -->
 <div id="illegal-step1" class="hidden">
-    <p class="step-label">STEP 1 / 3 · 위반 유형 선택</p>
-    <h1 class="calculator-title">위반건축물 양성화 견적</h1>
+    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div class="calculator-grid">
         <div class="calculator-card" onclick="pickViolation('무허가')"><div class="card-icon">🏚️</div><h2>무허가</h2><p>건축 허가·신고 없이 지어진 건축물</p></div>
         <div class="calculator-card" onclick="pickViolation('불법증축')"><div class="card-icon">🧱</div><h2>불법증축</h2><p>허가 범위를 초과하여 증축된 부분</p></div>
@@ -185,16 +186,14 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <!-- ===== 위반건축물 STEP2: 입력 ===== -->
 <div id="illegal-step2" class="hidden">
-    <p class="step-label">STEP 2 / 3 · 기본 정보 입력</p>
-    <h1 class="calculator-title">위반건축물 양성화 견적</h1>
+    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div style="text-align:center;"><span class="chosen-badge" id="illegal-chosen">위반 유형: -</span></div>
     <div class="form-wrap">
+        <input type="hidden" id="illegal-area" value="0">
+        <input type="hidden" id="illegal-floor" value="0">
+        <input type="hidden" id="illegal-basement" value="0">
         <div class="form-section">
-            <h3>기본 정보</h3>
-            <div class="form-field"><label>건물 용도</label>
-                <select id="illegal-type"><option>단독주택</option><option>다가구주택</option><option>아파트</option><option>오피스텔</option><option>근린생활시설</option><option>판매시설</option><option>업무시설</option><option>교육시설</option><option>의료시설</option><option>숙박시설</option><option>종교시설</option><option>운동시설</option><option>공장</option></select>
-            </div>
-            <div class="form-field"><label>연면적 (㎡)</label><input type="number" id="illegal-area" value="100" oninput="document.getElementById('illegal-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="illegal-pyeong">30.3평</p></div>
+            <h3>건물 주소</h3>
             <div class="form-field">
                 <label>도로명주소</label>
                 <div class="address-row">
@@ -204,13 +203,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             </div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('illegal')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
             <div id="illegal-building-info" class="building-info-panel"></div>
-        </div>
-        <div class="form-section">
-            <h3>건축물 층수</h3>
-            <div class="form-field-row">
-                <div class="form-field"><label>지하 (층)</label><input type="number" id="illegal-basement" value="0"></div>
-                <div class="form-field"><label>지상 (층)</label><input type="number" id="illegal-floor" value="2"></div>
-            </div>
         </div>
         <div class="form-section">
             <h3>불법부분 정보</h3>
@@ -230,26 +222,21 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <div class="form-field"><label>위반 시점</label><select id="illegal-when"><option>2006.5.9 이전 (특정건축물 정리 검토 가능)</option><option>2006.5.9 이후</option><option>모름</option></select></div>
             <div class="check-row"><input type="checkbox" id="illegal-far"><label>건폐율 또는 용적률 초과 (초과 시 양성화 제한될 수 있음)</label></div>
         </div>
-        <div class="btn-row">
-            <button class="back-btn" onclick="showScreen('illegal-step1')">← 다시 선택</button>
-            <button class="next-btn" onclick="goToEstimate('illegal')">가견적 확인하기 →</button>
-        </div>
+        <button class="next-btn" onclick="goToEstimate('illegal')">가견적 확인하기</button>
     </div>
 </div>
 
 <!-- ===== 위반건축물 STEP3: 견적 ===== -->
 <div id="illegal-step3" class="hidden">
     <button class="back-btn" onclick="showScreen('illegal-step2')">← 입력 수정</button>
-    <p class="step-label">STEP 3 / 3 · 가견적 확인</p>
-    <h1 class="calculator-title">위반건축물 양성화 견적</h1>
+    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div style="text-align:center;"><span class="chosen-badge" id="illegal-chosen-3">위반 유형: -</span></div>
     <div class="estimate-wrap"><div id="illegal-result"></div></div>
 </div>
 
 <!-- ===== 용도변경 STEP1 ===== -->
 <div id="usage-step1" class="hidden">
-    <p class="step-label">STEP 1 / 3 · 건물 정보</p>
-    <h1 class="calculator-title">용도변경 견적</h1>
+    <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div style="max-width:560px; margin:0 auto;">
         <div class="form-section">
             <h3>건물 주소</h3>
@@ -278,37 +265,30 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <!-- ===== 용도변경 STEP2: 입력 ===== -->
 <div id="usage-step2" class="hidden">
-    <p class="step-label">STEP 2 / 3 · 변경 항목</p>
-    <h1 class="calculator-title">용도변경 견적</h1>
+    <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="form-wrap">
         <div class="usage-helper">여러 층을 각기 다른 용도로 변경할 수 있어요<small>항목별로 신고/허가/기재변경이 자동 판별됩니다</small></div>
         <div id="usage-changes-container"></div>
-        <div class="btn-row">
-            <button class="back-btn" onclick="showScreen('usage-step1')">← 다시 선택</button>
-            <button class="next-btn" onclick="goToEstimate('usage')">가견적 확인하기 →</button>
-        </div>
+        <button class="next-btn" onclick="goToEstimate('usage')">가견적 확인하기</button>
     </div>
 </div>
 
 <!-- ===== 용도변경 STEP3: 견적 ===== -->
 <div id="usage-step3" class="hidden">
     <button class="back-btn" onclick="showScreen('usage-step2')">← 입력 수정</button>
-    <p class="step-label">STEP 3 / 3 · 가견적 확인</p>
-    <h1 class="calculator-title">용도변경 견적</h1>
+    <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="estimate-wrap"><div id="usage-result"></div></div>
 </div>
 
 <!-- ===== 리모델링 STEP1: 입력 ===== -->
 <div id="remodel-step2" class="hidden">
-    <p class="step-label">STEP 1 / 2 · 기본 정보 입력</p>
-    <h1 class="calculator-title">리모델링 견적</h1>
+    <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div style="text-align:center;"><span class="chosen-badge" id="remodel-chosen">공사 종류: -</span></div>
     <div class="form-wrap">
+        <input type="hidden" id="repair-area" value="0">
+        <input type="hidden" id="repair-parking" value="0">
         <div class="form-section">
-            <h3>기본 정보</h3>
-            <div class="form-field"><label>건물 용도</label><select id="repair-type"><option>단독주택</option><option>다가구주택</option><option>아파트</option><option>오피스텔</option><option>근린생활시설</option><option>판매시설</option><option>업무시설</option><option>교육시설</option><option>의료시설</option><option>숙박시설</option><option>종교시설</option><option>운동시설</option><option>공장</option></select></div>
-            <div class="form-field"><label>연면적 (㎡)</label><input type="number" id="repair-area" value="100" oninput="document.getElementById('repair-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="repair-pyeong">30.3평</p></div>
-            <div class="form-field"><label>건물 구조</label><select id="repair-structure"><option>목구조</option><option>철근콘크리트</option><option>철골</option><option>조적조</option><option>혼합구조</option></select></div>
+            <h3>건물 주소</h3>
             <div class="form-field">
                 <label>도로명주소</label>
                 <div class="address-row">
@@ -320,10 +300,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <div id="repair-building-info" class="building-info-panel"></div>
         </div>
         <div class="form-section">
-            <h3>건물 상세정보</h3>
-            <div class="form-field"><label>주차 대수 (대)</label><input type="number" id="repair-parking" value="0" min="0"></div>
-        </div>
-        <div class="form-section">
             <h3>현황도면 여부</h3>
             <div class="form-field"><select id="repair-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
         </div>
@@ -331,18 +307,14 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <h3>소유 여부</h3>
             <div class="form-field"><select id="repair-ownership"><option>소유</option><option>매수 검토중</option></select></div>
         </div>
-        <div class="btn-row">
-            <button class="back-btn" onclick="goMain()">← 홈으로</button>
-            <button class="next-btn" onclick="goToEstimate('remodel')">가견적 확인하기 →</button>
-        </div>
+        <button class="next-btn" onclick="goToEstimate('remodel')">가견적 확인하기</button>
     </div>
 </div>
 
 <!-- ===== 리모델링 STEP3: 견적 ===== -->
 <div id="remodel-step3" class="hidden">
     <button class="back-btn" onclick="showScreen('remodel-step2')">← 입력 수정</button>
-    <p class="step-label">STEP 2 / 2 · 가견적 확인</p>
-    <h1 class="calculator-title">리모델링 견적</h1>
+    <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div style="text-align:center;"><span class="chosen-badge" id="remodel-chosen-3">공사 종류: -</span></div>
     <div class="estimate-wrap"><div id="repair-result"></div></div>
 </div>
@@ -585,6 +557,10 @@ function applyBuildingInfo(info, type){
             if(bs) bs.value = info.ugrndFlrCnt;
         }
     }
+    if(type==='repair' && info.parking){
+        const pk = document.getElementById('repair-parking');
+        if(pk) pk.value = info.parking.total || 0;
+    }
 
     // === 건물 정보 패널 렌더링 ===
     const panel = document.getElementById(type+'-building-info');
@@ -600,7 +576,7 @@ function applyBuildingInfo(info, type){
 
     // === 섹션 1: 건축물대장 정보 (요약) ===
     html += '<div class="info-section">';
-    html += '<h3>📋 건축물대장 정보</h3>';
+    html += '<h3>건축물대장 정보</h3>';
 
     html += '<div class="info-grid">';
     html += '<div><label>건물명</label><span>' + fv(info.bldNm) + '</span></div>';
@@ -625,7 +601,7 @@ function applyBuildingInfo(info, type){
     if(info.floors && info.floors.length){
         const isUsage = (type === 'usage');
         html += '<div class="info-section">';
-        html += '<h3>🏢 층별 정보</h3>';
+        html += '<h3>층별 정보</h3>';
         if(info.floorsTotalCount && info.floorsTotalCount > info.floors.length){
             html += '<div class="floors-warning">⚠️ 건축물대장에 등록된 층은 ' + info.floorsTotalCount + '개인데 ' + info.floors.length + '개만 받아왔습니다. 새로고침 후 다시 시도해보세요.</div>';
         }
@@ -711,6 +687,11 @@ function selectRemodel(t){
     document.getElementById('remodel-chosen').textContent='공사 종류: '+t;
     const ch3 = document.getElementById('remodel-chosen-3');
     if(ch3) ch3.textContent='공사 종류: '+t;
+    // 페이지 제목 동적 분기
+    const titleText = t.indexOf('대수선') >= 0 ? '대수선 견적 계산기' : '증축 견적 계산기';
+    document.querySelectorAll('.remodel-title').forEach(function(el){
+        el.textContent = titleText;
+    });
     showScreen('remodel-step2');
 }
 
