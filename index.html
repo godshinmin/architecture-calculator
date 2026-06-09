@@ -6,21 +6,22 @@
 <meta name="color-scheme" content="light only">
 <meta name="theme-color" content="#f8f7f4">
 <title>건축 견적 계산기 - 오래온</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 html { background:#f8f7f4; }
-body { font-family:'Malgun Gothic','맑은 고딕',sans-serif; background:#f8f7f4; color:#2c2c2a; }
+body { font-family:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background:#f8f7f4; color:#2c2c2a; }
 .container { max-width:1200px; margin:0 auto; padding:40px 20px; }
 h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .subtitle { text-align:center; color:#666; margin-bottom:40px; }
 .hidden { display:none; }
-.step-label { text-align:center; color:#1976d2; font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
+.step-label { text-align:center; color:#1e3a5f; font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
 .calculator-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; max-width:900px; margin:0 auto; }
-.calculator-card { background:white; border:1px solid #e8e8e6; border-radius:14px; padding:28px; cursor:pointer; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
-.calculator-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(25,118,210,0.12); border-color:#1976d2; }
-.card-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:#f0f4f8; }
-.calculator-card h2 { font-size:19px; font-weight:600; margin-bottom:10px; }
+.calculator-card { background:white; border:1px solid #e8e8e6; border-radius:14px; padding:36px 24px; cursor:pointer; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; min-height:160px; }
+.calculator-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(30,58,95,0.15); border-color:#1e3a5f; }
+.card-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:#eef2f8; }
+.calculator-card h2 { font-size:19px; font-weight:600; margin-bottom:10px; color:#1e3a5f; }
 .calculator-card p { color:#666; font-size:14px; line-height:1.5; }
 .value-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:900px; margin:0 auto 36px; }
 .value-item { background:white; border:1px solid #e8e8e6; border-radius:12px; padding:20px 16px; text-align:center; }
@@ -35,21 +36,21 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 }
 .back-btn { background:white; border:1px solid #d0d0d0; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; margin-bottom:24px; }
 .back-btn:hover { background:#f5f5f5; }
-.next-btn { width:100%; margin-top:20px; padding:16px; background:#1976d2; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; font-weight:600; }
-.next-btn:hover { background:#1565c0; }
+.next-btn { width:100%; margin-top:20px; padding:16px; background:#1e3a5f; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; font-weight:600; }
+.next-btn:hover { background:#142a47; }
 .btn-row { display:flex; gap:10px; margin-top:20px; }
 .btn-row .back-btn { flex:1; padding:16px; margin:0; font-size:14px; font-weight:500; }
 .btn-row .next-btn { flex:1.5; margin:0; }
-.add-btn { width:100%; padding:14px; background:white; border:1.5px dashed #1976d2; color:#1976d2; border-radius:8px; cursor:pointer; font-size:15px; font-weight:500; margin-bottom:20px; }
-.add-btn:hover { background:#f0f7ff; }
+.add-btn { width:100%; padding:14px; background:white; border:1.5px dashed #1e3a5f; color:#1e3a5f; border-radius:8px; cursor:pointer; font-size:15px; font-weight:500; margin-bottom:20px; }
+.add-btn:hover { background:#eef2f8; }
 .change-card h3 { display:flex; justify-content:space-between; align-items:center; }
 .remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
 .remove-card-btn:hover { background:#fde8e8; }
 .permit-mini { margin-top:12px; }
-.building-info-panel { display:none; background:white; border:1.5px solid #1976d2; border-radius:12px; padding:20px; margin:16px 0; box-shadow:0 4px 12px rgba(25,118,210,0.08); }
+.building-info-panel { display:none; background:white; border:1.5px solid #1e3a5f; border-radius:12px; padding:20px; margin:16px 0; box-shadow:0 4px 12px rgba(25,118,210,0.08); }
 .building-info-panel.shown { display:block; animation:fadeIn 0.3s; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-.building-info-panel h3 { color:#1976d2; margin-bottom:14px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.building-info-panel h3 { color:#1e3a5f; margin-bottom:14px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; }
 .building-info-panel h4 { margin:16px 0 8px; font-size:13px; font-weight:600; color:#555; }
 .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px 16px; margin-bottom:14px; }
 .info-grid > div { display:flex; flex-direction:column; gap:2px; }
@@ -63,14 +64,14 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .floor-table th { background:#f5f8fc; font-weight:500; color:#666; font-size:12px; }
 .floor-table tr:hover td { background:#fafbfc; }
 .floor-table td.num { text-align:right; }
-.floor-table input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:#1976d2; }
+.floor-table input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:#1e3a5f; }
 .floor-table td.check-cell { text-align:center; width:36px; }
 .floor-table-actions { display:flex; gap:10px; margin-top:14px; }
 .floor-table-actions button { flex:1; padding:13px; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
 .btn-select-all { background:white; border:1px solid #d0d0d0 !important; color:#666; }
 .btn-select-all:hover { background:#f5f5f5; }
-.btn-apply-floors { background:#1976d2; color:white; }
-.btn-apply-floors:hover { background:#1565c0; }
+.btn-apply-floors { background:#1e3a5f; color:white; }
+.btn-apply-floors:hover { background:#142a47; }
 .floors-hint { font-size:12px; color:#888; margin-top:8px; }
 .floors-warning { background:#fff8e1; color:#92400e; padding:10px 12px; border-radius:6px; font-size:13px; margin-top:10px; border-left:3px solid #f59e0b; }
 .postcode-modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
@@ -87,8 +88,8 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .tab-home { flex:1; min-width:0; padding:11px 6px; border:1px solid #d0d0d0; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; color:#666; }
 .tab-home:hover { background:#f5f5f5; }
 .tab { flex:1; min-width:0; padding:11px 6px; border:1px solid #d0d0d0; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; color:#666; transition:all 0.15s; white-space:nowrap; }
-.tab:hover { border-color:#1976d2; color:#1976d2; }
-.tab.active { background:#1976d2; color:white; border-color:#1976d2; }
+.tab:hover { border-color:#1e3a5f; color:#1e3a5f; }
+.tab.active { background:#1e3a5f; color:white; border-color:#1e3a5f; }
 @media (max-width:480px){
     .tab-bar { gap:3px; margin-bottom:18px; }
     .tab-home { padding:10px 0; font-size:11px; }
@@ -96,8 +97,8 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 }
 .address-row { display:flex; gap:8px; }
 .address-row input { flex:1; }
-.lookup-btn { padding:0 16px; background:#1976d2; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap; }
-.lookup-btn:hover { background:#1565c0; }
+.lookup-btn { padding:0 16px; background:#1e3a5f; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap; }
+.lookup-btn:hover { background:#142a47; }
 .calculator-title { font-size:24px; font-weight:500; margin-bottom:24px; text-align:center; }
 .form-section { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; margin-bottom:20px; }
 .form-section h3 { font-size:17px; font-weight:500; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; }
@@ -113,11 +114,11 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .check-row label { font-size:14px; color:#444; margin:0; font-weight:400; line-height:1.4; }
 .permit-badge { margin-top:8px; padding:12px 14px; border-radius:8px; font-size:14px; font-weight:500; }
 .permit-badge.heoga { background:#fde8e8; color:#c0392b; }
-.permit-badge.singo { background:#e8f4fd; color:#1565c0; }
+.permit-badge.singo { background:#e8f4fd; color:#142a47; }
 .permit-badge.daejang { background:#eef7ee; color:#2e7d32; }
 .permit-badge.nochange { background:#f0f0f0; color:#757575; }
 .permit-badge small { display:block; font-weight:400; font-size:12px; margin-top:4px; opacity:0.85; }
-.chosen-badge { display:inline-block; background:#eaf2fb; color:#1565c0; padding:6px 14px; border-radius:20px; font-size:14px; font-weight:500; margin-bottom:20px; }
+.chosen-badge { display:inline-block; background:#eaf2fb; color:#142a47; padding:6px 14px; border-radius:20px; font-size:14px; font-weight:500; margin-bottom:20px; }
 .result-box { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; }
 .result-box h3 { font-size:17px; font-weight:500; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; }
 .result-item { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0; }
@@ -125,9 +126,9 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .result-item .amount { font-size:14px; font-weight:500; }
 .total-box { padding-top:20px; margin-top:20px; border-top:2px solid #333; display:flex; justify-content:space-between; align-items:baseline; }
 .total-box .label { font-size:16px; font-weight:500; }
-.total-box .amount { font-size:26px; font-weight:500; color:#1976d2; }
-.check-result { margin-top:18px; padding:14px; background:#f0f7ff; border-radius:8px; font-size:13px; color:#1565c0; line-height:1.6; }
-.check-result strong { display:block; margin-bottom:6px; color:#0d47a1; }
+.total-box .amount { font-size:26px; font-weight:500; color:#1e3a5f; }
+.check-result { margin-top:18px; padding:14px; background:#eef2f8; border-radius:8px; font-size:13px; color:#142a47; line-height:1.6; }
+.check-result strong { display:block; margin-bottom:6px; color:#142a47; }
 .warning-box { margin-top:16px; padding:14px; background:#fff3e0; border-radius:8px; font-size:13px; color:#e65100; }
 .info-box { margin-top:12px; padding:12px; background:#f5f5f5; border-radius:8px; font-size:12px; color:#666; line-height:1.6; }
 .info-box strong { color:#333; }
@@ -153,25 +154,11 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 <div id="selector-screen">
     <h1>건축 견적 계산기</h1>
     <p class="subtitle">항목을 선택하면 30초 안에 예상 견적이 나옵니다</p>
-    <div class="value-row">
-        <div class="value-item">
-            <div class="value-icon">⚡</div>
-            <div class="value-text"><strong>빠른 산정</strong>건축법규 기반 자동 계산</div>
-        </div>
-        <div class="value-item">
-            <div class="value-icon">📐</div>
-            <div class="value-text"><strong>인허가 검토 포함</strong>구조·소방·주차 등 종합</div>
-        </div>
-        <div class="value-item">
-            <div class="value-icon">💬</div>
-            <div class="value-text"><strong>건축사 직접 안내</strong>견적 후 상세 상담 연결</div>
-        </div>
-    </div>
     <div class="calculator-grid">
-        <div class="calculator-card" onclick="selectIllegal()"><div class="card-icon">⚠️</div><h2>위반건축물 양성화</h2><p>무허가, 불법증축 등 위반건축물의 적법화 견적</p></div>
-        <div class="calculator-card" onclick="selectUsage()"><div class="card-icon">🔄</div><h2>용도변경</h2><p>건축물 용도 변경에 필요한 설계비, 인허가 비용</p></div>
-        <div class="calculator-card" onclick="selectRemodel('대수선 (엘리베이터 설치)')"><div class="card-icon">🛗</div><h2>대수선 (엘리베이터 설치)</h2><p>기둥·보·내력벽 등 주요 구조부 수선 및 EV 설치</p></div>
-        <div class="calculator-card" onclick="selectRemodel('증축')"><div class="card-icon">🏗️</div><h2>증축</h2><p>기존 건축물의 면적·층수를 늘리는 공사</p></div>
+        <div class="calculator-card" onclick="selectIllegal()"><h2>위반건축물 양성화</h2><p>무허가, 불법증축 등 위반건축물의 적법화 견적</p></div>
+        <div class="calculator-card" onclick="selectUsage()"><h2>용도변경</h2><p>건축물 용도 변경에 필요한 설계비, 인허가 비용</p></div>
+        <div class="calculator-card" onclick="selectRemodel('대수선 (엘리베이터 설치)')"><h2>대수선 (엘리베이터 설치)</h2><p>기둥·보·내력벽 등 주요 구조부 수선 및 EV 설치</p></div>
+        <div class="calculator-card" onclick="selectRemodel('증축')"><h2>증축</h2><p>기존 건축물의 면적·층수를 늘리는 공사</p></div>
     </div>
     <p class="disclaimer">※ 본 견적은 참고용이며, 대지·건물 조건에 따라 실제 비용은 달라질 수 있습니다.</p>
 </div>
@@ -199,7 +186,6 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
                 <select id="illegal-type"><option>단독주택</option><option>다가구주택</option><option>아파트</option><option>오피스텔</option><option>근린생활시설</option><option>판매시설</option><option>업무시설</option><option>교육시설</option><option>의료시설</option><option>숙박시설</option><option>종교시설</option><option>운동시설</option><option>공장</option></select>
             </div>
             <div class="form-field"><label>연면적 (㎡)</label><input type="number" id="illegal-area" value="100" oninput="document.getElementById('illegal-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="illegal-pyeong">30.3평</p></div>
-            <div class="form-field"><label>소재지</label><select id="illegal-region"><option>서울</option><option>경기</option><option>인천</option><option>기타</option></select></div>
             <div class="form-field">
                 <label>도로명주소</label>
                 <div class="address-row">
@@ -207,7 +193,6 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
                     <button type="button" class="lookup-btn" onclick="lookupBuilding('illegal')">🔍 주소 검색</button>
                 </div>
             </div>
-            <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="illegal-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('illegal')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
             <div id="illegal-building-info" class="building-info-panel"></div>
         </div>
@@ -263,11 +248,9 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
                     <button type="button" class="lookup-btn" onclick="lookupBuilding('usage')">🔍 주소 검색</button>
                 </div>
             </div>
-            <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="usage-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('usage')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
             <p class="helper-text" style="margin-top:8px;">조회 시 첫 변경 항목의 면적이 자동 입력됩니다.</p>
             <div id="usage-building-info" class="building-info-panel"></div>
-            <div class="form-field"><label>소재지</label><select id="usage-region"><option>서울</option><option>경기</option><option>인천</option><option>기타</option></select></div>
         </div>
         <div class="form-section">
             <h3>현황 정보</h3>
@@ -312,7 +295,6 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
             <div class="form-field"><label>건물 용도</label><select id="repair-type"><option>단독주택</option><option>다가구주택</option><option>아파트</option><option>오피스텔</option><option>근린생활시설</option><option>판매시설</option><option>업무시설</option><option>교육시설</option><option>의료시설</option><option>숙박시설</option><option>종교시설</option><option>운동시설</option><option>공장</option></select></div>
             <div class="form-field"><label>연면적 (㎡)</label><input type="number" id="repair-area" value="100" oninput="document.getElementById('repair-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="repair-pyeong">30.3평</p></div>
             <div class="form-field"><label>건물 구조</label><select id="repair-structure"><option>목구조</option><option>철근콘크리트</option><option>철골</option><option>조적조</option><option>혼합구조</option></select></div>
-            <div class="form-field"><label>소재지</label><select id="repair-region"><option>서울</option><option>경기</option><option>인천</option><option>기타</option></select></div>
             <div class="form-field">
                 <label>도로명주소</label>
                 <div class="address-row">
@@ -320,7 +302,6 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
                     <button type="button" class="lookup-btn" onclick="lookupBuilding('repair')">🔍 주소 검색</button>
                 </div>
             </div>
-            <div class="form-field"><label>상세주소 <span style="font-weight:400; color:#999;">(동·호수 등, 선택)</span></label><input type="text" id="repair-detail" placeholder="예: 3층 301호"></div>
             <button type="button" class="lookup-btn" onclick="fetchBuilding('repair')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 자동조회</button>
             <div id="repair-building-info" class="building-info-panel"></div>
         </div>
@@ -642,7 +623,7 @@ function applyBuildingInfo(info, type){
         const isUsage = (type === 'usage');
         html += '<table class="floor-table"><thead><tr>';
         if(isUsage) html += '<th class="check-cell">선택</th>';
-        html += '<th>층</th><th>구조</th><th>주용도</th><th>면적</th>';
+        html += '<th>층</th><th>주용도</th><th>면적</th>';
         html += '</tr></thead><tbody>';
         info.floors.forEach(function(f, i){
             const floorName = f.flrNoNm || (f.flrNo + '층');
@@ -651,7 +632,6 @@ function applyBuildingInfo(info, type){
                 html += '<td class="check-cell"><input type="checkbox" class="floor-check" data-floor-name="' + floorName + '" data-area="' + (f.area || 0) + '" data-purpose="' + (f.mainPurps || '').replace(/"/g,'') + '"></td>';
             }
             html += '<td>' + floorName + '</td>';
-            html += '<td>' + (f.strct || '-') + '</td>';
             html += '<td>' + (f.mainPurps || '-') + '</td>';
             html += '<td class="num">' + (f.area ? f.area + '㎡' : '-') + '</td>';
             html += '</tr>';
@@ -819,8 +799,8 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml){
 
 function calculateIllegal(){
     const area=parseFloat(document.getElementById('illegal-area').value)||0;
-    const region=document.getElementById('illegal-region').value;
-    const rf=REGION_FACTOR[region];
+    const rf = 1.0;
+    
     const items=[
         {name:'건축사 설계비',amount:calculateDesignFee(area)},
         {name:'구조안전진단비 (예상금액)',amount:PRICING.구조안전진단비.정밀},
@@ -842,7 +822,7 @@ function calculateIllegal(){
         '건축물대장 등재 (양성화 신청 행정절차)'
     ];
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 양성화 진행</span></div>';
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #3b82f6;"><strong style="color:#1e40af;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (건축물 종류·면적별)<br>· 이행강제금 (양성화 절차 진행 시 납부 의무)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
+    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#1e3a5f;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (건축물 종류·면적별)<br>· 이행강제금 (양성화 절차 진행 시 납부 의무)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     renderResult(items,sub,sub*rf,rf,'illegal-result',extra);
 }
 
@@ -851,8 +831,8 @@ function calculateUsage(){
     if(changes.length === 0){ alert('변경 항목을 1개 이상 추가해주세요.'); return; }
     const totalChangeArea = changes.reduce(function(s,c){return s+c.area;},0);
     if(totalChangeArea === 0){ alert('변경 면적을 입력해주세요.'); return; }
-    const region = document.getElementById('usage-region').value;
-    const rf = REGION_FACTOR[region];
+    const rf = 1.0;
+    
 
     const judges = changes.map(function(c){
         const j = judgeUsageRaw(c.current, c.new);
@@ -928,21 +908,21 @@ function calculateUsage(){
     }
 
     let extra = changeListHtml;
-    extra += '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#0d47a1;">대표 처리 구분</strong>'+worst.title+(worst.sub?' — '+worst.sub:'')+'<br><span style="font-size:12px;opacity:0.85;">여러 변경 항목이 섞이면 가장 까다로운 절차를 기준으로 진행합니다.</span></div>';
+    extra += '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#142a47;">대표 처리 구분</strong>'+worst.title+(worst.sub?' — '+worst.sub:'')+'<br><span style="font-size:12px;opacity:0.85;">여러 변경 항목이 섞이면 가장 까다로운 절차를 기준으로 진행합니다.</span></div>';
     if(reviewList.length){
         extra += '<div class="check-result"><strong>견적에 포함된 '+reviewTitle+' 세부사항</strong>'+reviewList.map(function(r){return '· '+r;}).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 진행</span></div>';
     }
     if(worst.cls === 'singo' || worst.cls === 'daejang'){
         extra += '<div class="info-box"><strong>※ 구조변경 동반 시 별도 산정</strong><br>본 견적엔 구조변경 비용이 포함되지 않습니다. 내력벽·기둥 변경 등 구조변경이 수반되면 구조안전진단 및 구조검토비가 추가됩니다 (기본 약 200만원 / 정밀 약 350만원, 예상금액).</div>';
     }
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #3b82f6;"><strong style="color:#1e40af;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (변경 면적·용도별)<br>· 면허세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
+    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#1e3a5f;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (변경 면적·용도별)<br>· 면허세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     renderResult(items,sub,sub*rf,rf,'usage-result',extra);
 }
 
 function calculateRemodel(){
     const area=parseFloat(document.getElementById('repair-area').value)||0;
-    const region=document.getElementById('repair-region').value;
-    const rf=REGION_FACTOR[region];
+    const rf = 1.0;
+    
     let items=[], reviewList=[];
     if(STATE.remodelType==='증축'){
         items=[
@@ -983,7 +963,7 @@ function calculateRemodel(){
     if(sdf.fee>0) items.push({name:sdf.name, amount:sdf.fee});
     const sub=items.reduce((s,i)=>s+i.amount,0);
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 인허가 진행</span></div>';
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #3b82f6;"><strong style="color:#1e40af;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (대수선·증축 종류별)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
+    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#1e3a5f;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (대수선·증축 종류별)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     renderResult(items,sub,sub*rf,rf,'repair-result',extra);
 }
 </script>
