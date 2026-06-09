@@ -13,7 +13,7 @@
 html { background:#f8f7f4; }
 body { font-family:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background:#f8f7f4; color:#2c2c2a; }
 .container { max-width:1200px; margin:0 auto; padding:40px 20px; }
-h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
+h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; color:#1e3a5f; letter-spacing:-0.5px; }
 .subtitle { text-align:center; color:#666; margin-bottom:40px; }
 .hidden { display:none; }
 .step-label { text-align:center; color:#1e3a5f; font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
@@ -21,7 +21,7 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .calculator-card { background:white; border:1px solid #e8e8e6; border-radius:14px; padding:36px 24px; cursor:pointer; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; min-height:160px; }
 .calculator-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(30,58,95,0.15); border-color:#1e3a5f; }
 .card-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:#eef2f8; }
-.calculator-card h2 { font-size:19px; font-weight:600; margin-bottom:10px; color:#1e3a5f; }
+.calculator-card h2 { font-size:20px; font-weight:800; margin-bottom:10px; color:#1e3a5f; letter-spacing:-0.3px; }
 .calculator-card p { color:#666; font-size:14px; line-height:1.5; }
 .value-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:900px; margin:0 auto 36px; }
 .value-item { background:white; border:1px solid #e8e8e6; border-radius:12px; padding:20px 16px; text-align:center; }
@@ -47,27 +47,29 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
 .remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
 .remove-card-btn:hover { background:#fde8e8; }
 .permit-mini { margin-top:12px; }
-.building-info-panel { display:none; background:white; border:1.5px solid #1e3a5f; border-radius:12px; padding:20px; margin:16px 0; box-shadow:0 4px 12px rgba(25,118,210,0.08); }
+.building-info-panel { display:none; margin:16px 0; }
 .building-info-panel.shown { display:block; animation:fadeIn 0.3s; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-.building-info-panel h3 { color:#1e3a5f; margin-bottom:14px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; }
-.building-info-panel h4 { margin:16px 0 8px; font-size:13px; font-weight:600; color:#555; }
+.info-section { background:white; border:1.5px solid #1e3a5f; border-radius:12px; padding:22px; margin-bottom:14px; box-shadow:0 4px 12px rgba(30,58,95,0.08); }
+.info-section h3 { color:#1e3a5f; font-size:18px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:6px; letter-spacing:-0.3px; }
+.info-section h4 { margin:16px 0 8px; font-size:13px; font-weight:700; color:#555; }
+.floor-section-hint { background:#eef2f8; color:#1e3a5f; padding:12px 14px; border-radius:8px; font-size:14px; font-weight:700; text-align:center; margin-bottom:14px; }
 .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px 16px; margin-bottom:14px; }
 .info-grid > div { display:flex; flex-direction:column; gap:2px; }
-.info-grid label { font-size:11px; color:#888; font-weight:400; }
-.info-grid span { font-size:14px; color:#2c2c2a; font-weight:500; }
+.info-grid label { font-size:11px; color:#888; font-weight:500; }
+.info-grid span { font-size:14px; color:#2c2c2a; font-weight:600; }
 .info-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid #eee; font-size:13px; }
-.info-row label { color:#888; }
-.info-row span { color:#2c2c2a; font-weight:500; }
-.floor-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
-.floor-table th, .floor-table td { padding:8px 6px; border-bottom:1px solid #e8e8e6; text-align:left; }
-.floor-table th { background:#f5f8fc; font-weight:500; color:#666; font-size:12px; }
-.floor-table tr:hover td { background:#fafbfc; }
-.floor-table td.num { text-align:right; }
-.floor-table input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:#1e3a5f; }
-.floor-table td.check-cell { text-align:center; width:36px; }
-.floor-table-actions { display:flex; gap:10px; margin-top:14px; }
-.floor-table-actions button { flex:1; padding:13px; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.info-row label { color:#888; font-weight:500; }
+.info-row span { color:#2c2c2a; font-weight:600; }
+.floor-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:15px; table-layout:fixed; }
+.floor-table th { background:#1e3a5f; color:white; padding:14px 6px; font-weight:700; font-size:14px; text-align:center; }
+.floor-table td { padding:16px 6px; border-bottom:1px solid #e8e8e6; text-align:center; color:#000; font-weight:700; font-size:15px; }
+.floor-table tr:last-child td { border-bottom:none; }
+.floor-table tr:hover td { background:#f5f8fc; }
+.floor-table td.check-cell, .floor-table th.check-cell { width:60px; }
+.floor-table input[type="checkbox"] { width:22px; height:22px; cursor:pointer; accent-color:#1e3a5f; vertical-align:middle; }
+.floor-table-actions { display:flex; gap:10px; margin-top:16px; }
+.floor-table-actions button { flex:1; padding:14px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
 .btn-select-all { background:white; border:1px solid #d0d0d0 !important; color:#666; }
 .btn-select-all:hover { background:#f5f5f5; }
 .btn-apply-floors { background:#1e3a5f; color:white; }
@@ -85,8 +87,8 @@ h1 { font-size:28px; font-weight:500; text-align:center; margin-bottom:8px; }
     .postcode-modal-content { max-width:100%; border-radius:0; height:100vh; max-height:100vh; }
 }
 .tab-bar { display:flex; gap:6px; margin-bottom:24px; flex-wrap:nowrap; align-items:stretch; }
-.tab-home { flex:1; min-width:0; padding:11px 6px; border:1px solid #d0d0d0; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; color:#666; }
-.tab-home:hover { background:#f5f5f5; }
+.tab-home { flex:1; min-width:0; padding:11px 6px; border:1.5px solid #1e3a5f; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:700; color:#1e3a5f; }
+.tab-home:hover { background:#eef2f8; }
 .tab { flex:1; min-width:0; padding:11px 6px; border:1px solid #d0d0d0; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; color:#666; transition:all 0.15s; white-space:nowrap; }
 .tab:hover { border-color:#1e3a5f; color:#1e3a5f; }
 .tab.active { background:#1e3a5f; color:white; border-color:#1e3a5f; }
@@ -595,7 +597,11 @@ function applyBuildingInfo(info, type){
         ? '총 ' + p.total + '대 (옥내자주 ' + (p.indrAuto||0) + ' · 옥외자주 ' + (p.oudrAuto||0) + ' · 옥내기계 ' + (p.indrMech||0) + ' · 옥외기계 ' + (p.oudrMech||0) + ')'
         : '정보 없음';
 
-    let html = '<h3>📋 조회된 건축물대장 정보</h3>';
+    let html = '';
+
+    // === 섹션 1: 건축물대장 정보 (요약) ===
+    html += '<div class="info-section">';
+    html += '<h3>📋 건축물대장 정보</h3>';
 
     html += '<div class="info-grid">';
     html += '<div><label>건물명</label><span>' + fv(info.bldNm) + '</span></div>';
@@ -614,13 +620,19 @@ function applyBuildingInfo(info, type){
     html += '</div>';
 
     html += '<div class="info-row"><label>주차대수</label><span>' + parkingText + '</span></div>';
+    html += '</div>';
 
+    // === 섹션 2: 층별 정보 ===
     if(info.floors && info.floors.length){
-        html += '<h4>층별 정보 (' + info.floors.length + '개 층)</h4>';
+        const isUsage = (type === 'usage');
+        html += '<div class="info-section">';
+        html += '<h3>🏢 층별 정보 (' + info.floors.length + '개 층)</h3>';
         if(info.floorsTotalCount && info.floorsTotalCount > info.floors.length){
             html += '<div class="floors-warning">⚠️ 건축물대장에 등록된 층은 ' + info.floorsTotalCount + '개인데 ' + info.floors.length + '개만 받아왔습니다. 새로고침 후 다시 시도해보세요.</div>';
         }
-        const isUsage = (type === 'usage');
+        if(isUsage){
+            html += '<div class="floor-section-hint">용도변경 원하시는 층을 선택해주세요</div>';
+        }
         html += '<table class="floor-table"><thead><tr>';
         if(isUsage) html += '<th class="check-cell">선택</th>';
         html += '<th>층</th><th>주용도</th><th>면적</th>';
@@ -633,17 +645,17 @@ function applyBuildingInfo(info, type){
             }
             html += '<td>' + floorName + '</td>';
             html += '<td>' + (f.mainPurps || '-') + '</td>';
-            html += '<td class="num">' + (f.area ? f.area + '㎡' : '-') + '</td>';
+            html += '<td>' + (f.area ? f.area + '㎡' : '-') + '</td>';
             html += '</tr>';
         });
         html += '</tbody></table>';
         if(isUsage){
             html += '<div class="floor-table-actions">';
             html += '<button type="button" class="btn-select-all" onclick="toggleAllFloors()">전체 선택</button>';
-            html += '<button type="button" class="btn-apply-floors" onclick="applySelectedFloorsToUsage()">✓ 선택한 층 용도변경하기 →</button>';
+            html += '<button type="button" class="btn-apply-floors" onclick="applySelectedFloorsToUsage()">용도변경하기</button>';
             html += '</div>';
-            html += '<p class="floors-hint">변경할 층을 체크한 후 버튼을 누르면, 변경 항목 카드가 자동 생성됩니다.</p>';
         }
+        html += '</div>';
     }
 
     panel.innerHTML = html;
