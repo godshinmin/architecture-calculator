@@ -17,12 +17,47 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .subtitle { text-align:center; color:#666; margin-bottom:40px; }
 .hidden { display:none; }
 .step-label { text-align:center; color:#1e3a5f; font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
-.calculator-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; max-width:900px; margin:0 auto; }
-.calculator-card { background:white; border:1px solid #e8e8e6; border-radius:14px; padding:36px 24px; cursor:pointer; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; min-height:160px; }
-.calculator-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(30,58,95,0.15); border-color:#1e3a5f; }
+.calculator-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:900px; margin:0 auto; }
+@media (max-width:640px){ .calculator-grid { grid-template-columns:1fr; gap:14px; } }
+.calculator-card { background:white; border:1px solid #ecedef; border-radius:20px; cursor:pointer; transition:all 0.22s ease; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:grid; grid-template-columns:1.4fr 1fr; overflow:hidden; min-height:0; }
+.calculator-card:hover { transform:translateY(-4px); box-shadow:0 18px 36px rgba(0,0,0,0.10); }
+.card-content { padding:24px 22px; display:flex; flex-direction:column; text-align:left; }
+.calculator-card h2 { font-size:21px; font-weight:800; margin-bottom:8px; color:#1a1a1a; letter-spacing:-0.4px; line-height:1.3; }
+.calculator-card p { color:#666; font-size:13px; line-height:1.55; margin:0 0 16px 0; }
+.card-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+.card-tags .tag { background:#f3f4f6; color:#4b5563; padding:6px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+.card-cta { align-self:flex-start; padding:11px 20px; border-radius:10px; color:white; font-size:13.5px; font-weight:700; border:none; cursor:pointer; margin-top:auto; transition:all 0.15s; pointer-events:none; }
+.card-image { background-size:cover; background-position:center; background-color:#f3f4f6; min-height:100%; }
+@media (max-width:640px){
+    .calculator-card { grid-template-columns:1fr; }
+    .card-image { min-height:140px; order:-1; }
+    .card-content { padding:20px; }
+}
+.card-illegal .card-cta { background:#B91C1C; }
+.card-illegal:hover .card-cta { background:#991B1B; }
+.card-usage .card-cta { background:#0E7490; }
+.card-usage:hover .card-cta { background:#155E75; }
+.card-daesuseon .card-cta { background:#4338CA; }
+.card-daesuseon:hover .card-cta { background:#3730A3; }
+.card-jeungchuk .card-cta { background:#C2410C; }
+.card-jeungchuk:hover .card-cta { background:#9A3412; }
+.violation-grid { display:grid; grid-template-columns:1fr; gap:16px; max-width:900px; margin:0 auto; }
+.violation-card { background:white; border:1px solid #ecedef; border-radius:18px; cursor:pointer; transition:all 0.22s ease; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:grid; grid-template-columns:1.6fr 1fr; overflow:hidden; min-height:0; }
+.violation-card:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(0,0,0,0.08); }
+.violation-card .card-content { padding:22px 24px; display:flex; flex-direction:column; text-align:left; }
+.violation-card h2 { font-size:20px; font-weight:800; margin-bottom:6px; color:#1a1a1a; letter-spacing:-0.3px; }
+.violation-card p { color:#666; font-size:13px; line-height:1.5; margin:0 0 14px 0; }
+.violation-card .card-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.violation-card .card-tags .tag { background:#FEE2E2; color:#991B1B; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+.violation-card .card-cta { align-self:flex-start; padding:10px 18px; border-radius:9px; color:white; font-size:13px; font-weight:700; border:none; cursor:pointer; margin-top:auto; transition:all 0.15s; pointer-events:none; background:#B91C1C; }
+.violation-card:hover .card-cta { background:#991B1B; }
+.violation-card .card-image { background-size:cover; background-position:center; background-color:#f3f4f6; min-height:100%; }
+@media (max-width:640px){
+    .violation-card { grid-template-columns:1fr; }
+    .violation-card .card-image { min-height:130px; order:-1; }
+    .violation-card .card-content { padding:18px; }
+}
 .card-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:#eef2f8; }
-.calculator-card h2 { font-size:20px; font-weight:800; margin-bottom:10px; color:#1e3a5f; letter-spacing:-0.3px; }
-.calculator-card p { color:#666; font-size:14px; line-height:1.5; }
 .value-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:900px; margin:0 auto 36px; }
 .value-item { background:white; border:1px solid #e8e8e6; border-radius:12px; padding:20px 16px; text-align:center; }
 .value-icon { font-size:28px; margin-bottom:10px; }
@@ -166,10 +201,58 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1>건축 견적 계산기</h1>
     <p class="subtitle">항목을 선택하면 30초 안에 예상 견적이 나옵니다</p>
     <div class="calculator-grid">
-        <div class="calculator-card" onclick="selectIllegal()"><h2>위반건축물 양성화</h2><p>무허가, 불법증축 등 위반건축물의 적법화 견적</p></div>
-        <div class="calculator-card" onclick="selectUsage()"><h2>용도변경</h2><p>건축물 용도 변경에 필요한 설계비, 인허가 비용</p></div>
-        <div class="calculator-card" onclick="selectRemodel('대수선 (엘리베이터 설치)')"><h2>대수선 (엘리베이터 설치)</h2><p>기둥·보·내력벽 등 주요 구조부 수선 및 EV 설치</p></div>
-        <div class="calculator-card" onclick="selectRemodel('증축')"><h2>증축</h2><p>기존 건축물의 면적·층수를 늘리는 공사</p></div>
+        <div class="calculator-card card-illegal" onclick="selectIllegal()">
+            <div class="card-content">
+                <h2>위반건축물 양성화</h2>
+                <p>위반된 건축물을 합법화하는 비용을 산출합니다<br>이행강제금부터 신고 비용까지</p>
+                <div class="card-tags">
+                    <span class="tag">이행강제금</span>
+                    <span class="tag">시정 비용</span>
+                    <span class="tag">신고 검토</span>
+                </div>
+                <button type="button" class="card-cta">양성화 견적 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="calculator-card card-usage" onclick="selectUsage()">
+            <div class="card-content">
+                <h2>용도변경</h2>
+                <p>건물 용도 변경에 필요한 비용을 산출합니다<br>허가/신고 여부를 자동 판별합니다</p>
+                <div class="card-tags">
+                    <span class="tag">허가/신고 판별</span>
+                    <span class="tag">시설군 매칭</span>
+                    <span class="tag">자동 견적</span>
+                </div>
+                <button type="button" class="card-cta">용도변경 견적 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="calculator-card card-daesuseon" onclick="selectRemodel('대수선 (엘리베이터 설치)')">
+            <div class="card-content">
+                <h2>대수선</h2>
+                <p>대수선 공사 비용을 산출합니다<br>엘리베이터 설치 등 주요 구조 변경</p>
+                <div class="card-tags">
+                    <span class="tag">구조부 수선</span>
+                    <span class="tag">EV 설치</span>
+                    <span class="tag">감리 포함</span>
+                </div>
+                <button type="button" class="card-cta">대수선 견적 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="calculator-card card-jeungchuk" onclick="selectRemodel('증축')">
+            <div class="card-content">
+                <h2>증축</h2>
+                <p>건물 증축 공사 비용을 산출합니다<br>면적·층수 증가 시 필요 비용 검토</p>
+                <div class="card-tags">
+                    <span class="tag">면적 산정</span>
+                    <span class="tag">구조 검토</span>
+                    <span class="tag">용적률 적용</span>
+                </div>
+                <button type="button" class="card-cta">증축 견적 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
     </div>
     <p class="disclaimer">※ 본 견적은 참고용이며, 대지·건물 조건에 따라 실제 비용은 달라질 수 있습니다.</p>
 </div>
@@ -177,10 +260,46 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <!-- ===== 위반건축물 STEP1 ===== -->
 <div id="illegal-step1" class="hidden">
     <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
-    <div class="calculator-grid">
-        <div class="calculator-card" onclick="pickViolation('무허가')"><div class="card-icon">🏚️</div><h2>무허가</h2><p>건축 허가·신고 없이 지어진 건축물</p></div>
-        <div class="calculator-card" onclick="pickViolation('불법증축')"><div class="card-icon">🧱</div><h2>불법증축</h2><p>허가 범위를 초과하여 증축된 부분</p></div>
-        <div class="calculator-card" onclick="pickViolation('용도위반')"><div class="card-icon">🔀</div><h2>용도위반</h2><p>허가된 용도와 다르게 사용 중인 경우</p></div>
+    <div class="violation-grid">
+        <div class="violation-card" onclick="pickViolation('무허가')">
+            <div class="card-content">
+                <h2>무허가</h2>
+                <p>건축 허가·신고 없이 지어진 건축물<br>철거 또는 양성화 절차 검토</p>
+                <div class="card-tags">
+                    <span class="tag">허가 누락</span>
+                    <span class="tag">사후 신고</span>
+                    <span class="tag">철거 검토</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="violation-card" onclick="pickViolation('불법증축')">
+            <div class="card-content">
+                <h2>불법증축</h2>
+                <p>허가 범위를 초과하여 증축된 부분<br>옥상 가건물·발코니 확장 등</p>
+                <div class="card-tags">
+                    <span class="tag">면적 초과</span>
+                    <span class="tag">이행강제금</span>
+                    <span class="tag">원상복구</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="violation-card" onclick="pickViolation('용도위반')">
+            <div class="card-content">
+                <h2>용도위반</h2>
+                <p>허가된 용도와 다르게 사용 중인 경우<br>주거→상가 등 무단 용도 변경</p>
+                <div class="card-tags">
+                    <span class="tag">무단 변경</span>
+                    <span class="tag">용도 정정</span>
+                    <span class="tag">신고 누락</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
     </div>
 </div>
 
@@ -283,7 +402,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <!-- ===== 리모델링 STEP1: 입력 ===== -->
 <div id="remodel-step2" class="hidden">
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
-    <div style="text-align:center;"><span class="chosen-badge" id="remodel-chosen">공사 종류: -</span></div>
     <div class="form-wrap">
         <input type="hidden" id="repair-area" value="0">
         <input type="hidden" id="repair-parking" value="0">
@@ -315,7 +433,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <div id="remodel-step3" class="hidden">
     <button class="back-btn" onclick="showScreen('remodel-step2')">← 입력 수정</button>
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
-    <div style="text-align:center;"><span class="chosen-badge" id="remodel-chosen-3">공사 종류: -</span></div>
     <div class="estimate-wrap"><div id="repair-result"></div></div>
 </div>
 
@@ -684,7 +801,8 @@ function usageNext(){
 
 function selectRemodel(t){
     STATE.remodelType=t;
-    document.getElementById('remodel-chosen').textContent='공사 종류: '+t;
+    const ch1 = document.getElementById('remodel-chosen');
+    if(ch1) ch1.textContent='공사 종류: '+t;
     const ch3 = document.getElementById('remodel-chosen-3');
     if(ch3) ch3.textContent='공사 종류: '+t;
     // 페이지 제목 동적 분기
@@ -705,7 +823,7 @@ function goToEstimate(type){
         calculateUsage();
         showScreen('usage-step3');
     } else if(type==='remodel'){
-        document.getElementById('remodel-chosen-3').textContent=document.getElementById('remodel-chosen').textContent;
+        const rc=document.getElementById('remodel-chosen-3'); const rc2=document.getElementById('remodel-chosen'); if(rc && rc2) rc.textContent=rc2.textContent;
         calculateRemodel();
         showScreen('remodel-step3');
     }
