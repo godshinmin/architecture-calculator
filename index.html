@@ -259,12 +259,12 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .qb-extension:hover { border-color:#c2410c; }
 .qb-remodel:hover { border-color:#4338ca; }
 .qb-illegal:hover { border-color:#b91c1c; }
-.daejang-cta { display:flex; align-items:center; justify-content:center; padding:18px 22px; max-width:720px; margin:0 auto 28px; background:linear-gradient(135deg, #1e3a5f 0%, #142a47 100%); border:none; border-radius:14px; cursor:pointer; transition:all 0.18s; width:100%; box-shadow:0 4px 14px rgba(30,58,95,0.18); font-family:inherit; }
+.daejang-cta { display:flex; align-items:center; justify-content:center; padding:24px 22px; max-width:720px; margin:0 auto 28px; background:linear-gradient(135deg, #1e3a5f 0%, #142a47 100%); border:none; border-radius:14px; cursor:pointer; transition:all 0.18s; width:100%; box-shadow:0 4px 14px rgba(30,58,95,0.18); font-family:inherit; }
 .daejang-cta:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,58,95,0.28); }
 .daejang-cta-icon { font-size:26px; flex-shrink:0; }
 .daejang-cta-text { display:flex; flex-direction:column; gap:3px; align-items:center; text-align:center; }
-.daejang-cta-title { color:white; font-size:15.5px; font-weight:800; letter-spacing:-0.3px; }
-.daejang-cta-sub { color:rgba(255,255,255,0.75); font-size:12px; font-weight:500; }
+.daejang-cta-title { color:white; font-size:20px; font-weight:800; letter-spacing:-0.3px; }
+.daejang-cta-sub { color:rgba(255,255,255,0.8); font-size:13.5px; font-weight:500; }
 .daejang-cta-arrow { color:white; font-size:20px; font-weight:300; }
 .building-animation { background:linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border:1px solid #e2e8f0; border-radius:18px; padding:32px 22px 28px; margin:0 auto 28px; text-align:center; max-width:720px; }
 .building-animation-title { color:#475569; font-size:13px; font-weight:700; margin:0 0 4px 0; letter-spacing:-0.2px; }
@@ -472,8 +472,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     </section>
 
     <div class="consult-form-section home-consult-form">
-        <h3>전문가 상담 신청</h3>
-        <p class="consult-sub">정확한 현장 견적과 맞춤 상담을 받아보세요</p>
+        <h3>건축사 검토 요청하기</h3>
+        <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
         <div class="form-field">
             <label>이름</label>
             <input type="text" class="consult-name" placeholder="홍길동">
@@ -495,7 +495,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">상담 신청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
         </div>
     </div>
 <!-- ===== 위반건축물 STEP1 ===== -->
@@ -591,8 +591,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div class="estimate-wrap"><div id="illegal-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="consult-form-section">
-        <h3>전문가 상담 신청</h3>
-        <p class="consult-sub">정확한 현장 견적과 맞춤 상담을 받아보세요</p>
+        <h3>건축사 검토 요청하기</h3>
+        <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
         <div class="form-field">
             <label>이름</label>
             <input type="text" class="consult-name" placeholder="홍길동">
@@ -614,7 +614,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">상담 신청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
         </div>
     </div>
 <!-- ===== 용도변경 STEP1 ===== -->
@@ -662,8 +662,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="estimate-wrap"><div id="usage-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="consult-form-section">
-        <h3>전문가 상담 신청</h3>
-        <p class="consult-sub">정확한 현장 견적과 맞춤 상담을 받아보세요</p>
+        <h3>건축사 검토 요청하기</h3>
+        <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
         <div class="form-field">
             <label>이름</label>
             <input type="text" class="consult-name" placeholder="홍길동">
@@ -685,7 +685,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">상담 신청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
         </div>
     </div>
 <!-- ===== 리모델링 STEP1: 입력 ===== -->
@@ -724,8 +724,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div class="estimate-wrap"><div id="repair-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="consult-form-section">
-        <h3>전문가 상담 신청</h3>
-        <p class="consult-sub">정확한 현장 견적과 맞춤 상담을 받아보세요</p>
+        <h3>건축사 검토 요청하기</h3>
+        <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
         <div class="form-field">
             <label>이름</label>
             <input type="text" class="consult-name" placeholder="홍길동">
@@ -747,7 +747,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">상담 신청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
         </div>
     </div>
 </div>
@@ -1312,7 +1312,7 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     if(extraHtml) html+=extraHtml;
     html+='<div class="warning-box">⚠️ 본 견적은 개략적인 예상 금액이며, 실제 비용은 현장 여건에 따라 달라질 수 있습니다.</div>';
     html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
-    html+='<div class="info-box"><strong>※ 구조안전진단비 안내</strong><br>구조안전진단비는 구조사무실에 별도 견적을 받아야 합니다. 위 금액은 일반적인 예상금액입니다.</div>';
+    html+='<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 350만원</b> (정밀진단 기준, 별도 산정)</div>';
     html+='<button class="print-btn" onclick="window.print()">🖨️ 견적서 출력</button></div>';
     document.getElementById(resultId).innerHTML=html;
 }
@@ -1323,7 +1323,6 @@ function calculateIllegal(){
     
     const items=[
         {name:'건축사 설계비',amount:calculateDesignFee(area)},
-        {name:'구조안전진단비 (예상금액)',amount:PRICING.구조안전진단비.정밀},
         {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_허가}
     ];
     const sdf=surveyDocFee('illegal-drawing', area);
@@ -1376,7 +1375,7 @@ function calculateUsage(){
         {name:'인허가 대행비 (인허가 검토 포함)', amount: usageHeoga ? PRICING.인허가대행비_허가 : PRICING.인허가대행비}
     ];
     if(worst.cls === 'heoga'){
-        items.push({name:'구조안전진단 및 구조검토비 (예상금액·정밀)', amount:PRICING.구조안전진단비.정밀});
+        // 구조안전진단·구조검토는 별도 안내 (extra)
     }
     const sdf = surveyDocFee('usage-drawing', totalChangeArea);
     sdf.items.forEach(it=>items.push(it));
@@ -1464,7 +1463,6 @@ function calculateRemodel(){
         items=[
             {name:'건축사 설계비',amount:area*PRICING.설계비_대수선증축},
             {name:'현황측량비',amount:getSurveyFee(area)},
-            {name:'구조안전진단비 (예상금액)',amount:PRICING.구조안전진단비.정밀},
             {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_대수선증축}
         ];
         reviewList=[
@@ -1482,7 +1480,6 @@ function calculateRemodel(){
     } else {
         items=[
             {name:'건축사 설계비',amount:area*PRICING.설계비_대수선증축},
-            {name:'구조안전진단비 (예상금액)',amount:PRICING.구조안전진단비.기본},
             {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_대수선증축}
         ];
         reviewList=[
@@ -1500,6 +1497,9 @@ function calculateRemodel(){
     const sub=items.reduce((s,i)=>s+i.amount,0);
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 인허가 진행</span></div>';
     extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#1e3a5f;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (대수선·증축 종류별)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
+    const structAmount = (STATE.remodelType==='증축') ? '약 350만원' : '약 200만원';
+    const structTitle = (STATE.remodelType==='증축') ? '정밀진단 기준' : '기본진단 기준';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>'+structAmount+'</b> ('+structTitle+', 별도 산정)</div>';
     const isExtension = STATE.remodelType === '증축';
     const meta = {
         badge: isExtension ? '증축' : '대수선',
