@@ -159,6 +159,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .address-row input { flex:1; }
 .lookup-btn { padding:0 16px; background:#001780; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap; }
 .lookup-btn:hover { background:#000d4d; }
+
+.step-label { display:inline-block; padding:6px 14px; background:#eff6ff; color:#001780; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:0.3px; margin-bottom:14px; }
 .calculator-title { font-size:28px; font-weight:800; margin-bottom:24px; text-align:center; color:#001780; letter-spacing:-0.5px; }
 .form-section { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; margin-bottom:20px; }
 .form-section h3 { font-size:18px; font-weight:800; color:#1a1a1a; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; letter-spacing:-0.3px; }
@@ -500,7 +502,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     </div>
 <!-- ===== 위반건축물 STEP1 ===== -->
 <div id="illegal-step1" class="hidden">
-    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <div style="text-align:center;"><span class="step-label">STEP 1 / 2</span></div>
+    <h1 class="calculator-title">위반 유형 선택</h1>
     <div class="violation-grid">
         <div class="violation-card" onclick="pickViolation('무허가')">
             <div class="card-content">
@@ -546,7 +550,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <!-- ===== 위반건축물 STEP2: 입력 ===== -->
 <div id="illegal-step2" class="hidden">
-    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
+    <button class="back-btn" onclick="showScreen('illegal-step1')">← 이전</button>
+    <div style="text-align:center;"><span class="step-label">STEP 2 / 2</span></div>
+    <h1 class="calculator-title">기본 정보 입력</h1>
     <div class="form-wrap">
         <input type="hidden" id="illegal-area" value="0">
         <input type="hidden" id="illegal-floor" value="0">
@@ -619,7 +625,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     </div>
 <!-- ===== 용도변경 STEP1 ===== -->
 <div id="usage-step1" class="hidden">
-    <h1 class="calculator-title">용도변경 견적 계산기</h1>
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <div style="text-align:center;"><span class="step-label">STEP 1 / 2</span></div>
+    <h1 class="calculator-title">기본 정보 입력</h1>
     <div class="form-wrap">
         <div class="form-section">
             <h3>건물 주소</h3>
@@ -647,7 +655,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <!-- ===== 용도변경 STEP2: 입력 ===== -->
 <div id="usage-step2" class="hidden">
-    <h1 class="calculator-title">용도변경 견적 계산기</h1>
+    <button class="back-btn" onclick="showScreen('usage-step1')">← 이전</button>
+    <div style="text-align:center;"><span class="step-label">STEP 2 / 2</span></div>
+    <h1 class="calculator-title">변경 용도 선택</h1>
     <div class="form-wrap">
         <div class="usage-helper">항목별로 신고/허가/기재변경이 자동 판별됩니다</div>
         <div id="usage-changes-container"></div>
@@ -689,6 +699,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     </div>
 <!-- ===== 리모델링 STEP1: 입력 ===== -->
 <div id="remodel-step2" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <div style="text-align:center;"><span class="step-label">기본 정보 입력</span></div>
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div class="form-wrap">
         <input type="hidden" id="repair-area" value="0">
