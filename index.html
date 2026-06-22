@@ -157,8 +157,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 }
 .address-row { display:flex; gap:8px; }
 .address-row input { flex:1; }
-.lookup-btn { padding:0 16px; background:white; color:#001780; border:1.5px solid #c7d2e8; border-radius:6px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; transition:all 0.15s; }
-.lookup-btn:hover { background:#eff6ff; border-color:#001780; }
+.lookup-btn { padding:0 16px; background:#001780; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; transition:all 0.15s; }
+.lookup-btn:hover { background:#000d4d; }
 
 .step-label { display:inline-block; padding:6px 14px; background:#eff6ff; color:#001780; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:0.3px; margin-bottom:14px; }
 .calculator-title { font-size:28px; font-weight:800; margin-bottom:24px; text-align:center; color:#001780; letter-spacing:-0.5px; }
@@ -323,6 +323,11 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .stat-num small { font-size:14px; color:#1a1a1a; font-weight:700; margin-left:2px; }
 .stat-label { color:#666; font-size:12px; font-weight:600; line-height:1.4; }
 .home-section { max-width:720px; margin:50px auto 0; padding:0 20px; }
+
+.home-daejang-section { max-width:720px; margin:0 auto 32px; }
+.home-daejang-section .home-section-title { margin-bottom:6px; }
+.home-section-sub { font-size:13.5px; color:#64748b; margin:0 0 16px 0; letter-spacing:-0.2px; }
+.home-daejang-form { background:#fafbfd; border:1px solid #e2e8f0; }
 .home-section-title { font-size:22px; font-weight:800; color:#1a1a1a; margin-bottom:18px; letter-spacing:-0.4px; }
 .about-card { background:#fafbfc; border:1px solid #ecedef; border-radius:14px; padding:24px; }
 .about-card h3 { font-size:18px; font-weight:800; color:#1a1a1a; margin:0 0 12px 0; letter-spacing:-0.3px; }
@@ -456,6 +461,23 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <span class="qb-title">위반건축물 양성화</span>
         </button>
     </div>
+    
+    <section class="home-daejang-section">
+        <h2 class="home-section-title">건축물대장 자동조회</h2>
+        <p class="home-section-sub">주소만 입력하면 건물 개요, 층별 면적·용도가 자동 표시됩니다</p>
+        <div class="form-section home-daejang-form">
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="home-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('home')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('home')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회하기</button>
+            <div id="home-building-info" class="building-info-panel"></div>
+        </div>
+    </section>
+
     <section class="home-section">
         <h2 class="home-section-title">상담 사례</h2>
         <div class="testimonial">
