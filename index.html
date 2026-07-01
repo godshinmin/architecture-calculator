@@ -69,6 +69,15 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     .value-item { display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px; }
     .value-icon { font-size:24px; margin-bottom:0; }
 }
+
+.calc-intro { background:#f0f7ff; border-left:4px solid #001780; border-radius:8px; padding:18px 20px; margin:0 0 20px 0; }
+.calc-intro h4 { font-size:15px; font-weight:800; color:#001780; margin:0 0 10px 0; letter-spacing:-0.3px; }
+.calc-intro p { font-size:13.5px; color:#334155; line-height:1.65; margin:0 0 10px 0; letter-spacing:-0.2px; }
+.calc-intro p:last-child { margin-bottom:0; }
+.calc-intro ul { margin:8px 0 0 0; padding-left:18px; }
+.calc-intro ul li { font-size:13.5px; color:#475569; line-height:1.8; letter-spacing:-0.2px; }
+.calc-intro ul li b { color:#001780; font-weight:800; }
+.calc-intro .note { font-size:12px; color:#64748b; margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1; }
 .back-btn { background:white; border:1px solid #d0d0d0; padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700; color:#1a1a1a; margin-bottom:20px; letter-spacing:-0.2px; transition:all 0.15s; }
 .back-btn:hover { background:#f5f5f5; border-color:#1a1a1a; }
 .next-btn { width:100%; margin-top:20px; padding:16px; background:#001780; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; font-weight:600; }
@@ -346,6 +355,24 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .testimonial .quote-tag { padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
 .testimonial .quote-tag.blue { background:#dbeafe; color:#1e40af; }
 .testimonial .quote-tag.gray { background:#f3f4f6; color:#4b5563; }
+
+.more-cases-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:280px; margin:14px auto 0; padding:12px 20px; background:white; border:1.5px solid #001780; border-radius:999px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#001780; transition:all 0.18s; }
+.more-cases-btn:hover { background:#001780; color:white; }
+.more-cases-btn .more-arrow { font-size:11px; transition:transform 0.18s; }
+.more-cases-btn.expanded .more-arrow { transform:rotate(180deg); }
+
+.estimate-actions { display:flex; gap:10px; margin:16px 0 24px; max-width:720px; margin-left:auto; margin-right:auto; }
+.estimate-action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:800; letter-spacing:-0.2px; transition:all 0.15s; border:none; }
+.estimate-action-btn.pdf { background:#001780; color:white; }
+.estimate-action-btn.pdf:hover { background:#000d4d; transform:translateY(-1px); }
+.estimate-action-btn.share { background:white; color:#001780; border:1.5px solid #001780; }
+.estimate-action-btn.share:hover { background:#eff6ff; }
+.estimate-action-btn .action-icon { font-size:16px; }
+@media (max-width:480px){
+    .estimate-actions { flex-direction:column; padding:0 4px; }
+    .estimate-action-btn { padding:14px; font-size:14px; }
+}
+.pdf-loading { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; color:white; font-size:16px; font-weight:700; }
 .consult-form-section { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:14px; padding:28px 24px; margin-top:30px; }
 .consult-form-section h3 { font-size:20px; font-weight:800; color:#001780; margin-bottom:6px; text-align:center; letter-spacing:-0.3px; }
 .consult-form-section .consult-sub { color:#666; font-size:13px; text-align:center; margin-bottom:20px; }
@@ -357,6 +384,15 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .home-consult-form h3 { color:#1a1a1a; }
 .home-consult-form .consult-submit-btn { background:#1a1a1a; }
 .home-consult-form .consult-submit-btn:hover { background:#000; }
+.home-kakao-cta { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:14px; padding:32px 24px; margin:30px auto; max-width:720px; text-align:center; }
+.home-kakao-cta h3 { font-size:22px; font-weight:800; color:#1a1a1a; margin:0 0 8px 0; letter-spacing:-0.4px; }
+.home-kakao-cta .kakao-cta-sub { color:#666; font-size:14px; margin:0 0 22px 0; }
+.kakao-channel-btn-lg { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:18px 40px; background:#FEE500; border:none; border-radius:10px; cursor:pointer; font-family:inherit; font-size:17px; font-weight:800; color:#3C1E1E; letter-spacing:-0.3px; transition:all 0.15s; box-shadow:0 3px 10px rgba(254,229,0,0.45); }
+.kakao-channel-btn-lg:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(254,229,0,0.6); }
+.kakao-channel-btn-lg .kakao-icon { font-size:22px; }
+@media (max-width:480px){
+    .kakao-channel-btn-lg { padding:16px 28px; font-size:15px; width:100%; }
+}
 
 .consult-btn-row { display:flex; gap:10px; margin-top:8px; }
 .consult-btn-row .consult-submit-btn { flex:1; margin-top:0; }
@@ -386,6 +422,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .footer-company a { color:#999; text-decoration:none; }
 .footer-copyright { margin-top:14px; font-size:11px; color:#bbb; }
 </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <header class="site-header">
@@ -504,45 +542,75 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <span class="quote-tag gray">경기 성남시</span>
             </div>
         </div>
+
+        <div id="more-cases" style="display:none;">
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">3층 사무실을 <mark>학원으로 용도변경</mark>하면서 피난·소방 기준을 한 번에 검토받아 <mark>인허가 기간을 절반으로 단축</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">용도변경 (허가)</span>
+                    <span class="quote-tag gray">서울 강남구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">1층 일반음식점을 <mark>키즈카페로 변경</mark>할 때 다중이용시설 안전기준을 사전 검토해 <mark>설비 비용을 30% 절감</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">용도변경 (신고)</span>
+                    <span class="quote-tag gray">경기 용인시</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">노후 상가 <mark>대수선 + 엘리베이터 설치</mark>를 동시 진행해 공사·인허가를 한 번에 정리. <mark>임대 공실 기간을 최소화</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">대수선 + EV</span>
+                    <span class="quote-tag gray">서울 마포구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">건축물대장과 실제 면적이 다른 노후 주택의 <mark>현황을 정비</mark>해 매매 진행. <mark>법적 리스크를 정리</mark>한 뒤 거래가 성사됐습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">기재변경</span>
+                    <span class="quote-tag gray">인천 부평구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">옥탑 컨테이너와 1층 출입구 확장 부분을 <mark>한 번에 양성화</mark>. 임차인 문제도 함께 해소해 <mark>건물 가치가 상승</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">위반건축물 양성화</span>
+                    <span class="quote-tag gray">경기 안양시</span>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="more-cases-btn" id="more-cases-btn" onclick="toggleMoreCases()">사례 더보기 <span class="more-arrow">▼</span></button>
     </section>
 
-    <div class="consult-form-section home-consult-form">
+    <div class="home-kakao-cta">
         <h3>건축사 무료 상담</h3>
-        
-        <div class="form-field">
-            <label>이름</label>
-            <input type="text" class="consult-name" placeholder="홍길동">
-        </div>
-        <div class="form-field">
-            <label>연락처</label>
-            <input type="tel" class="consult-phone" placeholder="010-0000-0000">
-        </div>
-        <div class="form-field">
-            <label>알게된 경로</label>
-            <select class="consult-source">
-                <option value="">선택해주세요</option>
-                <option>검색 (네이버·구글)</option>
-                <option>지인 소개</option>
-                <option>인스타그램</option>
-                <option>유튜브</option>
-                <option>블로그</option>
-                <option>홈페이지</option>
-                <option>기타</option>
-            </select>
-        </div>
-        <div class="consult-btn-row">
-            <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">상담 신청</button>
-            <button type="button" class="kakao-channel-btn" onclick="openKakaoChannel()">
-                <span class="kakao-icon">💬</span>
-                <span class="kakao-label">카카오톡 채널 상담</span>
-            </button>
-        </div>
+        <p class="kakao-cta-sub">카카오톡 채널로 바로 상담받으세요</p>
+        <button type="button" class="kakao-channel-btn-lg" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>
+            <span class="kakao-label">카카오톡 채널 상담</span>
+        </button>
         </div>
     </div>
 <!-- ===== 위반건축물 STEP1 ===== -->
 <div id="illegal-step1" class="hidden">
     <button class="back-btn" onclick="goMain()">← 홈으로</button>
     <h1 class="calculator-title">STEP 1. 위반 유형 선택</h1>
+    <div class="calc-intro">
+        <h4>위반건축물 양성화란?</h4>
+        <p>허가·신고 없이 건축·증축·용도변경한 부분을 사후에 합법화하는 절차입니다.</p>
+        <ul>
+            <li><b>무허가 건축</b> — 허가·신고 없이 신축한 건물</li>
+            <li><b>불법 증축</b> — 허가 없이 면적이나 층을 늘린 부분 (옥상 가건물·테라스 확장 등)</li>
+            <li><b>용도위반</b> — 허가받은 용도와 다르게 사용 (예: 창고를 사무실로)</li>
+        </ul>
+        <p class="note">양성화 신청 시 구조 안전성·소방·주차 등 현행 법규 충족 여부를 검토합니다.</p>
+    </div>
     <div class="violation-grid">
         <div class="violation-card" onclick="pickViolation('무허가')">
             <div class="card-content">
@@ -590,6 +658,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <div id="illegal-step2" class="hidden">
     <button class="back-btn" onclick="showScreen('illegal-step1')">← 이전</button>
     <h1 class="calculator-title">STEP 2. 기본 정보 입력</h1>
+    <div class="calc-intro">
+        <h4>안내</h4>
+        <p>건축물대장 자동조회로 건물 정보가 빠르게 입력됩니다. 위반 부분의 면적·위치를 정확히 기입해 주세요.</p>
+    </div>
     <div class="form-wrap">
         <input type="hidden" id="illegal-area" value="0">
         <input type="hidden" id="illegal-floor" value="0">
@@ -633,6 +705,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <button class="back-btn" onclick="showScreen('illegal-step2')">← 입력 수정</button>
     <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div class="estimate-wrap"><div id="illegal-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('illegal-result', '위반건축물_양성화')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('illegal-result', '위반건축물_양성화')"><span class="action-icon">📤</span>견적서 공유</button>
+    </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
         <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
@@ -664,6 +740,11 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <div id="usage-step1" class="hidden">
     <button class="back-btn" onclick="goMain()">← 홈으로</button>
     <h1 class="calculator-title">STEP 1. 기본 정보 입력</h1>
+    <div class="calc-intro">
+        <h4>용도변경이란?</h4>
+        <p>기존 건축물의 용도를 다른 용도로 바꾸는 절차입니다.</p>
+        <p>건축법상 기존 용도와 변경 용도에 따라 행정 절차가 달라집니다.</p>
+    </div>
     <div class="form-wrap">
         <div class="form-section">
             <h3>건물 주소</h3>
@@ -705,6 +786,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <button class="back-btn" onclick="showScreen('usage-step2')">← 입력 수정</button>
     <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="estimate-wrap"><div id="usage-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('usage-result', '용도변경')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('usage-result', '용도변경')"><span class="action-icon">📤</span>견적서 공유</button>
+    </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
         <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
@@ -736,6 +821,19 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 <div id="remodel-step2" class="hidden">
     <button class="back-btn" onclick="goMain()">← 홈으로</button>
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
+    <div class="calc-intro" id="remodel-intro">
+        <h4 id="remodel-intro-title">대수선이란?</h4>
+        <div id="remodel-intro-body">
+            <p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>
+            <ul>
+                <li><b>주요 구조부 변경</b> — 내력벽·기둥·보·지붕 변경 또는 보강</li>
+                <li><b>외벽·계단 변경</b> — 외벽 마감재·구조 변경, 계단 신설</li>
+                <li><b>엘리베이터 신설</b> — 기존 건물에 EV 추가 (구조 보강 동반)</li>
+                <li><b>방화구획 변경</b> — 피난·소방 관련 구조 변경</li>
+            </ul>
+            <p class="note">구조 변경이 동반되면 구조 안전진단·구조검토가 별도로 발생합니다.</p>
+        </div>
+    </div>
     <div class="form-wrap">
         <input type="hidden" id="repair-area" value="0">
         <input type="hidden" id="repair-parking" value="0">
@@ -768,6 +866,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <button class="back-btn" onclick="showScreen('remodel-step2')">← 입력 수정</button>
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div class="estimate-wrap"><div id="repair-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">📤</span>견적서 공유</button>
+    </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
         <p class="consult-sub">담당 건축사가 직접 검토 후 회신드립니다</p>
@@ -798,7 +900,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 </div>
 
 <footer class="site-footer">
-    <h4 class="footer-brand" onclick="document.querySelector('.consult-form-section')?.scrollIntoView({behavior:'smooth'}) || alert('견적 확인 후 상담 신청이 가능합니다.')" style="cursor:pointer;">건축사사무소 무료상담</h4>
+    <h4 class="footer-brand" onclick="document.querySelector('.home-kakao-cta')?.scrollIntoView({behavior:'smooth'}) || alert('견적 확인 후 상담 신청이 가능합니다.')" style="cursor:pointer;">건축사사무소 무료상담</h4>
 
     <hr class="footer-divider">
 
@@ -833,19 +935,53 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 <script>
 const PRICING = {
-    설계비:{소형:15000,중형:12000,대형:10000},
-    설계비_대수선증축:60000,   // 대수선/증축 m² 단가
-    현황측량비:{소형:800000,중형:1200000,대형:1500000},
-    구조안전진단비:{기본:2000000,정밀:3500000},
-    인허가대행비:1000000,        // 기재변경·신고
-    인허가대행비_허가:3000000,   // 허가·양성화
-    인허가대행비_대수선증축:3000000,
-    측량도서작성비:800000,
-    // 면적 비례 도면 비용 (원/m²)
-    도면단가_pdf:1000,           // PDF 보유 → 디지털 변환
-    도면단가_현황측량:1000,      // 도면 없음 → 현황측량
-    도면단가_도면작성:1000       // 도면 없음 → 도면작성
+    // ==== 케이스별 설계비 m² 단가 (엑셀 기준) ====
+    설계비_대수선: 33000,          // 대수선 33,000원/m²
+    설계비_증축: 76000,             // 증축 76,000원/m² (평당 25만)
+    설계비_용도변경_허가: 3000,     // 용도변경 허가 3,000원/m²
+    설계비_용도변경_신고: 2000,     // 용도변경 신고 2,000원/m²
+    설계비_용도변경_기재변경: 0,    // 기재변경 설계비 없음
+    설계비_양성화: 15000,           // 위반건축물 양성화 15,000원/m²
+    
+    // ==== 인허가 대행비 - 고정 케이스 ====
+    인허가대행비_기재변경: 1500000,    // 기재변경 150만원 (고정)
+    인허가대행비_대수선: 3000000,      // 대수선 300만원
+    인허가대행비_증축: 3000000,        // 증축 300만원
+    인허가대행비_양성화: 3000000,      // 양성화 300만원
+    
+    // ==== 도면 비용 (원/m²) ====
+    도면단가_pdf: 1000,               // PDF·종이 → 1,000원/m²
+    도면단가_도면작성: 1000,          // 도면 없음 → 도면작성 1,000원/m²
+    
+    // ==== 별도 안내 (예상 견적) ====
+    구조안전진단비: 5000000,          // 500만원 (안내만)
+    LX측량비: 1000000                 // 100만원 (양성화 시 안내)
 };
+
+// 용도변경 인허가 대행비 - 면적별 차등
+function 용도변경_허가_대행비(area){
+    if(area <= 500) return 2500000;
+    if(area <= 1000) return 3000000;
+    if(area <= 2000) return 3500000;
+    if(area <= 5000) return 4000000;
+    return 6000000;
+}
+function 용도변경_신고_대행비(area){
+    if(area <= 500) return 1500000;
+    if(area <= 1000) return 2000000;
+    if(area <= 2000) return 2500000;
+    if(area <= 5000) return 3000000;
+    return 4000000;
+}
+
+// 도면 없음 - 현황실측비 (면적별 차등)
+function 현황실측비(area){
+    if(area <= 100) return 500000;
+    if(area <= 300) return 800000;
+    if(area <= 1000) return 1000000;
+    if(area <= 2000) return 1300000;
+    return 1500000;
+}
 const REGION_FACTOR = {'서울':1.0,'경기':1.0,'인천':1.0,'기타':1.0};
 const STATE = { illegalViolation:'', remodelType:'' };
 
@@ -886,14 +1022,14 @@ function formatCurrency(n){ return Math.round(n).toLocaleString('ko-KR')+'원'; 
 function calculateDesignFee(a){ const p=a/3.3; if(p<50)return a*PRICING.설계비.소형; if(p<100)return a*PRICING.설계비.중형; return a*PRICING.설계비.대형; }
 function getSurveyFee(a){ const p=a/3.3; if(p<50)return PRICING.현황측량비.소형; if(p<100)return PRICING.현황측량비.중형; return PRICING.현황측량비.대형; }
 function surveyDocFee(drawingId, area){
-    // 면적 비례 도면 비용 - 여러 항목 반환 가능
+    // 면적 비례 도면 비용 - 엑셀 기준
     const d = document.getElementById(drawingId).value;
     const a = area || 0;
     if(d === 'cad') return {items:[]};
     if(d === 'pdf') return {items:[{name:'도면 디지털 변환비 (PDF·종이 도면)', amount:a*PRICING.도면단가_pdf}]};
     if(d === 'none') return {items:[
-        {name:'현황측량비 (도면 미보유)', amount:a*PRICING.도면단가_현황측량},
-        {name:'도면작성비 (도면 미보유)', amount:a*PRICING.도면단가_도면작성}
+        {name:'현황 실측비 (도면 미보유)', amount:현황실측비(a)},
+        {name:'도면 작성비 (도면 미보유)', amount:a*PRICING.도면단가_도면작성}
     ]};
     return {items:[]};
 }
@@ -1159,6 +1295,138 @@ function toggleSideMenu(){
 
 // TODO: 카카오톡 채널 URL 등록 시 아래 변수에 채워주세요 (예: 'http://pf.kakao.com/_xxxxx/chat')
 const KAKAO_CHANNEL_URL = '';
+function toggleMoreCases(){
+    const div = document.getElementById('more-cases');
+    const btn = document.getElementById('more-cases-btn');
+    if(div.style.display === 'none'){
+        div.style.display = 'block';
+        btn.classList.add('expanded');
+        btn.innerHTML = '접기 <span class="more-arrow">▼</span>';
+    } else {
+        div.style.display = 'none';
+        btn.classList.remove('expanded');
+        btn.innerHTML = '사례 더보기 <span class="more-arrow">▼</span>';
+    }
+}
+
+// ==== 견적서 PDF 다운로드 + 공유 ====
+async function captureEstimate(resultId){
+    const el = document.getElementById(resultId);
+    if(!el) throw new Error('견적 결과를 찾을 수 없습니다.');
+    // 오버레이 표시
+    const loading = document.createElement('div');
+    loading.className = 'pdf-loading';
+    loading.textContent = '견적서 준비 중...';
+    document.body.appendChild(loading);
+    try {
+        const canvas = await html2canvas(el, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        });
+        return canvas;
+    } finally {
+        loading.remove();
+    }
+}
+
+function getEstimateFileName(caseType){
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+    const safe = (caseType||'견적').replace(/[\/:*?"<>|\s]/g,'_');
+    return '디바이엠_'+safe+'_'+y+m+d;
+}
+
+async function downloadPDF(resultId, caseType){
+    try {
+        const canvas = await captureEstimate(resultId);
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p','mm','a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // 헤더
+        pdf.setFillColor(0, 23, 128);
+        pdf.rect(0, 0, pageWidth, 20, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(14);
+        pdf.text('DBYM Architects - Estimate', 10, 13);
+        pdf.setFontSize(9);
+        const dateStr = new Date().toLocaleDateString('ko-KR');
+        pdf.text(dateStr, pageWidth - 10, 13, {align:'right'});
+        
+        // 본문 이미지 (여러 페이지 처리)
+        let heightLeft = imgHeight;
+        let position = 25;
+        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - position);
+        while(heightLeft > 0){
+            position = -(imgHeight - heightLeft);
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        // 푸터
+        const pageCount = pdf.internal.getNumberOfPages();
+        for(let i=1; i<=pageCount; i++){
+            pdf.setPage(i);
+            pdf.setTextColor(120, 120, 120);
+            pdf.setFontSize(8);
+            pdf.text('dbym@dbym.kr | 070-4647-3376 | Seoul, Songpa', 10, pageHeight - 8);
+            pdf.text(i+' / '+pageCount, pageWidth - 10, pageHeight - 8, {align:'right'});
+        }
+        
+        pdf.save(getEstimateFileName(caseType)+'.pdf');
+    } catch(err){
+        console.error(err);
+        alert('PDF 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    }
+}
+
+async function shareEstimate(resultId, caseType){
+    try {
+        const canvas = await captureEstimate(resultId);
+        const fileName = getEstimateFileName(caseType);
+        // Blob → File 생성
+        canvas.toBlob(async function(blob){
+            const file = new File([blob], fileName+'.png', {type:'image/png'});
+            // Web Share API - 모바일에서 카톡·문자·이메일 공유 가능
+            if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+                try {
+                    await navigator.share({
+                        title: '디바이엠 건축 견적서',
+                        text: '건축 인허가 견적서입니다.',
+                        files: [file]
+                    });
+                } catch(e){
+                    if(e.name !== 'AbortError') fallbackDownload(canvas, fileName);
+                }
+            } else {
+                // 데스크탑·미지원 브라우저 → 이미지 다운로드
+                fallbackDownload(canvas, fileName);
+            }
+        }, 'image/png');
+    } catch(err){
+        console.error(err);
+        alert('견적서 공유 중 오류가 발생했습니다.');
+    }
+}
+
+function fallbackDownload(canvas, fileName){
+    const link = document.createElement('a');
+    link.download = fileName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    alert('견적서가 이미지로 저장되었습니다. 갤러리·앨범에서 확인 후 공유하세요.');
+}
+
 function openKakaoChannel(){
     if(KAKAO_CHANNEL_URL){
         window.open(KAKAO_CHANNEL_URL, '_blank');
@@ -1220,6 +1488,32 @@ function selectRemodel(t){
     document.querySelectorAll('.remodel-title').forEach(function(el){
         el.textContent = titleText;
     });
+    // 인트로 박스 모드별 갱신
+    const introTitle = document.getElementById('remodel-intro-title');
+    const introBody = document.getElementById('remodel-intro-body');
+    if(introTitle && introBody){
+        if(t.indexOf('대수선') < 0){
+            introTitle.textContent = '증축이란?';
+            introBody.innerHTML = '<p>기존 건축물의 면적을 늘리거나 층을 추가하는 공사입니다. 건축허가 대상이며 구조 안전 검토가 필수입니다.</p>'
+                + '<ul>'
+                + '<li><b>수평 증축</b> — 같은 층에서 면적 확장</li>'
+                + '<li><b>수직 증축</b> — 위로 층을 추가</li>'
+                + '<li><b>별동 증축</b> — 같은 대지에 별개 건물 신축</li>'
+                + '<li><b>옥상 증축</b> — 옥상 공간 활용</li>'
+                + '</ul>'
+                + '<p class="note">건폐율·용적률·일조권·주차장 기준을 검토하며 구조 안전진단이 필요합니다.</p>';
+        } else {
+            introTitle.textContent = '대수선이란?';
+            introBody.innerHTML = '<p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>'
+                + '<ul>'
+                + '<li><b>주요 구조부 변경</b> — 내력벽·기둥·보·지붕 변경 또는 보강</li>'
+                + '<li><b>외벽·계단 변경</b> — 외벽 마감재·구조 변경, 계단 신설</li>'
+                + '<li><b>엘리베이터 신설</b> — 기존 건물에 EV 추가 (구조 보강 동반)</li>'
+                + '<li><b>방화구획 변경</b> — 피난·소방 관련 구조 변경</li>'
+                + '</ul>'
+                + '<p class="note">구조 변경이 동반되면 구조 안전진단·구조검토가 별도로 발생합니다.</p>';
+        }
+    }
     showScreen('remodel-step2');
 }
 
@@ -1367,7 +1661,7 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     if(extraHtml) html+=extraHtml;
     html+='<div class="warning-box">⚠️ 본 견적은 개략적인 예상 금액이며, 실제 비용은 현장 여건에 따라 달라질 수 있습니다.</div>';
     html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
-    html+='<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 350만원</b> (정밀진단 기준, 별도 산정)</div>';
+    html+='<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 500만원</b> (필요시, 구조사무실 별도 견적)</div>';
     html+='<button class="print-btn" onclick="window.print()">🖨️ 견적서 출력</button></div>';
     document.getElementById(resultId).innerHTML=html;
 }
@@ -1377,8 +1671,8 @@ function calculateIllegal(){
     const rf = 1.0;
     
     const items=[
-        {name:'건축사 설계비',amount:calculateDesignFee(area)},
-        {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_허가}
+        {name:'건축사 설계비 (현황 반영 설계 + 측량도서 정비 포함)',amount:area*PRICING.설계비_양성화},
+        {name:'인허가 대행비 (양성화 허가 + 도서 + 보완·재신청)',amount:PRICING.인허가대행비_양성화}
     ];
     const sdf=surveyDocFee('illegal-drawing', area);
     sdf.items.forEach(it=>items.push(it));
@@ -1396,6 +1690,8 @@ function calculateIllegal(){
         '건축물대장 등재 (양성화 신청 행정절차)'
     ];
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 양성화 진행</span></div>';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 500만원</b> (필요시, 구조사무실 별도 견적)</div>';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 지적측량비 별도 발생</strong><br>한국국토정보공사(LX) 별도 견적으로 진행됩니다.<br>예상 비용: <b>약 100만원</b> (양성화 시 해당, LX 별도 견적)</div>';
     extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (건축물 종류·면적별)<br>· 이행강제금 (양성화 절차 진행 시 납부 의무)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     const meta = {
         badge: '위반건축물 양성화',
@@ -1425,15 +1721,47 @@ function calculateUsage(){
     });
 
     const usageHeoga = (worst.cls === 'heoga');
-    const items = [
-        {name:'건축사 설계비', amount:calculateDesignFee(totalChangeArea)},
-        {name:'인허가 대행비 (인허가 검토 포함)', amount: usageHeoga ? PRICING.인허가대행비_허가 : PRICING.인허가대행비}
-    ];
-    if(worst.cls === 'heoga'){
-        // 구조안전진단·구조검토는 별도 안내 (extra)
+    const usageSingo = (worst.cls === 'singo');
+    const usageJaejae = (worst.cls === 'daejang' || worst.cls === 'nochange');
+    
+    // 케이스별 설계비 단가 (엑셀 기준)
+    let designUnit = 0;
+    let designLabel = '건축사 설계비';
+    if(usageHeoga){
+        designUnit = PRICING.설계비_용도변경_허가;
+        designLabel = '건축사 설계비 (용도변경 설계 + 변경 도면)';
+    } else if(usageSingo){
+        designUnit = PRICING.설계비_용도변경_신고;
+        designLabel = '건축사 설계비 (용도변경 설계 + 변경 도면)';
+    } else {
+        designUnit = PRICING.설계비_용도변경_기재변경; // 0원
     }
-    const sdf = surveyDocFee('usage-drawing', totalChangeArea);
-    sdf.items.forEach(it=>items.push(it));
+    
+    // 케이스별 인허가 대행비 (면적별 차등)
+    let permitFee = 0;
+    let permitLabel = '';
+    if(usageHeoga){
+        permitFee = 용도변경_허가_대행비(totalChangeArea);
+        permitLabel = '인허가 대행비 (허가 · 도서 · 보완 포함)';
+    } else if(usageSingo){
+        permitFee = 용도변경_신고_대행비(totalChangeArea);
+        permitLabel = '인허가 대행비 (신고 · 도서 · 보완 포함)';
+    } else {
+        permitFee = PRICING.인허가대행비_기재변경;
+        permitLabel = '인허가 대행비 (기재변경 · 서류 접수 · 보완 포함)';
+    }
+    
+    const items = [];
+    if(designUnit > 0){
+        items.push({name: designLabel, amount: totalChangeArea * designUnit});
+    }
+    items.push({name: permitLabel, amount: permitFee});
+    
+    // 기재변경은 도면 불필요
+    if(!usageJaejae){
+        const sdf = surveyDocFee('usage-drawing', totalChangeArea);
+        sdf.items.forEach(it=>items.push(it));
+    }
     const sub = items.reduce(function(s,i){return s+i.amount;},0);
 
     let changeListHtml = '<div class="check-result"><strong>변경 항목 리스트 (총 '+changes.length+'건 · '+totalChangeArea+'㎡)</strong>';
@@ -1494,7 +1822,7 @@ function calculateUsage(){
         extra += '<div class="check-result"><strong>견적에 포함된 '+reviewTitle+' 세부사항</strong>'+reviewList.map(function(r){return '· '+r;}).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 진행</span></div>';
     }
     if(worst.cls === 'singo' || worst.cls === 'daejang'){
-        extra += '<div class="info-box"><strong>※ 구조변경 동반 시 별도 산정</strong><br>본 견적엔 구조변경 비용이 포함되지 않습니다. 내력벽·기둥 변경 등 구조변경이 수반되면 구조안전진단 및 구조검토비가 추가됩니다 (기본 약 200만원 / 정밀 약 350만원, 예상금액).</div>';
+        extra += '<div class="info-box"><strong>※ 구조변경 동반 시 별도 산정</strong><br>본 견적엔 구조변경 비용이 포함되지 않습니다. 내력벽·기둥 변경 등 구조변경이 수반되면 구조안전진단 및 구조검토비가 추가됩니다 (약 500만원, 구조사무실 별도 견적).</div>';
     }
     extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (변경 면적·용도별)<br>· 면허세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     const adminMap = {'heoga':'허가','singo':'신고','daejang':'기재변경','nochange':'기재변경'};
@@ -1516,9 +1844,8 @@ function calculateRemodel(){
     let items=[], reviewList=[];
     if(STATE.remodelType==='증축'){
         items=[
-            {name:'건축사 설계비',amount:area*PRICING.설계비_대수선증축},
-            {name:'현황측량비',amount:getSurveyFee(area)},
-            {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_대수선증축}
+            {name:'건축사 설계비 (건축+구조+기계+전기+통신+소방+인테리어 공용부)',amount:area*PRICING.설계비_증축},
+            {name:'인허가 대행비 (건축허가 + 도서 + 보완·재신청 + 사용승인)',amount:PRICING.인허가대행비_증축}
         ];
         reviewList=[
             '건폐율·용적률 여유분 확인',
@@ -1534,8 +1861,8 @@ function calculateRemodel(){
         ];
     } else {
         items=[
-            {name:'건축사 설계비',amount:area*PRICING.설계비_대수선증축},
-            {name:'인허가 대행비 (인허가 검토 포함)',amount:PRICING.인허가대행비_대수선증축}
+            {name:'건축사 설계비 (구조검토 + 기획설계 + 인허가 도서)',amount:area*PRICING.설계비_대수선},
+            {name:'인허가 대행비 (대수선 허가·신고 + 도서 + 보완)',amount:PRICING.인허가대행비_대수선}
         ];
         reviewList=[
             '구조 안전성 (보·기둥·내력벽 변경 시 보강)',
@@ -1552,8 +1879,8 @@ function calculateRemodel(){
     const sub=items.reduce((s,i)=>s+i.amount,0);
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 인허가 진행</span></div>';
     extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (대수선·증축 종류별)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
-    const structAmount = (STATE.remodelType==='증축') ? '약 350만원' : '약 200만원';
-    const structTitle = (STATE.remodelType==='증축') ? '정밀진단 기준' : '기본진단 기준';
+    const structAmount = '약 500만원';
+    const structTitle = '구조사무실 별도 견적';
     extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>'+structAmount+'</b> ('+structTitle+', 별도 산정)</div>';
     const isExtension = STATE.remodelType === '증축';
     const meta = {
