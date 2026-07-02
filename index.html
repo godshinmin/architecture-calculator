@@ -406,6 +406,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 .consult-submit-btn { width:100%; padding:15px; background:#001780; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; margin-top:8px; transition:background 0.15s; }
 .consult-submit-btn:hover { background:#000d4d; }
+.kakao-channel-btn-estimate { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; background:#FEE500; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14.5px; font-weight:800; color:#3C1E1E; letter-spacing:-0.3px; margin-top:10px; transition:all 0.15s; box-shadow:0 2px 8px rgba(254,229,0,0.4); }
+.kakao-channel-btn-estimate:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(254,229,0,0.55); }
+.kakao-channel-btn-estimate .kakao-icon { font-size:16px; }
+
 .site-footer { max-width:720px; margin:60px auto 24px; padding:36px 22px 24px; border-top:1px solid #e8e8e6; background:#fafbfc; border-radius:14px; }
 .footer-brand { font-size:24px; font-weight:800; color:#1a1a1a; margin:0 0 14px 0; letter-spacing:-0.5px; }
 .footer-slogan { color:#888; font-size:14px; line-height:1.65; margin:0 0 6px 0; }
@@ -706,7 +710,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div class="estimate-wrap"><div id="illegal-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('illegal-result', '위반건축물_양성화')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('illegal-result', '위반건축물_양성화')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
         <button type="button" class="estimate-action-btn share" onclick="shareEstimate('illegal-result', '위반건축물_양성화')"><span class="action-icon">📤</span>견적서 공유</button>
     </div>
     <div class="consult-form-section">
@@ -734,6 +738,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             </select>
         </div>
         <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
         </div>
     </div>
 <!-- ===== 용도변경 STEP1 ===== -->
@@ -742,8 +749,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">STEP 1. 기본 정보 입력</h1>
     <div class="calc-intro">
         <h4>용도변경이란?</h4>
-        <p>기존 건축물의 용도를 다른 용도로 바꾸는 절차입니다.</p>
-        <p>건축법상 기존 용도와 변경 용도에 따라 행정 절차가 달라집니다.</p>
+        <p>기존 건축물의 용도를 다른 용도로 바꾸는 절차입니다. 건축법상 기존 용도와 변경 용도에 따라 행정 절차가 달라집니다.</p>
     </div>
     <div class="form-wrap">
         <div class="form-section">
@@ -787,7 +793,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="estimate-wrap"><div id="usage-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('usage-result', '용도변경')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('usage-result', '용도변경')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
         <button type="button" class="estimate-action-btn share" onclick="shareEstimate('usage-result', '용도변경')"><span class="action-icon">📤</span>견적서 공유</button>
     </div>
     <div class="consult-form-section">
@@ -815,6 +821,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             </select>
         </div>
         <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
         </div>
     </div>
 <!-- ===== 리모델링 STEP1: 입력 ===== -->
@@ -825,13 +834,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <h4 id="remodel-intro-title">대수선이란?</h4>
         <div id="remodel-intro-body">
             <p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>
-            <ul>
-                <li><b>주요 구조부 변경</b> — 내력벽·기둥·보·지붕 변경 또는 보강</li>
-                <li><b>외벽·계단 변경</b> — 외벽 마감재·구조 변경, 계단 신설</li>
-                <li><b>엘리베이터 신설</b> — 기존 건물에 EV 추가 (구조 보강 동반)</li>
-                <li><b>방화구획 변경</b> — 피난·소방 관련 구조 변경</li>
-            </ul>
-            <p class="note">구조 변경이 동반되면 구조 안전진단·구조검토가 별도로 발생합니다.</p>
         </div>
     </div>
     <div class="form-wrap">
@@ -867,7 +869,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div class="estimate-wrap"><div id="repair-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadPDF('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">📄</span>PDF 다운로드</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
         <button type="button" class="estimate-action-btn share" onclick="shareEstimate('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">📤</span>견적서 공유</button>
     </div>
     <div class="consult-form-section">
@@ -895,6 +897,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             </select>
         </div>
         <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
         </div>
     </div>
 </div>
@@ -1294,7 +1299,7 @@ function toggleSideMenu(){
 }
 
 // TODO: 카카오톡 채널 URL 등록 시 아래 변수에 채워주세요 (예: 'http://pf.kakao.com/_xxxxx/chat')
-const KAKAO_CHANNEL_URL = '';
+const KAKAO_CHANNEL_URL = 'http://pf.kakao.com/_ZEPPX/chat';
 function toggleMoreCases(){
     const div = document.getElementById('more-cases');
     const btn = document.getElementById('more-cases-btn');
@@ -1313,16 +1318,18 @@ function toggleMoreCases(){
 async function captureEstimate(resultId){
     const el = document.getElementById(resultId);
     if(!el) throw new Error('견적 결과를 찾을 수 없습니다.');
-    // 오버레이 표시
     const loading = document.createElement('div');
     loading.className = 'pdf-loading';
     loading.textContent = '견적서 준비 중...';
     document.body.appendChild(loading);
     try {
+        window.scrollTo(0, 0);
+        await new Promise(function(r){ setTimeout(r, 100); });
         const canvas = await html2canvas(el, {
             scale: 2,
             backgroundColor: '#ffffff',
             useCORS: true,
+            allowTaint: true,
             logging: false
         });
         return canvas;
@@ -1331,64 +1338,43 @@ async function captureEstimate(resultId){
     }
 }
 
-function getEstimateFileName(caseType){
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    const d = String(now.getDate()).padStart(2,'0');
-    const safe = (caseType||'견적').replace(/[\/:*?"<>|\s]/g,'_');
-    return '디바이엠_'+safe+'_'+y+m+d;
+function downloadImage(resultId, caseType){
+    captureEstimate(resultId).then(function(canvas){
+        const fileName = getEstimateFileName(caseType) + '.png';
+        const ua = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(ua);
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        if(isIOS){
+            // iOS Safari: 새 탭에서 이미지 열기 → 사용자가 길게 눌러 저장
+            const win = window.open();
+            if(win){
+                win.document.write('<html><head><title>'+fileName+'</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#000;"><img src="'+dataUrl+'" style="width:100%;display:block;"><div style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.85);color:white;padding:14px;text-align:center;font-family:sans-serif;font-size:14px;font-weight:700;">이미지를 길게 눌러 &quot;사진에 저장&quot; 선택</div></body></html>');
+                win.document.close();
+            } else {
+                alert('팝업이 차단되었습니다.\n브라우저 설정에서 팝업 허용 후 다시 시도해주세요.');
+            }
+            return;
+        }
+        
+        // Android / PC: 다운로드
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        if(/Android/.test(ua)){
+            setTimeout(function(){
+                alert('이미지가 다운로드 폴더에 저장되었습니다.\n갤러리에서 확인하세요.');
+            }, 300);
+        }
+    }).catch(function(err){
+        console.error(err);
+        alert('이미지 저장 중 오류가 발생했습니다.\n다시 시도해주세요.');
+    });
 }
 
-async function downloadPDF(resultId, caseType){
-    try {
-        const canvas = await captureEstimate(resultId);
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p','mm','a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 20;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // 헤더
-        pdf.setFillColor(0, 23, 128);
-        pdf.rect(0, 0, pageWidth, 20, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(14);
-        pdf.text('DBYM Architects - Estimate', 10, 13);
-        pdf.setFontSize(9);
-        const dateStr = new Date().toLocaleDateString('ko-KR');
-        pdf.text(dateStr, pageWidth - 10, 13, {align:'right'});
-        
-        // 본문 이미지 (여러 페이지 처리)
-        let heightLeft = imgHeight;
-        let position = 25;
-        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pageHeight - position);
-        while(heightLeft > 0){
-            position = -(imgHeight - heightLeft);
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-        }
-        
-        // 푸터
-        const pageCount = pdf.internal.getNumberOfPages();
-        for(let i=1; i<=pageCount; i++){
-            pdf.setPage(i);
-            pdf.setTextColor(120, 120, 120);
-            pdf.setFontSize(8);
-            pdf.text('dbym@dbym.kr | 070-4647-3376 | Seoul, Songpa', 10, pageHeight - 8);
-            pdf.text(i+' / '+pageCount, pageWidth - 10, pageHeight - 8, {align:'right'});
-        }
-        
-        pdf.save(getEstimateFileName(caseType)+'.pdf');
-    } catch(err){
-        console.error(err);
-        alert('PDF 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    }
-}
 
 async function shareEstimate(resultId, caseType){
     try {
@@ -1435,18 +1421,125 @@ function openKakaoChannel(){
     }
 }
 
-function submitConsult(btn){
+// Web3Forms 이메일 발송용 Access Key (사용자가 발급 후 채워야 함)
+// 발급: https://web3forms.com/#start
+const WEB3FORMS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY';
+const RECIPIENT_EMAIL = 'goodshinmin@naver.com';
+
+async function submitConsult(btn){
     const section = btn.closest('.consult-form-section');
     const name = section.querySelector('.consult-name').value.trim();
     const phone = section.querySelector('.consult-phone').value.trim();
     const source = section.querySelector('.consult-source').value;
     if(!name){ alert('이름을 입력해주세요.'); return; }
     if(!phone){ alert('연락처를 입력해주세요.'); return; }
-    const msg = '상담 신청이 접수되었습니다.\n\n이름: ' + name + '\n연락처: ' + phone + '\n알게된 경로: ' + (source || '미기재') + '\n\n빠른 시일 내에 연락드리겠습니다.';
-    alert(msg);
-    section.querySelector('.consult-name').value = '';
-    section.querySelector('.consult-phone').value = '';
-    section.querySelector('.consult-source').value = '';
+    
+    // 현재 활성 견적서 페이지 찾기
+    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden)');
+    let resultId = null, caseType = '견적';
+    if(activeScreen){
+        const id = activeScreen.id;
+        if(id === 'illegal-step3'){ resultId = 'illegal-result'; caseType = '위반건축물 양성화'; }
+        else if(id === 'usage-step3'){ resultId = 'usage-result'; caseType = '용도변경'; }
+        else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
+    }
+    
+    // Access Key 미설정 시 임시 안내
+    if(WEB3FORMS_KEY === 'YOUR_WEB3FORMS_ACCESS_KEY'){
+        alert('접수되었습니다.\n\n이름: ' + name + '\n연락처: ' + phone + '\n케이스: ' + caseType + '\n\n※ 이메일 자동발송을 위해 관리자 설정이 필요합니다.\n담당자에게 070-4647-3376 / dbym@dbym.kr 로 연락드리겠습니다.');
+        return;
+    }
+    
+    // 로딩 표시
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '전송 중...';
+    
+    try {
+        // 견적서 캡처 → PDF 생성
+        let pdfBlob = null;
+        if(resultId){
+            const el = document.getElementById(resultId);
+            if(el){
+                const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p','mm','a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                // 헤더
+                pdf.setFillColor(0, 23, 128);
+                pdf.rect(0, 0, pageWidth, 20, 'F');
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(14);
+                pdf.text('DBYM Architects - Estimate', 10, 13);
+                pdf.setFontSize(9);
+                const dateStr = new Date().toLocaleDateString('ko-KR');
+                pdf.text(dateStr, pageWidth - 10, 13, {align:'right'});
+                let heightLeft = imgHeight;
+                let position = 25;
+                pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - position);
+                while(heightLeft > 0){
+                    position = -(imgHeight - heightLeft);
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                pdfBlob = pdf.output('blob');
+            }
+        }
+        
+        // Web3Forms로 이메일 발송
+        const formData = new FormData();
+        formData.append('access_key', WEB3FORMS_KEY);
+        formData.append('subject', '[디바이엠] 건축사 검토 요청 - ' + caseType + ' (' + name + ')');
+        formData.append('from_name', '디바이엠 견적 시스템');
+        formData.append('replyto', RECIPIENT_EMAIL);
+        formData.append('email', RECIPIENT_EMAIL);
+        formData.append('to', RECIPIENT_EMAIL);
+        formData.append('message', 
+            '건축사 검토 요청이 접수되었습니다.\n\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━\n' +
+            '● 신청자 정보\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━\n' +
+            '이름: ' + name + '\n' +
+            '연락처: ' + phone + '\n' +
+            '알게된 경로: ' + (source || '미기재') + '\n\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━\n' +
+            '● 견적 정보\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━\n' +
+            '케이스: ' + caseType + '\n' +
+            '접수일시: ' + new Date().toLocaleString('ko-KR') + '\n\n' +
+            '견적서 PDF가 첨부되어 있습니다. 확인 후 고객에게 연락 부탁드립니다.'
+        );
+        if(pdfBlob){
+            const now = new Date();
+            const dateStr = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+            const safeType = caseType.replace(/[\/:*?"<>|\s]/g,'_');
+            formData.append('attachment', pdfBlob, '견적서_'+safeType+'_'+name+'_'+dateStr+'.pdf');
+        }
+        
+        const res = await fetch('https://api.web3forms.com/submit', {method:'POST', body:formData});
+        const data = await res.json();
+        
+        if(data.success){
+            alert('검토 요청이 접수되었습니다.\n\n담당 건축사가 검토 후 회신드리겠습니다.\n\n※ 카카오톡 채널로 더 빠르게 상담받으실 수 있습니다.');
+            section.querySelector('.consult-name').value = '';
+            section.querySelector('.consult-phone').value = '';
+            section.querySelector('.consult-source').value = '';
+        } else {
+            throw new Error(data.message || '발송 실패');
+        }
+    } catch(err){
+        console.error(err);
+        alert('요청 접수 중 오류가 발생했습니다.\n\n직접 연락 부탁드립니다:\n070-4647-3376\ndbym@dbym.kr');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }
 
 function selectIllegal(){ showScreen('illegal-step1'); }
@@ -1494,24 +1587,10 @@ function selectRemodel(t){
     if(introTitle && introBody){
         if(t.indexOf('대수선') < 0){
             introTitle.textContent = '증축이란?';
-            introBody.innerHTML = '<p>기존 건축물의 면적을 늘리거나 층을 추가하는 공사입니다. 건축허가 대상이며 구조 안전 검토가 필수입니다.</p>'
-                + '<ul>'
-                + '<li><b>수평 증축</b> — 같은 층에서 면적 확장</li>'
-                + '<li><b>수직 증축</b> — 위로 층을 추가</li>'
-                + '<li><b>별동 증축</b> — 같은 대지에 별개 건물 신축</li>'
-                + '<li><b>옥상 증축</b> — 옥상 공간 활용</li>'
-                + '</ul>'
-                + '<p class="note">건폐율·용적률·일조권·주차장 기준을 검토하며 구조 안전진단이 필요합니다.</p>';
+            introBody.innerHTML = '<p>기존 건축물의 면적을 늘리거나 층을 추가하는 공사입니다. 건축허가 대상이며 구조 안전 검토가 필수입니다.</p>';
         } else {
             introTitle.textContent = '대수선이란?';
-            introBody.innerHTML = '<p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>'
-                + '<ul>'
-                + '<li><b>주요 구조부 변경</b> — 내력벽·기둥·보·지붕 변경 또는 보강</li>'
-                + '<li><b>외벽·계단 변경</b> — 외벽 마감재·구조 변경, 계단 신설</li>'
-                + '<li><b>엘리베이터 신설</b> — 기존 건물에 EV 추가 (구조 보강 동반)</li>'
-                + '<li><b>방화구획 변경</b> — 피난·소방 관련 구조 변경</li>'
-                + '</ul>'
-                + '<p class="note">구조 변경이 동반되면 구조 안전진단·구조검토가 별도로 발생합니다.</p>';
+            introBody.innerHTML = '<p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>';
         }
     }
     showScreen('remodel-step2');
@@ -1661,7 +1740,6 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     if(extraHtml) html+=extraHtml;
     html+='<div class="warning-box">⚠️ 본 견적은 개략적인 예상 금액이며, 실제 비용은 현장 여건에 따라 달라질 수 있습니다.</div>';
     html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
-    html+='<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 500만원</b> (필요시, 구조사무실 별도 견적)</div>';
     html+='<button class="print-btn" onclick="window.print()">🖨️ 견적서 출력</button></div>';
     document.getElementById(resultId).innerHTML=html;
 }
@@ -1692,7 +1770,6 @@ function calculateIllegal(){
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 양성화 진행</span></div>';
     extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 500만원</b> (필요시, 구조사무실 별도 견적)</div>';
     extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 지적측량비 별도 발생</strong><br>한국국토정보공사(LX) 별도 견적으로 진행됩니다.<br>예상 비용: <b>약 100만원</b> (양성화 시 해당, LX 별도 견적)</div>';
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (건축물 종류·면적별)<br>· 이행강제금 (양성화 절차 진행 시 납부 의무)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     const meta = {
         badge: '위반건축물 양성화',
         badgeClass: 'violation',
@@ -1824,7 +1901,6 @@ function calculateUsage(){
     if(worst.cls === 'singo' || worst.cls === 'daejang'){
         extra += '<div class="info-box"><strong>※ 구조변경 동반 시 별도 산정</strong><br>본 견적엔 구조변경 비용이 포함되지 않습니다. 내력벽·기둥 변경 등 구조변경이 수반되면 구조안전진단 및 구조검토비가 추가됩니다 (약 500만원, 구조사무실 별도 견적).</div>';
     }
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (변경 면적·용도별)<br>· 면허세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     const adminMap = {'heoga':'허가','singo':'신고','daejang':'기재변경','nochange':'기재변경'};
     const badgeMap = {'heoga':{label:'허가 대상',cls:'permit'},'singo':{label:'신고 대상',cls:'report'},'daejang':{label:'기재변경 대상',cls:'daejang'},'nochange':{label:'기재변경 대상',cls:'daejang'}};
     const meta = {
@@ -1878,7 +1954,6 @@ function calculateRemodel(){
     sdf.items.forEach(it=>items.push(it));
     const sub=items.reduce((s,i)=>s+i.amount,0);
     let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 인허가 진행</span></div>';
-    extra += '<div class="info-box" style="background:#eef5ff; border-left:3px solid #4a6fa5;"><strong style="color:#001780;">※ 행정 비용 (관할 행정청 납부, 별도)</strong><br>· 인허가 수수료 (대수선·증축 종류별)<br>· 면허세·등록세 (지방세)<br>· 변경 후 건축물대장 발급 수수료</div>';
     const structAmount = '약 500만원';
     const structTitle = '구조사무실 별도 견적';
     extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>'+structAmount+'</b> ('+structTitle+', 별도 산정)</div>';
