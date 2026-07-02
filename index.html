@@ -737,7 +737,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
@@ -820,7 +820,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
@@ -896,7 +896,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 <option>기타</option>
             </select>
         </div>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">검토 요청하기</button>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
@@ -1341,68 +1341,100 @@ async function captureEstimate(resultId){
 function downloadImage(resultId, caseType){
     captureEstimate(resultId).then(function(canvas){
         const fileName = getEstimateFileName(caseType) + '.png';
-        const ua = navigator.userAgent;
-        const isIOS = /iPad|iPhone|iPod/.test(ua);
         const dataUrl = canvas.toDataURL('image/png');
-        
-        if(isIOS){
-            // iOS Safari: 새 탭에서 이미지 열기 → 사용자가 길게 눌러 저장
-            const win = window.open();
-            if(win){
-                win.document.write('<html><head><title>'+fileName+'</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#000;"><img src="'+dataUrl+'" style="width:100%;display:block;"><div style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.85);color:white;padding:14px;text-align:center;font-family:sans-serif;font-size:14px;font-weight:700;">이미지를 길게 눌러 &quot;사진에 저장&quot; 선택</div></body></html>');
-                win.document.close();
-            } else {
-                alert('팝업이 차단되었습니다.\n브라우저 설정에서 팝업 허용 후 다시 시도해주세요.');
-            }
-            return;
-        }
-        
-        // Android / PC: 다운로드
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        if(/Android/.test(ua)){
-            setTimeout(function(){
-                alert('이미지가 다운로드 폴더에 저장되었습니다.\n갤러리에서 확인하세요.');
-            }, 300);
-        }
+        // 모든 기기에서 100% 작동 - 화면에 모달로 이미지 표시
+        showImageModal(dataUrl, fileName);
     }).catch(function(err){
         console.error(err);
-        alert('이미지 저장 중 오류가 발생했습니다.\n다시 시도해주세요.');
+        alert('이미지 생성 중 오류: ' + err.message);
     });
 }
 
+function showImageModal(dataUrl, fileName){
+    // 기존 모달 있으면 제거
+    const existing = document.getElementById('img-save-modal');
+    if(existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'img-save-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;flex-direction:column;overflow:auto;';
+    
+    // 상단 안내 바
+    const header = document.createElement('div');
+    header.style.cssText = 'position:sticky;top:0;background:#001780;color:white;padding:16px;text-align:center;font-family:Pretendard,sans-serif;';
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isMobile = isIOS || /Android/.test(navigator.userAgent);
+    let guideText = '';
+    if(isIOS){
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>손가락으로 길게 누르고</b><br>"사진에 저장" 또는 "이미지 저장" 선택</div>';
+    } else if(isMobile){
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>손가락으로 길게 누르고</b><br>"이미지 다운로드" 선택</div>';
+    } else {
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>마우스 우클릭</b> → "이미지를 다른 이름으로 저장"</div>';
+    }
+    header.innerHTML = guideText;
+    
+    // 닫기 버튼
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕ 닫기';
+    closeBtn.style.cssText = 'position:sticky;top:0;margin:12px auto;padding:10px 24px;background:white;color:#001780;border:none;border-radius:999px;font-family:Pretendard,sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:100;';
+    closeBtn.onclick = function(){ modal.remove(); };
+    
+    // 이미지
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = fileName;
+    img.style.cssText = 'display:block;width:100%;max-width:900px;margin:14px auto;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+    
+    // PC용 다운로드 버튼 (선택)
+    let dlBtn = null;
+    if(!isMobile){
+        dlBtn = document.createElement('a');
+        dlBtn.href = dataUrl;
+        dlBtn.download = fileName;
+        dlBtn.textContent = '⬇️ 파일로 다운로드';
+        dlBtn.style.cssText = 'display:inline-block;margin:8px auto 20px;padding:12px 28px;background:#001780;color:white;border-radius:8px;font-family:Pretendard,sans-serif;font-size:14px;font-weight:800;text-decoration:none;';
+    }
+    
+    modal.appendChild(header);
+    modal.appendChild(closeBtn);
+    modal.appendChild(img);
+    if(dlBtn){
+        const btnWrap = document.createElement('div');
+        btnWrap.style.textAlign = 'center';
+        btnWrap.appendChild(dlBtn);
+        modal.appendChild(btnWrap);
+    }
+    document.body.appendChild(modal);
+}
 
-async function shareEstimate(resultId, caseType){
-    try {
-        const canvas = await captureEstimate(resultId);
-        const fileName = getEstimateFileName(caseType);
-        // Blob → File 생성
-        canvas.toBlob(async function(blob){
-            const file = new File([blob], fileName+'.png', {type:'image/png'});
-            // Web Share API - 모바일에서 카톡·문자·이메일 공유 가능
-            if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-                try {
-                    await navigator.share({
-                        title: '디바이엠 건축 견적서',
-                        text: '건축 인허가 견적서입니다.',
-                        files: [file]
-                    });
-                } catch(e){
-                    if(e.name !== 'AbortError') fallbackDownload(canvas, fileName);
-                }
+
+function shareEstimate(resultId, caseType){
+    captureEstimate(resultId).then(function(canvas){
+        const fileName = getEstimateFileName(caseType) + '.png';
+        canvas.toBlob(function(blob){
+            if(!blob){ 
+                // Blob 실패 시 모달로 폴백
+                showImageModal(canvas.toDataURL('image/png'), fileName);
+                return;
+            }
+            // Web Share API 시도 (모바일 카톡·앨범 저장 가능)
+            const file = new File([blob], fileName, {type:'image/png'});
+            if(navigator.canShare && navigator.canShare({files:[file]})){
+                navigator.share({files:[file], title:'디바이엠 견적서'}).catch(function(err){
+                    if(err.name !== 'AbortError'){
+                        showImageModal(canvas.toDataURL('image/png'), fileName);
+                    }
+                });
             } else {
-                // 데스크탑·미지원 브라우저 → 이미지 다운로드
-                fallbackDownload(canvas, fileName);
+                // 공유 API 없으면 모달
+                showImageModal(canvas.toDataURL('image/png'), fileName);
             }
         }, 'image/png');
-    } catch(err){
+    }).catch(function(err){
         console.error(err);
-        alert('견적서 공유 중 오류가 발생했습니다.');
-    }
+        alert('공유 준비 중 오류: ' + err.message);
+    });
 }
 
 function fallbackDownload(canvas, fileName){
@@ -1417,27 +1449,8 @@ function openKakaoChannel(){
     window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
 }
 
-// 이메일 발송 (Formsubmit.co - Access Key 불필요, 이메일만으로 즉시 사용)
-// 첫 발송 시 goodshinmin@naver.com으로 확인 메일 발송됨 → 링크 클릭 후 활성화
-const RECIPIENT_EMAIL = 'goodshinmin@naver.com';
-
-function extractEstimateSummary(resultId){
-    // 견적서 다크카드에서 항목·금액 텍스트 추출
-    const el = document.getElementById(resultId);
-    if(!el) return { summary: '견적 정보 없음', total: '' };
-    const lines = [];
-    let total = '';
-    try {
-        const items = el.querySelectorAll('.item, .item-name, .item-amount, li, tr');
-        // 다크카드 내용 추출 - innerText로 통째 가져와 정리
-        const text = el.innerText || el.textContent || '';
-        return { summary: text.substring(0, 3000), total: '' };
-    } catch(e){
-        return { summary: '견적 정보 추출 실패', total: '' };
-    }
-}
-
-async function submitConsult(btn){
+// 검토 요청: 견적 정보 자동 복사 + 카카오톡 채널 열기
+function submitConsult(btn){
     const section = btn.closest('.consult-form-section');
     const name = section.querySelector('.consult-name').value.trim();
     const phone = section.querySelector('.consult-phone').value.trim();
@@ -1455,48 +1468,63 @@ async function submitConsult(btn){
         else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
     }
     
-    // 견적 정보 추출
-    const est = extractEstimateSummary(resultId);
-    
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = '전송 중...';
-    
-    try {
-        // Formsubmit.co - AJAX 방식 (Access Key 불필요)
-        const formData = new FormData();
-        formData.append('_subject', '[디바이엠] 건축사 검토 요청 - ' + caseType + ' (' + name + ')');
-        formData.append('_captcha', 'false');
-        formData.append('_template', 'table');
-        formData.append('신청자_이름', name);
-        formData.append('신청자_연락처', phone);
-        formData.append('알게된_경로', source || '미기재');
-        formData.append('견적_케이스', caseType);
-        formData.append('접수일시', new Date().toLocaleString('ko-KR'));
-        formData.append('견적_내역', est.summary);
-        
-        const res = await fetch('https://formsubmit.co/ajax/' + RECIPIENT_EMAIL, {
-            method: 'POST',
-            headers: {'Accept': 'application/json'},
-            body: formData
-        });
-        const data = await res.json();
-        
-        if(data.success === 'true' || data.success === true){
-            alert('검토 요청이 정상 접수되었습니다.\n\n담당 건축사가 검토 후 회신드리겠습니다.\n빠른 상담은 카카오톡 채널을 이용해주세요.');
-            section.querySelector('.consult-name').value = '';
-            section.querySelector('.consult-phone').value = '';
-            section.querySelector('.consult-source').value = '';
-        } else {
-            throw new Error(data.message || '발송 실패');
+    // 견적 요약 텍스트 추출
+    let estimateText = '';
+    if(resultId){
+        const el = document.getElementById(resultId);
+        if(el){
+            estimateText = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').substring(0, 500);
         }
-    } catch(err){
-        console.error('submitConsult error:', err);
-        alert('요청 접수 중 오류가 발생했습니다.\n\n직접 연락 부탁드립니다:\n070-4647-3376\ndbym@dbym.kr\n\n또는 카카오톡 채널 상담을 이용해주세요.');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
     }
+    
+    // 카카오톡에 붙여넣을 메시지 생성
+    const message = 
+        '[건축사 검토 요청]\n' +
+        '━━━━━━━━━━━━━━━━━\n' +
+        '이름: ' + name + '\n' +
+        '연락처: ' + phone + '\n' +
+        '알게된 경로: ' + (source || '미기재') + '\n' +
+        '견적 케이스: ' + caseType + '\n' +
+        '접수일시: ' + new Date().toLocaleString('ko-KR') + '\n' +
+        '━━━━━━━━━━━━━━━━━\n' +
+        '[견적 요약]\n' +
+        estimateText;
+    
+    // 클립보드에 복사
+    copyToClipboard(message);
+    
+    // 안내 후 카카오톡 채널 열기
+    alert('검토 요청 내용이 복사되었습니다.\n\n카카오톡 채널이 열리면\n채팅창에 붙여넣기(길게 누르면 붙여넣기 메뉴)\n해서 전송해주세요.\n\n담당 건축사가 직접 답변드립니다.');
+    window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
+    
+    // 폼 초기화
+    section.querySelector('.consult-name').value = '';
+    section.querySelector('.consult-phone').value = '';
+    section.querySelector('.consult-source').value = '';
+}
+
+function copyToClipboard(text){
+    // 최신 브라우저: Clipboard API
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).catch(function(){
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text){
+    // 구형 브라우저 폴백
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
 }
 
 function selectIllegal(){ showScreen('illegal-step1'); }
