@@ -1417,10 +1417,25 @@ function openKakaoChannel(){
     window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
 }
 
-// Web3Forms 이메일 발송용 Access Key (사용자가 발급 후 채워야 함)
-// 발급: https://web3forms.com/#start
-const WEB3FORMS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY';
+// 이메일 발송 (Formsubmit.co - Access Key 불필요, 이메일만으로 즉시 사용)
+// 첫 발송 시 goodshinmin@naver.com으로 확인 메일 발송됨 → 링크 클릭 후 활성화
 const RECIPIENT_EMAIL = 'goodshinmin@naver.com';
+
+function extractEstimateSummary(resultId){
+    // 견적서 다크카드에서 항목·금액 텍스트 추출
+    const el = document.getElementById(resultId);
+    if(!el) return { summary: '견적 정보 없음', total: '' };
+    const lines = [];
+    let total = '';
+    try {
+        const items = el.querySelectorAll('.item, .item-name, .item-amount, li, tr');
+        // 다크카드 내용 추출 - innerText로 통째 가져와 정리
+        const text = el.innerText || el.textContent || '';
+        return { summary: text.substring(0, 3000), total: '' };
+    } catch(e){
+        return { summary: '견적 정보 추출 실패', total: '' };
+    }
+}
 
 async function submitConsult(btn){
     const section = btn.closest('.consult-form-section');
@@ -1430,7 +1445,7 @@ async function submitConsult(btn){
     if(!name){ alert('이름을 입력해주세요.'); return; }
     if(!phone){ alert('연락처를 입력해주세요.'); return; }
     
-    // 현재 활성 견적서 페이지 찾기
+    // 현재 활성 견적 페이지 찾기
     const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden)');
     let resultId = null, caseType = '견적';
     if(activeScreen){
@@ -1440,89 +1455,35 @@ async function submitConsult(btn){
         else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
     }
     
-    // Access Key 미설정 시 임시 안내
-    if(WEB3FORMS_KEY === 'YOUR_WEB3FORMS_ACCESS_KEY'){
-        alert('접수되었습니다.\n\n이름: ' + name + '\n연락처: ' + phone + '\n케이스: ' + caseType + '\n\n※ 이메일 자동발송을 위해 관리자 설정이 필요합니다.\n담당자에게 070-4647-3376 / dbym@dbym.kr 로 연락드리겠습니다.');
-        return;
-    }
+    // 견적 정보 추출
+    const est = extractEstimateSummary(resultId);
     
-    // 로딩 표시
     btn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = '전송 중...';
     
     try {
-        // 견적서 캡처 → PDF 생성
-        let pdfBlob = null;
-        if(resultId){
-            const el = document.getElementById(resultId);
-            if(el){
-                const canvas = await html2canvas(el, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
-                const imgData = canvas.toDataURL('image/jpeg', 0.9);
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p','mm','a4');
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = pageWidth - 20;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                // 헤더
-                pdf.setFillColor(0, 23, 128);
-                pdf.rect(0, 0, pageWidth, 20, 'F');
-                pdf.setTextColor(255, 255, 255);
-                pdf.setFontSize(14);
-                pdf.text('DBYM Architects - Estimate', 10, 13);
-                pdf.setFontSize(9);
-                const dateStr = new Date().toLocaleDateString('ko-KR');
-                pdf.text(dateStr, pageWidth - 10, 13, {align:'right'});
-                let heightLeft = imgHeight;
-                let position = 25;
-                pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-                heightLeft -= (pageHeight - position);
-                while(heightLeft > 0){
-                    position = -(imgHeight - heightLeft);
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                pdfBlob = pdf.output('blob');
-            }
-        }
-        
-        // Web3Forms로 이메일 발송
+        // Formsubmit.co - AJAX 방식 (Access Key 불필요)
         const formData = new FormData();
-        formData.append('access_key', WEB3FORMS_KEY);
-        formData.append('subject', '[디바이엠] 건축사 검토 요청 - ' + caseType + ' (' + name + ')');
-        formData.append('from_name', '디바이엠 견적 시스템');
-        formData.append('replyto', RECIPIENT_EMAIL);
-        formData.append('email', RECIPIENT_EMAIL);
-        formData.append('to', RECIPIENT_EMAIL);
-        formData.append('message', 
-            '건축사 검토 요청이 접수되었습니다.\n\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━\n' +
-            '● 신청자 정보\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━\n' +
-            '이름: ' + name + '\n' +
-            '연락처: ' + phone + '\n' +
-            '알게된 경로: ' + (source || '미기재') + '\n\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━\n' +
-            '● 견적 정보\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━\n' +
-            '케이스: ' + caseType + '\n' +
-            '접수일시: ' + new Date().toLocaleString('ko-KR') + '\n\n' +
-            '견적서 PDF가 첨부되어 있습니다. 확인 후 고객에게 연락 부탁드립니다.'
-        );
-        if(pdfBlob){
-            const now = new Date();
-            const dateStr = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-            const safeType = caseType.replace(/[\/:*?"<>|\s]/g,'_');
-            formData.append('attachment', pdfBlob, '견적서_'+safeType+'_'+name+'_'+dateStr+'.pdf');
-        }
+        formData.append('_subject', '[디바이엠] 건축사 검토 요청 - ' + caseType + ' (' + name + ')');
+        formData.append('_captcha', 'false');
+        formData.append('_template', 'table');
+        formData.append('신청자_이름', name);
+        formData.append('신청자_연락처', phone);
+        formData.append('알게된_경로', source || '미기재');
+        formData.append('견적_케이스', caseType);
+        formData.append('접수일시', new Date().toLocaleString('ko-KR'));
+        formData.append('견적_내역', est.summary);
         
-        const res = await fetch('https://api.web3forms.com/submit', {method:'POST', body:formData});
+        const res = await fetch('https://formsubmit.co/ajax/' + RECIPIENT_EMAIL, {
+            method: 'POST',
+            headers: {'Accept': 'application/json'},
+            body: formData
+        });
         const data = await res.json();
         
-        if(data.success){
-            alert('검토 요청이 접수되었습니다.\n\n담당 건축사가 검토 후 회신드리겠습니다.\n\n※ 카카오톡 채널로 더 빠르게 상담받으실 수 있습니다.');
+        if(data.success === 'true' || data.success === true){
+            alert('검토 요청이 정상 접수되었습니다.\n\n담당 건축사가 검토 후 회신드리겠습니다.\n빠른 상담은 카카오톡 채널을 이용해주세요.');
             section.querySelector('.consult-name').value = '';
             section.querySelector('.consult-phone').value = '';
             section.querySelector('.consult-source').value = '';
@@ -1530,8 +1491,8 @@ async function submitConsult(btn){
             throw new Error(data.message || '발송 실패');
         }
     } catch(err){
-        console.error(err);
-        alert('요청 접수 중 오류가 발생했습니다.\n\n직접 연락 부탁드립니다:\n070-4647-3376\ndbym@dbym.kr');
+        console.error('submitConsult error:', err);
+        alert('요청 접수 중 오류가 발생했습니다.\n\n직접 연락 부탁드립니다:\n070-4647-3376\ndbym@dbym.kr\n\n또는 카카오톡 채널 상담을 이용해주세요.');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
