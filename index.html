@@ -171,6 +171,32 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 
 .step-label { display:inline-block; padding:6px 14px; background:#eff6ff; color:#001780; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:0.3px; margin-bottom:14px; }
 .calculator-title { font-size:28px; font-weight:800; margin-bottom:24px; text-align:center; color:#001780; letter-spacing:-0.5px; }
+
+.info-modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100000; align-items:center; justify-content:center; padding:20px; }
+.info-modal-overlay.show { display:flex; }
+.info-modal-box { background:white; border-radius:16px; padding:28px 24px; max-width:420px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+.info-modal-title { font-size:20px; font-weight:800; color:#001780; margin:0 0 8px 0; letter-spacing:-0.4px; text-align:center; }
+.info-modal-sub { font-size:13.5px; color:#666; margin:0 0 22px 0; text-align:center; line-height:1.6; }
+.info-modal-field { margin-bottom:14px; }
+.info-modal-field label { display:block; font-size:13px; font-weight:800; color:#1a1a1a; margin-bottom:6px; }
+.info-modal-field input { width:100%; padding:12px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+.info-modal-field input:focus { outline:none; border-color:#001780; }
+.info-modal-btn-row { display:flex; gap:10px; margin-top:22px; }
+.info-modal-btn-cancel { flex:1; padding:14px; background:white; color:#666; border:1.5px solid #d0d0d0; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.info-modal-btn-cancel:hover { background:#f5f5f5; }
+.info-modal-btn-submit { flex:2; padding:14px; background:#001780; color:white; border:none; border-radius:8px; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+.info-modal-btn-submit:hover { background:#000d4d; }
+
+/* 견적 완료 알림 팝업 */
+.done-toast-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100001; align-items:center; justify-content:center; padding:20px; }
+.done-toast-overlay.show { display:flex; }
+.done-toast-box { background:white; border-radius:16px; padding:32px 28px; max-width:400px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+.done-toast-icon { font-size:56px; margin-bottom:12px; }
+.done-toast-title { font-size:16px; font-weight:800; color:#001780; margin:0 0 8px 0; letter-spacing:-0.3px; }
+.done-toast-msg { font-size:14px; color:#334155; line-height:1.7; margin:0 0 22px 0; }
+.done-toast-btn { padding:12px 32px; background:#001780; color:white; border:none; border-radius:8px; font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+.done-toast-btn:hover { background:#000d4d; }
+
 .form-section { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; margin-bottom:20px; }
 .form-section h3 { font-size:18px; font-weight:800; color:#1a1a1a; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; letter-spacing:-0.3px; }
 .form-field { margin-bottom:20px; }
@@ -361,6 +387,19 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .more-cases-btn .more-arrow { font-size:11px; transition:transform 0.18s; }
 .more-cases-btn.expanded .more-arrow { transform:rotate(180deg); }
 
+
+@media print {
+    body.printing * { visibility: hidden !important; }
+    body.printing #illegal-result, body.printing #illegal-result *,
+    body.printing #usage-result, body.printing #usage-result *,
+    body.printing #repair-result, body.printing #repair-result * { visibility: visible !important; }
+    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result {
+        position: absolute !important; top: 0 !important; left: 0 !important; 
+        width: 100% !important; margin: 0 !important; padding: 20px !important;
+    }
+    body.printing .print-btn, body.printing .estimate-actions, body.printing .back-btn { display:none !important; }
+    @page { margin: 15mm; size: A4; }
+}
 .estimate-actions { display:flex; gap:10px; margin:16px 0 24px; max-width:720px; margin-left:auto; margin-right:auto; }
 .estimate-action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:800; letter-spacing:-0.2px; transition:all 0.15s; border:none; }
 .estimate-action-btn.pdf { background:#001780; color:white; }
@@ -710,8 +749,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
     <div class="estimate-wrap"><div id="illegal-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('illegal-result', '위반건축물_양성화')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
-        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('illegal-result', '위반건축물_양성화')"><span class="action-icon">📤</span>견적서 공유</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('illegal-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
@@ -793,8 +831,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title">용도변경 견적 계산기</h1>
     <div class="estimate-wrap"><div id="usage-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('usage-result', '용도변경')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
-        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('usage-result', '용도변경')"><span class="action-icon">📤</span>견적서 공유</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('usage-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
@@ -869,8 +906,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
     <div class="estimate-wrap"><div id="repair-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
     <div class="estimate-actions">
-        <button type="button" class="estimate-action-btn pdf" onclick="downloadImage('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">🖼️</span>이미지로 저장하기</button>
-        <button type="button" class="estimate-action-btn share" onclick="shareEstimate('repair-result', STATE.remodelType||'대수선_증축')"><span class="action-icon">📤</span>견적서 공유</button>
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('repair-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
         <h3>건축사 검토 요청하기</h3>
@@ -935,6 +971,40 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <button type="button" onclick="closePostcodeModal()" aria-label="닫기">✕</button>
         </div>
         <div id="postcode-embed"></div>
+    </div>
+</div>
+
+<!-- 견적 확인 전 정보 입력 모달 -->
+<div id="info-modal" class="info-modal-overlay">
+    <div class="info-modal-box">
+        <h3 class="info-modal-title">견적 확인 정보</h3>
+        <p class="info-modal-sub">정확한 안내를 위해 아래 정보를 입력해주세요.<br>담당 건축사가 검토 후 회신드립니다.</p>
+        <div class="info-modal-field">
+            <label>이름 *</label>
+            <input type="text" id="modal-name" placeholder="홍길동" autocomplete="name">
+        </div>
+        <div class="info-modal-field">
+            <label>연락처 *</label>
+            <input type="tel" id="modal-phone" placeholder="010-0000-0000" autocomplete="tel">
+        </div>
+        <div class="info-modal-field">
+            <label>이메일 *</label>
+            <input type="email" id="modal-email" placeholder="example@email.com" autocomplete="email">
+        </div>
+        <div class="info-modal-btn-row">
+            <button type="button" class="info-modal-btn-cancel" onclick="closeInfoModal()">취소</button>
+            <button type="button" class="info-modal-btn-submit" onclick="submitInfoModal()">견적 확인하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 견적 완료 알림 팝업 -->
+<div id="done-toast" class="done-toast-overlay">
+    <div class="done-toast-box">
+        <div class="done-toast-icon">✅</div>
+        <h3 class="done-toast-title">검토 요청이 완료되었습니다</h3>
+        <p class="done-toast-msg">건축 인허가 계산기 견적서가<br>담당 건축사에게 검토 요청되었습니다.<br><br>추가 상담은 카카오톡 채널을 이용해주세요.</p>
+        <button type="button" class="done-toast-btn" onclick="closeDoneToast()">확인</button>
     </div>
 </div>
 
@@ -1445,6 +1515,25 @@ function fallbackDownload(canvas, fileName){
     alert('견적서가 이미지로 저장되었습니다. 갤러리·앨범에서 확인 후 공유하세요.');
 }
 
+// 견적서 저장 - window.print 사용 (모든 기기에서 확실히 작동)
+// iOS: 공유 시트에서 "PDF로 저장" 또는 "사진에 저장" 가능
+// Android: 인쇄 → PDF로 저장 가능
+// PC: 인쇄 대화 → "PDF로 저장" 선택 가능
+function saveEstimate(resultId){
+    // 해당 result만 인쇄되도록 body에 클래스 추가
+    document.body.classList.add('printing');
+    document.body.setAttribute('data-print-target', resultId);
+    // 약간의 딜레이 후 인쇄 (CSS 반영 시간)
+    setTimeout(function(){
+        window.print();
+        // 인쇄 대화 닫힌 후 클래스 제거
+        setTimeout(function(){
+            document.body.classList.remove('printing');
+            document.body.removeAttribute('data-print-target');
+        }, 500);
+    }, 100);
+}
+
 function openKakaoChannel(){
     window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
 }
@@ -1581,8 +1670,59 @@ function selectRemodel(t){
     showScreen('remodel-step2');
 }
 
-// 견적 확인하기 — 입력 검증 후 step3 이동
+// 견적 확인하기 - 정보 입력 모달 → 계산 → 견적 표시 → 완료 팝업
+let pendingEstimateType = null;
+
 function goToEstimate(type){
+    pendingEstimateType = type;
+    openInfoModal();
+}
+
+function openInfoModal(){
+    document.getElementById('info-modal').classList.add('show');
+    // 이전 입력값 복원
+    if(STATE.customerInfo){
+        document.getElementById('modal-name').value = STATE.customerInfo.name || '';
+        document.getElementById('modal-phone').value = STATE.customerInfo.phone || '';
+        document.getElementById('modal-email').value = STATE.customerInfo.email || '';
+    }
+    // 이름 필드에 포커스
+    setTimeout(function(){
+        document.getElementById('modal-name').focus();
+    }, 100);
+}
+
+function closeInfoModal(){
+    document.getElementById('info-modal').classList.remove('show');
+    pendingEstimateType = null;
+}
+
+function submitInfoModal(){
+    const name = document.getElementById('modal-name').value.trim();
+    const phone = document.getElementById('modal-phone').value.trim();
+    const email = document.getElementById('modal-email').value.trim();
+    
+    if(!name){ alert('이름을 입력해주세요.'); document.getElementById('modal-name').focus(); return; }
+    if(!phone){ alert('연락처를 입력해주세요.'); document.getElementById('modal-phone').focus(); return; }
+    if(!email){ alert('이메일을 입력해주세요.'); document.getElementById('modal-email').focus(); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        alert('올바른 이메일 형식을 입력해주세요. (예: name@email.com)');
+        document.getElementById('modal-email').focus(); return;
+    }
+    // 연락처 간단 검증
+    if(phone.replace(/[^0-9]/g,'').length < 9){
+        alert('올바른 연락처를 입력해주세요.');
+        document.getElementById('modal-phone').focus(); return;
+    }
+    
+    // 정보 저장
+    STATE.customerInfo = { name: name, phone: phone, email: email };
+    document.getElementById('info-modal').classList.remove('show');
+    
+    // 실제 계산 진행
+    const type = pendingEstimateType;
+    pendingEstimateType = null;
+    
     if(type==='illegal'){
         const ic=document.getElementById('illegal-chosen-3'); const ic2=document.getElementById('illegal-chosen'); if(ic && ic2) ic.textContent=ic2.textContent;
         if(calculateIllegal() === false) return;
@@ -1595,6 +1735,57 @@ function goToEstimate(type){
         if(calculateRemodel() === false) return;
         showScreen('remodel-step3');
     }
+    
+    // 견적 표시 후 SMS 발송 + 완료 알림 팝업
+    setTimeout(function(){
+        sendCompletionSMS(name, phone, type);
+        showDoneToast();
+    }, 600);
+}
+
+// 네이버 클라우드 SENS를 통한 SMS 발송
+async function sendCompletionSMS(name, phone, type){
+    let caseType = '견적';
+    if(type==='illegal') caseType = '위반건축물 양성화';
+    else if(type==='usage') caseType = '용도변경';
+    else if(type==='remodel') caseType = STATE.remodelType || '대수선/증축';
+    
+    const message = 
+        '[디바이엠건축사사무소]\n' +
+        '건축 인허가 계산기\n' +
+        '견적서가 담당건축사에게\n' +
+        '검토 요청이 완료되었습니다.\n\n' +
+        '● 신청자: ' + name + '\n' +
+        '● 케이스: ' + caseType + '\n\n' +
+        '담당 건축사가 확인 후 회신드립니다.\n' +
+        '문의: 070-4647-3376';
+    
+    try {
+        const res = await fetch('/api/send-sms', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                phone: phone,           // 고객 연락처
+                adminPhone: '07046473376', // 관리자에게도 알림
+                message: message
+            })
+        });
+        const data = await res.json();
+        if(!data.success){
+            console.warn('SMS 발송 실패 (환경변수 미설정 등):', data.error);
+            // 실패해도 사용자 흐름은 유지
+        }
+    } catch(err){
+        console.error('SMS 발송 오류:', err);
+    }
+}
+
+function showDoneToast(){
+    document.getElementById('done-toast').classList.add('show');
+}
+
+function closeDoneToast(){
+    document.getElementById('done-toast').classList.remove('show');
 }
 
 let usageChangeCounter = 0;
