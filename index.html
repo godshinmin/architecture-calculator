@@ -4,8 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light only">
-<meta name="theme-color" content="#f8f7f4">
-<title>건축 견적 계산기 - 오래온</title>
+<meta name="theme-color" content="#001780">
+
+<!-- ===== 기본 SEO ===== -->
+<title>건축 인허가 견적 계산기 | 디바이엠건축사사무소</title>
+<meta name="description" content="용도변경, 대수선, 증축, 위반건축물 양성화 견적을 10초 만에 확인하세요. 건축물대장 자동조회로 정확한 인허가 비용을 무료로 산출해 드립니다.">
+<meta name="keywords" content="건축 인허가, 용도변경 비용, 대수선 견적, 증축 견적, 위반건축물 양성화, 건축사사무소, 인허가 대행, 건축물대장 조회">
+<meta name="author" content="디바이엠건축사사무소">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://architecture-calculator-six.vercel.app/">
+
+<!-- ===== 네이버 / 구글 사이트 소유확인 (등록 후 발급받은 값으로 교체) ===== -->
+<!-- <meta name="naver-site-verification" content="여기에_네이버_인증코드"> -->
+<!-- <meta name="google-site-verification" content="여기에_구글_인증코드"> -->
+
+<!-- ===== 카카오톡 / 페이스북 공유 미리보기 ===== -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="디바이엠건축사사무소">
+<meta property="og:title" content="건축 인허가 견적 계산기 | 디바이엠건축사사무소">
+<meta property="og:description" content="용도변경·대수선·증축·양성화 견적을 10초 만에. 건축물대장 자동조회로 정확하게.">
+<meta property="og:url" content="https://architecture-calculator-six.vercel.app/">
+<meta property="og:locale" content="ko_KR">
+
+<!-- ===== 검색엔진용 사업자 정보 ===== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "디바이엠건축사사무소",
+  "description": "건축 인허가 대행 및 설계 전문 건축사사무소. 용도변경, 대수선, 증축, 위반건축물 양성화 견적 제공.",
+  "url": "https://architecture-calculator-six.vercel.app/",
+  "telephone": "+82-70-4647-3376",
+  "email": "dbym@dbym.kr",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "송파대로43길 1 (석촌동) 501호",
+    "addressLocality": "송파구",
+    "addressRegion": "서울특별시",
+    "addressCountry": "KR"
+  },
+  "areaServed": "대한민국",
+  "priceRange": "₩₩"
+}
+</script>
+
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <style>
@@ -2374,10 +2416,19 @@ function calculateUsage(){
     }
     const sub = items.reduce(function(s,i){return s+i.amount;},0);
 
-    let changeListHtml = '<div class="check-result"><strong>변경 항목 리스트 (총 '+changes.length+'건 · '+totalChangeArea+'㎡)</strong>';
+    let changeListHtml = '<div class="check-result"><strong>변경 항목 리스트 (총 '+changes.length+'건 · '+(Math.round(totalChangeArea*100)/100)+'㎡)</strong>';
     judges.forEach(function(j,i){
-        const floorTxt = j.floor || '-';
-        changeListHtml += '<div style="padding:8px 0; border-bottom:1px dashed #d0d5dd; font-size:13px;">'+(i+1)+'. <strong>'+floorTxt+'</strong> · '+j.area+'㎡<br>'+j.current+' → '+j.new+' <span class="permit-badge '+j.cls+'" style="display:inline-block; padding:2px 8px; font-size:11px; margin-left:4px;">'+j.title+'</span></div>';
+        let floorTxt = (j.floor || '').trim();
+        // 숫자만 들어온 경우 '층' 붙이기 (예: "2" → "2층")
+        if(/^-?\d+$/.test(floorTxt)) floorTxt = floorTxt + '층';
+        // 의미 없는 기본값이면 순번으로 대체
+        if(!floorTxt || floorTxt === '변경 항목') floorTxt = '변경 ' + (i+1);
+        changeListHtml += '<div style="padding:10px 0; border-bottom:1px dashed #d0d5dd; font-size:13px; line-height:1.6;">'
+            + '<strong style="color:#001780;">' + floorTxt + '</strong>'
+            + '<span style="color:#94a3b8;"> · ' + j.area + '㎡</span><br>'
+            + '<span style="color:#334155;">' + j.current + ' → ' + j.new + '</span> '
+            + '<span class="permit-badge ' + j.cls + '" style="display:inline-block; padding:2px 8px; font-size:11px; margin-left:4px;">' + j.title + '</span>'
+            + '</div>';
     });
     changeListHtml += '</div>';
 
