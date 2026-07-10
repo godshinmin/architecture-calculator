@@ -217,21 +217,78 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .permit-badge b { font-weight:900; }
 .permit-badge small { display:block; font-weight:500; font-size:12px; margin-top:6px; opacity:0.78; letter-spacing:-0.1px; }
 .chosen-badge { display:inline-block; background:#eaf2fb; color:#000d4d; padding:6px 14px; border-radius:20px; font-size:14px; font-weight:500; margin-bottom:20px; }
-.result-box { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; }
-.result-box h3 { font-size:17px; font-weight:500; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; }
-.result-item { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0; }
-.result-item .label { font-size:14px; color:#666; }
-.result-item .amount { font-size:14px; font-weight:500; }
-.total-box { padding-top:20px; margin-top:20px; border-top:2px solid #333; display:flex; justify-content:space-between; align-items:baseline; }
-.total-box .label { font-size:16px; font-weight:500; }
-.total-box .amount { font-size:26px; font-weight:500; color:#001780; }
-.check-result { margin-top:18px; padding:14px; background:#eef2f8; border-radius:8px; font-size:13px; color:#000d4d; line-height:1.6; }
-.check-result strong { display:block; margin-bottom:6px; color:#000d4d; }
-.warning-box { margin-top:16px; padding:14px; background:#fff3e0; border-radius:8px; font-size:13px; color:#e65100; }
-.info-box { margin-top:12px; padding:12px; background:#f5f5f5; border-radius:8px; font-size:12px; color:#666; line-height:1.6; }
-.info-box strong { color:#333; }
-.print-btn { width:100%; margin-top:16px; padding:12px; background:white; border:1px solid #d0d0d0; border-radius:8px; cursor:pointer; }
-.print-btn:hover { background:#f5f5f5; }
+
+/* ===== 관리자 페이지 ===== */
+.admin-wrap { max-width:1100px; margin:0 auto; }
+.admin-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.admin-title { font-size:24px; font-weight:800; color:#1a1a1a; letter-spacing:-0.5px; margin:0; }
+.admin-actions { display:flex; gap:8px; }
+.admin-btn { padding:9px 16px; border-radius:8px; border:1.5px solid #cbd5e1; background:white; color:#475569; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+.admin-btn:hover { border-color:#001780; color:#001780; }
+.admin-btn.primary { background:#001780; border-color:#001780; color:white; }
+.admin-btn.primary:hover { background:#000d4d; }
+.admin-login { max-width:380px; margin:60px auto; background:white; border:1px solid #e8eaee; border-radius:14px; padding:32px 26px; text-align:center; }
+.admin-login h3 { font-size:19px; font-weight:800; color:#001780; margin:0 0 6px; }
+.admin-login p { font-size:13px; color:#666; margin:0 0 20px; }
+.admin-login input { width:100%; padding:13px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; margin-bottom:12px; }
+.admin-login input:focus { outline:none; border-color:#001780; }
+.admin-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+.admin-stat { background:#f7f9fc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; }
+.admin-stat-label { font-size:11px; font-weight:800; color:#94a3b8; letter-spacing:1px; margin-bottom:6px; }
+.admin-stat-value { font-size:20px; font-weight:900; color:#001780; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+.admin-table-wrap { background:white; border:1px solid #e8eaee; border-radius:14px; overflow:hidden; }
+.admin-table { width:100%; border-collapse:collapse; font-size:13px; }
+.admin-table th { background:#f7f9fc; text-align:left; padding:13px 12px; font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.6px; border-bottom:1.5px solid #e2e8f0; white-space:nowrap; }
+.admin-table td { padding:14px 12px; border-bottom:1px solid #f1f3f5; vertical-align:top; color:#334155; }
+.admin-table tr:last-child td { border-bottom:none; }
+.admin-table tr:hover td { background:#fafbfd; }
+.adm-name { font-weight:800; color:#1a1a1a; }
+.adm-sub { display:block; font-size:11.5px; color:#94a3b8; margin-top:3px; }
+.adm-total { font-weight:800; color:#001780; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.adm-tag { display:inline-block; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:800; background:#eef4ff; color:#001780; white-space:nowrap; }
+.adm-tag.violation { background:#fee2e2; color:#b91c1c; }
+.adm-tag.remodel { background:#e0e7ff; color:#3730a3; }
+.adm-addr { max-width:220px; font-size:12.5px; line-height:1.5; }
+.adm-detail-btn { padding:6px 11px; font-size:11.5px; font-weight:700; border:1px solid #cbd5e1; background:white; border-radius:6px; cursor:pointer; color:#475569; white-space:nowrap; }
+.adm-detail-btn:hover { border-color:#001780; color:#001780; }
+.admin-empty { padding:60px 20px; text-align:center; color:#94a3b8; font-size:14px; }
+.admin-err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:16px; line-height:1.6; }
+.adm-items { margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0; }
+.adm-item-row { display:flex; justify-content:space-between; gap:10px; font-size:11.5px; color:#64748b; padding:2px 0; }
+@media (max-width:768px){
+    .admin-stats { grid-template-columns:1fr; }
+    .admin-table thead { display:none; }
+    .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display:block; width:100%; box-sizing:border-box; }
+    .admin-table tr { border-bottom:8px solid #f4f6f9; padding:6px 0; }
+    .admin-table td { border:none; padding:6px 14px; }
+    .adm-addr { max-width:none; }
+}
+.result-box { background:white; border:1px solid #e8eaee; border-radius:14px; padding:26px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.03); }
+.result-box h3 { font-size:13px; font-weight:800; color:#94a3b8; margin-bottom:6px; padding-bottom:0; border-bottom:none; letter-spacing:1.2px; text-transform:uppercase; }
+.result-items-wrap { border-top:2px solid #1a1a1a; margin-top:12px; }
+.result-item { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:16px 0; border-bottom:1px solid #f1f3f5; }
+.result-item .label { flex:1; min-width:0; }
+.result-item .item-name { display:block; font-size:14.5px; font-weight:700; color:#1a1a1a; letter-spacing:-0.2px; line-height:1.45; }
+.result-item .item-desc { display:block; font-size:11.5px; font-weight:500; color:#94a3b8; margin-top:5px; line-height:1.5; letter-spacing:-0.1px; }
+.result-item .amount { flex-shrink:0; font-size:15px; font-weight:800; color:#1a1a1a; font-variant-numeric:tabular-nums; letter-spacing:-0.3px; white-space:nowrap; padding-top:1px; }
+.total-box { padding:20px 18px; margin-top:14px; background:#f7f9fc; border:1.5px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.total-box .label { font-size:14px; font-weight:800; color:#475569; letter-spacing:-0.2px; }
+.total-box .amount { font-size:26px; font-weight:900; color:#001780; font-variant-numeric:tabular-nums; letter-spacing:-1px; white-space:nowrap; }
+@media (max-width:480px){
+    .result-box { padding:22px 18px; }
+    .result-item { gap:10px; }
+    .result-item .item-name { font-size:14px; }
+    .result-item .amount { font-size:14px; }
+    .total-box { padding:18px 16px; }
+    .total-box .amount { font-size:22px; }
+}
+.check-result { margin-top:20px; padding:18px 16px; background:#f4f7fc; border-radius:10px; font-size:12.5px; color:#334155; line-height:1.8; }
+.check-result strong { display:block; margin-bottom:10px; color:#001780; font-size:13px; font-weight:800; letter-spacing:-0.2px; }
+.warning-box { margin-top:14px; padding:15px 16px; background:#fff8ed; border-radius:10px; font-size:12.5px; color:#9a3412; line-height:1.6; font-weight:600; }
+.info-box { margin-top:12px; padding:16px; background:#fafbfc; border-radius:10px; font-size:12.5px; color:#64748b; line-height:1.75; }
+.info-box strong { display:block; margin-bottom:8px; color:#334155; font-size:13px; font-weight:800; letter-spacing:-0.2px; }
+.print-btn { width:100%; margin-top:20px; padding:14px; background:white; border:1.5px solid #cbd5e1; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#475569; transition:all 0.15s; }
+.print-btn:hover { background:#f8fafc; border-color:#001780; color:#001780; }
 .estimate-wrap { max-width:720px; margin:0 auto; }
 .hero-result-badge { display:inline-block; padding:10px 22px; border-radius:999px; font-size:16px; font-weight:800; margin-bottom:14px; letter-spacing:-0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border:1.5px solid; }
 .hero-result-badge.violation { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
@@ -495,6 +552,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <ul>
         <li onclick="alert('무료 상담은 견적 결과 페이지 또는 홈에서 신청 가능합니다.'); toggleSideMenu();">무료 상담</li>
         <li onclick="alert('준비 중입니다.'); toggleSideMenu();">자주 묻는 질문</li>
+    </ul>
+    <div class="menu-section-title">관리자</div>
+    <ul>
+        <li onclick="openAdmin(); toggleSideMenu();">견적 접수 목록</li>
     </ul>
 </aside>
 <div id="side-menu-overlay" class="side-menu-overlay" onclick="toggleSideMenu()"></div>
@@ -974,6 +1035,62 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     </div>
 </div>
 
+
+<!-- ===== 관리자: 견적 접수 목록 ===== -->
+<div id="admin-screen" class="hidden">
+    <div class="admin-wrap">
+        <button class="back-btn" onclick="goMain()">← 홈으로</button>
+
+        <div id="admin-login-box" class="admin-login">
+            <h3>관리자 로그인</h3>
+            <p>견적 접수 목록을 확인하려면<br>비밀번호를 입력해주세요.</p>
+            <input type="password" id="admin-password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')adminLogin()">
+            <button class="admin-btn primary" style="width:100%;padding:13px;" onclick="adminLogin()">로그인</button>
+        </div>
+
+        <div id="admin-panel" class="hidden">
+            <div class="admin-head">
+                <h1 class="admin-title">견적 접수 목록</h1>
+                <div class="admin-actions">
+                    <button class="admin-btn" onclick="adminExportCSV()">CSV 내려받기</button>
+                    <button class="admin-btn primary" onclick="adminLoad()">새로고침</button>
+                </div>
+            </div>
+            <div id="admin-error"></div>
+            <div class="admin-stats">
+                <div class="admin-stat">
+                    <div class="admin-stat-label">전체 접수</div>
+                    <div class="admin-stat-value" id="adm-stat-total">-</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">최근 7일</div>
+                    <div class="admin-stat-value" id="adm-stat-week">-</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">견적 합계</div>
+                    <div class="admin-stat-value" id="adm-stat-sum">-</div>
+                </div>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>접수일시</th>
+                            <th>신청자</th>
+                            <th>구분</th>
+                            <th>주소 / 면적</th>
+                            <th>견적금액</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody"></tbody>
+                </table>
+                <div id="admin-empty" class="admin-empty hidden">아직 접수된 견적이 없습니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 견적 확인 전 정보 입력 모달 -->
 <div id="info-modal" class="info-modal-overlay">
     <div class="info-modal-box">
@@ -1356,7 +1473,7 @@ function applyBuildingInfo(info, type){
 }
 
 // 화면 전환
-const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3'];
+const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','admin-screen'];
 function showScreen(id){
     SCREENS.forEach(s=>document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -1532,6 +1649,170 @@ function saveEstimate(resultId){
             document.body.removeAttribute('data-print-target');
         }, 500);
     }, 100);
+}
+
+// ================= 관리자: 견적 접수 목록 =================
+let ADMIN_PW = '';
+let ADMIN_DATA = [];
+
+function openAdmin(){
+    showScreen('admin-screen');
+    if(ADMIN_PW){ adminLoad(); }
+}
+
+function adminLogin(){
+    const pw = document.getElementById('admin-password').value.trim();
+    if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
+    ADMIN_PW = pw;
+    adminLoad(true);
+}
+
+async function adminLoad(fromLogin){
+    const errBox = document.getElementById('admin-error');
+    errBox.innerHTML = '';
+    try {
+        const res = await fetch('/api/submissions?password=' + encodeURIComponent(ADMIN_PW));
+        const data = await res.json();
+        if(!data.success){
+            if(res.status === 401){
+                ADMIN_PW = '';
+                alert('비밀번호가 올바르지 않습니다.');
+                return;
+            }
+            throw new Error(data.error || '조회 실패');
+        }
+        document.getElementById('admin-login-box').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        ADMIN_DATA = data.submissions || [];
+        adminRender();
+    } catch(err){
+        console.error(err);
+        if(fromLogin){ ADMIN_PW = ''; }
+        errBox.innerHTML = '<div class="admin-err"><b>목록을 불러오지 못했습니다.</b><br>' + err.message + '</div>';
+        document.getElementById('admin-login-box').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+    }
+}
+
+function adminRender(){
+    const tbody = document.getElementById('admin-tbody');
+    const empty = document.getElementById('admin-empty');
+    tbody.innerHTML = '';
+
+    // 통계
+    const now = Date.now();
+    const week = ADMIN_DATA.filter(function(r){ return now - new Date(r.createdAt).getTime() < 7*24*3600*1000; }).length;
+    const sum = ADMIN_DATA.reduce(function(s,r){ return s + (r.total||0); }, 0);
+    document.getElementById('adm-stat-total').textContent = ADMIN_DATA.length + '건';
+    document.getElementById('adm-stat-week').textContent = week + '건';
+    document.getElementById('adm-stat-sum').textContent = formatCurrency(sum);
+
+    if(ADMIN_DATA.length === 0){ empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    ADMIN_DATA.forEach(function(r, idx){
+        const tr = document.createElement('tr');
+        let tagCls = '';
+        if((r.caseType||'').indexOf('위반') >= 0) tagCls = 'violation';
+        else if((r.caseType||'').indexOf('대수선') >= 0 || (r.caseType||'').indexOf('증축') >= 0) tagCls = 'remodel';
+
+        tr.innerHTML =
+            '<td><span class="adm-sub" style="margin:0;">' + adminDate(r.createdAt) + '</span></td>' +
+            '<td><span class="adm-name">' + esc(r.name) + '</span>' +
+                '<span class="adm-sub">' + esc(r.phone) + '</span>' +
+                (r.email ? '<span class="adm-sub">' + esc(r.email) + '</span>' : '') + '</td>' +
+            '<td><span class="adm-tag ' + tagCls + '">' + esc(r.caseType || '-') + '</span>' +
+                (r.adminType ? '<span class="adm-sub">' + esc(r.adminType) + '</span>' : '') + '</td>' +
+            '<td class="adm-addr">' + (esc(r.address) || '<span style="color:#cbd5e1;">주소 미입력</span>') +
+                '<span class="adm-sub">' + (r.area ? Number(r.area).toLocaleString() + '㎡ (' + (r.area/3.3).toFixed(1) + '평)' : '면적 -') +
+                (r.drawing ? ' · ' + esc(r.drawing) : '') + '</span></td>' +
+            '<td class="adm-total">' + formatCurrency(r.total||0) + '</td>' +
+            '<td><button class="adm-detail-btn" onclick="adminToggleDetail(' + idx + ', this)">내역</button></td>';
+        tbody.appendChild(tr);
+
+        // 상세 행 (기본 숨김)
+        const detail = document.createElement('tr');
+        detail.id = 'adm-detail-' + idx;
+        detail.className = 'hidden';
+        let itemsHtml = '<div class="adm-items">';
+        (r.items||[]).forEach(function(it){
+            itemsHtml += '<div class="adm-item-row"><span>' + esc(it.name) + '</span><span>' + formatCurrency(it.amount) + '</span></div>';
+        });
+        if(!(r.items||[]).length) itemsHtml += '<div class="adm-item-row"><span>세부 내역 없음</span></div>';
+        itemsHtml += '</div>';
+        detail.innerHTML = '<td colspan="6" style="background:#fafbfd;">' + itemsHtml + '</td>';
+        tbody.appendChild(detail);
+    });
+}
+
+function adminToggleDetail(idx, btn){
+    const el = document.getElementById('adm-detail-' + idx);
+    if(!el) return;
+    el.classList.toggle('hidden');
+    btn.textContent = el.classList.contains('hidden') ? '내역' : '닫기';
+}
+
+function adminDate(iso){
+    try {
+        const d = new Date(iso);
+        return d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') +
+               ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    } catch(e){ return '-'; }
+}
+
+function esc(s){
+    if(s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function adminExportCSV(){
+    if(!ADMIN_DATA.length){ alert('내려받을 데이터가 없습니다.'); return; }
+    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액'];
+    const rows = ADMIN_DATA.map(function(r){
+        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total]
+            .map(function(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }).join(',');
+    });
+    const csv = '\uFEFF' + head.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = '견적접수목록_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// 견적 제출 기록 서버 저장
+async function saveSubmission(type, caseType){
+    const info = STATE.customerInfo || {};
+    let address = '', area = 0, drawing = '', resultId = '';
+    if(type === 'illegal'){
+        address = val('illegal-address'); area = num('illegal-area'); drawing = drawText('illegal-drawing'); resultId = 'illegal-result';
+    } else if(type === 'usage'){
+        address = val('usage-address'); area = STATE.usageTotalArea || 0; drawing = drawText('usage-drawing'); resultId = 'usage-result';
+    } else if(type === 'remodel'){
+        address = val('repair-address'); area = num('repair-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
+    }
+    const snap = STATE.lastEstimate || {};
+    try {
+        await fetch('/api/submissions', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                name: info.name, phone: info.phone, email: info.email,
+                caseType: caseType, adminType: snap.adminType || '',
+                address: address, area: area, drawing: drawing,
+                total: snap.total || 0, items: snap.items || []
+            })
+        });
+    } catch(err){ console.error('기록 저장 실패:', err); }
+}
+
+function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function num(id){ const el = document.getElementById(id); return el ? (parseFloat(el.value)||0) : 0; }
+function drawText(id){
+    const el = document.getElementById(id);
+    if(!el) return '';
+    const map = {cad:'CAD 보유', pdf:'PDF·종이', none:'도면 없음'};
+    return map[el.value] || '';
 }
 
 function openKakaoChannel(){
@@ -1736,8 +2017,13 @@ function submitInfoModal(){
         showScreen('remodel-step3');
     }
     
-    // 견적 표시 후 SMS 발송 + 완료 알림 팝업
+    // 견적 표시 후 기록 저장 + SMS 발송 + 완료 알림 팝업
     setTimeout(function(){
+        let caseLabel = '견적';
+        if(type==='illegal') caseLabel = '위반건축물 양성화';
+        else if(type==='usage') caseLabel = '용도변경';
+        else if(type==='remodel') caseLabel = STATE.remodelType || '대수선/증축';
+        saveSubmission(type, caseLabel);
         sendCompletionSMS(name, phone, type);
         showDoneToast();
     }, 600);
@@ -1946,6 +2232,8 @@ function getUsageChanges(){
 
 function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     meta = meta || {};
+    // 관리자 기록용 스냅샷
+    STATE.lastEstimate = { total: total, adminType: meta.adminType || '', items: items.filter(function(i){return i.amount>0;}) };
     const min = Math.round(total * 0.85);
     const max = Math.round(total * 1.2);
     let html = '';
@@ -1967,8 +2255,18 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
         html += '</div>';
     }
     html += '</div>';
-    html += '<div class="result-box"><h3>견적 내역</h3>';
-    items.forEach(it=>{ if(it.amount>0) html+='<div class="result-item"><span class="label">'+it.name+'</span><span class="amount">'+formatCurrency(it.amount)+'</span></div>'; });
+    html += '<div class="result-box"><h3>견적 내역</h3><div class="result-items-wrap">';
+    items.forEach(function(it){
+        if(it.amount<=0) return;
+        // 항목명에서 괄호 안 세부사항 분리 → 2줄 레이아웃
+        var name = it.name, desc = '';
+        var m = it.name.match(/^(.*?)\s*\((.+)\)\s*$/);
+        if(m){ name = m[1].trim(); desc = m[2].trim(); }
+        html += '<div class="result-item"><span class="label"><span class="item-name">' + name + '</span>'
+              + (desc ? '<span class="item-desc">' + desc + '</span>' : '')
+              + '</span><span class="amount">' + formatCurrency(it.amount) + '</span></div>';
+    });
+    html += '</div>';
     if(rf!==1.0) html+='<div style="background:#f8f7f4;padding:14px;border-radius:8px;margin:20px 0;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>소계</span><span>'+formatCurrency(subtotal)+'</span></div><div style="display:flex;justify-content:space-between;font-size:13px;"><span>지역할증 (×'+rf+')</span><span>'+formatCurrency(total-subtotal)+'</span></div></div>';
     html+='<div class="total-box"><span class="label">총 견적금액</span><span class="amount">'+formatCurrency(total)+'</span></div>';
     if(extraHtml) html+=extraHtml;
@@ -2019,6 +2317,7 @@ function calculateUsage(){
     if(changes.length === 0){ alert('변경 항목을 1개 이상 추가해주세요.'); return false; }
     const totalChangeArea = changes.reduce(function(s,c){return s+c.area;},0);
     if(totalChangeArea === 0){ alert('변경 면적을 입력해주세요.'); return false; }
+    STATE.usageTotalArea = totalChangeArea;
     const rf = 1.0;
 
     const judges = changes.map(function(c){
