@@ -524,6 +524,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .consult-form-section { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:14px; padding:28px 24px; margin-top:30px; }
 .consult-form-section h3 { font-size:20px; font-weight:800; color:#001780; margin-bottom:6px; text-align:center; letter-spacing:-0.3px; }
 .consult-form-section .consult-sub { color:#666; font-size:13px; text-align:center; margin-bottom:20px; }
+.consult-form-section .consult-lead { color:#001780; font-size:19px; font-weight:800; text-align:center; margin-bottom:20px; letter-spacing:-0.4px; line-height:1.4; }
 .consult-form-section .form-field { margin-bottom:14px; }
 .consult-form-section .form-field label { display:block; font-weight:800; color:#000; font-size:13px; margin-bottom:6px; }
 .consult-form-section input, .consult-form-section select { width:100%; padding:12px 14px; border:1.5px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
@@ -854,7 +855,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         </div>
         <div class="est-info-form">
             <h3>견적 확인 정보</h3>
-            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
             <div class="est-info-field">
                 <label>이름 *</label>
                 <input type="text" id="illegal-name" placeholder="홍길동" autocomplete="name">
@@ -893,9 +894,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('illegal-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
-        <h3>건축사 검토 요청하기</h3>
-        <p class="consult-sub">앞서 입력하신 정보로 담당 건축사가 직접 검토 후 회신드립니다</p>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
@@ -943,7 +943,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <div id="usage-changes-container"></div>
         <div class="est-info-form">
             <h3>견적 확인 정보</h3>
-            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
             <div class="est-info-field">
                 <label>이름 *</label>
                 <input type="text" id="usage-name" placeholder="홍길동" autocomplete="name">
@@ -982,9 +982,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('usage-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
-        <h3>건축사 검토 요청하기</h3>
-        <p class="consult-sub">앞서 입력하신 정보로 담당 건축사가 직접 검토 후 회신드립니다</p>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
@@ -1025,7 +1024,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         </div>
         <div class="est-info-form">
             <h3>견적 확인 정보</h3>
-            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
             <div class="est-info-field">
                 <label>이름 *</label>
                 <input type="text" id="remodel-name" placeholder="홍길동" autocomplete="name">
@@ -1064,9 +1063,8 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('repair-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
     </div>
     <div class="consult-form-section">
-        <h3>건축사 검토 요청하기</h3>
-        <p class="consult-sub">앞서 입력하신 정보로 담당 건축사가 직접 검토 후 회신드립니다</p>
-        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">담당건축사 검토 요청</button>
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
         <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
             <span class="kakao-icon">💬</span>카카오톡 채널 상담
         </button>
