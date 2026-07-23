@@ -229,6 +229,16 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .info-modal-btn-submit { flex:2; padding:14px; background:#001780; color:white; border:none; border-radius:8px; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; }
 .info-modal-btn-submit:hover { background:#000d4d; }
 
+/* 견적 확인 전 인라인 정보 입력 */
+.est-info-form { background:white; border:1px solid #e5e7eb; border-radius:14px; padding:22px 20px; margin-top:16px; }
+.est-info-form h3 { font-size:17px; font-weight:800; color:#001780; margin:0 0 4px; letter-spacing:-0.3px; }
+.est-info-form .est-sub { font-size:13px; color:#666; margin:0 0 18px; line-height:1.55; }
+.est-info-field { margin-bottom:14px; }
+.est-info-field label { display:block; font-size:13px; font-weight:800; color:#1a1a1a; margin-bottom:6px; }
+.est-info-field label .opt { color:#94a3b8; font-weight:600; }
+.est-info-field input, .est-info-field select { width:100%; padding:13px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:15px; font-family:inherit; box-sizing:border-box; background:white; }
+.est-info-field input:focus, .est-info-field select:focus { outline:none; border-color:#001780; }
+
 /* 견적 완료 알림 팝업 */
 .done-toast-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100001; align-items:center; justify-content:center; padding:20px; }
 .done-toast-overlay.show { display:flex; }
@@ -842,7 +852,35 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <div class="form-field"><label>위반 시점</label><select id="illegal-when"><option>2006.5.9 이전 (특정건축물 정리 검토 가능)</option><option>2006.5.9 이후</option><option>모름</option></select></div>
             <div class="check-row"><input type="checkbox" id="illegal-far"><label>건폐율 또는 용적률 초과 (초과 시 양성화 제한될 수 있음)</label></div>
         </div>
-        <button class="next-btn" onclick="goToEstimate('illegal')">견적 확인하기</button>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="illegal-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="illegal-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="illegal-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="illegal-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('illegal')">견적 바로 확인하기</button>
     </div>
 </div>
 
@@ -903,7 +941,35 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <div class="form-wrap">
         <div class="usage-helper">항목별로 신고/허가/기재변경이 자동 판별됩니다</div>
         <div id="usage-changes-container"></div>
-        <button class="next-btn" onclick="goToEstimate('usage')">견적 확인하기</button>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="usage-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="usage-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="usage-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="usage-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('usage')">견적 바로 확인하기</button>
     </div>
 </div>
 
@@ -957,7 +1023,35 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <h3>소유 여부</h3>
             <div class="form-field"><select id="repair-ownership"><option>소유</option><option>매수 검토중</option></select></div>
         </div>
-        <button class="next-btn" onclick="goToEstimate('remodel')">견적 확인하기</button>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">정확한 안내를 위해 아래 정보를 입력해주세요. 담당 건축사가 검토 후 회신드립니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="remodel-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="remodel-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="remodel-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="remodel-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('remodel')">견적 바로 확인하기</button>
     </div>
 </div>
 
@@ -1066,30 +1160,6 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                 </table>
                 <div id="admin-empty" class="admin-empty hidden">아직 접수된 견적이 없습니다.</div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- 견적 확인 전 정보 입력 모달 -->
-<div id="info-modal" class="info-modal-overlay">
-    <div class="info-modal-box">
-        <h3 class="info-modal-title">견적 확인 정보</h3>
-        <p class="info-modal-sub">정확한 안내를 위해 아래 정보를 입력해주세요.<br>담당 건축사가 검토 후 회신드립니다.</p>
-        <div class="info-modal-field">
-            <label>이름 *</label>
-            <input type="text" id="modal-name" placeholder="홍길동" autocomplete="name">
-        </div>
-        <div class="info-modal-field">
-            <label>연락처 *</label>
-            <input type="tel" id="modal-phone" placeholder="010-0000-0000" autocomplete="tel">
-        </div>
-        <div class="info-modal-field">
-            <label>이메일 <span style="color:#94a3b8; font-weight:600;">(선택)</span></label>
-            <input type="email" id="modal-email" placeholder="example@email.com" autocomplete="email">
-        </div>
-        <div class="info-modal-btn-row">
-            <button type="button" class="info-modal-btn-cancel" onclick="closeInfoModal()">취소</button>
-            <button type="button" class="info-modal-btn-submit" onclick="submitInfoModal()">견적 확인하기</button>
         </div>
     </div>
 </div>
@@ -1928,59 +1998,27 @@ function selectRemodel(t){
     showScreen('remodel-step2');
 }
 
-// 견적 확인하기 - 정보 입력 모달 → 계산 → 견적 표시 → 완료 팝업
-let pendingEstimateType = null;
-
+// 견적 확인하기 - 인라인 폼에서 정보 읽어 검증 → 계산 → 견적 표시
 function goToEstimate(type){
-    pendingEstimateType = type;
-    openInfoModal();
-}
-
-function openInfoModal(){
-    document.getElementById('info-modal').classList.add('show');
-    // 이전 입력값 복원
-    if(STATE.customerInfo){
-        document.getElementById('modal-name').value = STATE.customerInfo.name || '';
-        document.getElementById('modal-phone').value = STATE.customerInfo.phone || '';
-        document.getElementById('modal-email').value = STATE.customerInfo.email || '';
-    }
-    // 이름 필드에 포커스
-    setTimeout(function(){
-        document.getElementById('modal-name').focus();
-    }, 100);
-}
-
-function closeInfoModal(){
-    document.getElementById('info-modal').classList.remove('show');
-    pendingEstimateType = null;
-}
-
-function submitInfoModal(){
-    const name = document.getElementById('modal-name').value.trim();
-    const phone = document.getElementById('modal-phone').value.trim();
-    const email = document.getElementById('modal-email').value.trim();
+    const name = val(type + '-name');
+    const phone = val(type + '-phone');
+    const email = val(type + '-email');
+    const source = val(type + '-source');
     
-    if(!name){ alert('이름을 입력해주세요.'); document.getElementById('modal-name').focus(); return; }
-    if(!phone){ alert('연락처를 입력해주세요.'); document.getElementById('modal-phone').focus(); return; }
-    // 이메일은 선택 — 입력한 경우에만 형식 검사
+    if(!name){ alert('이름을 입력해주세요.'); focusEl(type + '-name'); return; }
+    if(!phone){ alert('연락처를 입력해주세요.'); focusEl(type + '-phone'); return; }
+    if(phone.replace(/[^0-9]/g,'').length < 9){
+        alert('올바른 연락처를 입력해주세요.'); focusEl(type + '-phone'); return;
+    }
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
         alert('올바른 이메일 형식을 입력해주세요. (예: name@email.com)');
-        document.getElementById('modal-email').focus(); return;
-    }
-    // 연락처 간단 검증
-    if(phone.replace(/[^0-9]/g,'').length < 9){
-        alert('올바른 연락처를 입력해주세요.');
-        document.getElementById('modal-phone').focus(); return;
+        focusEl(type + '-email'); return;
     }
     
     // 정보 저장
-    STATE.customerInfo = { name: name, phone: phone, email: email };
-    document.getElementById('info-modal').classList.remove('show');
+    STATE.customerInfo = { name: name, phone: phone, email: email, source: source };
     
     // 실제 계산 진행
-    const type = pendingEstimateType;
-    pendingEstimateType = null;
-    
     if(type==='illegal'){
         const ic=document.getElementById('illegal-chosen-3'); const ic2=document.getElementById('illegal-chosen'); if(ic && ic2) ic.textContent=ic2.textContent;
         if(calculateIllegal() === false) return;
@@ -2005,6 +2043,8 @@ function submitInfoModal(){
         showDoneToast();
     }, 600);
 }
+
+function focusEl(id){ const el = document.getElementById(id); if(el) el.focus(); }
 
 // 네이버 클라우드 SENS를 통한 SMS 발송 (고객용 + 관리자용 분리)
 async function sendCompletionSMS(name, phone, type){
