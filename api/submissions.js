@@ -13,7 +13,7 @@ const MAX_RECORDS = 500; // 최근 500건만 보관
 
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -91,6 +91,58 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ success: true, count: list.length, submissions: list });
         } catch (err) {
             console.error('조회 실패:', err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+    }
+
+    // ---------- 삭제 (관리자) ----------
+    if (req.method === 'DELETE') {
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminPassword) {
+            return res.status(500).json({ success: false, error: 'ADMIN_PASSWORD 미설정' });
+        }
+        let body;
+        try {
+            body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        } catch (e) {
+            body = {};
+        }
+        const given = (body && body.password) || (req.query && req.query.password) || '';
+        if (given !== adminPassword) {
+            return res.status(401).json({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+        }
+
+        // 지울 대상 id 목록 (단건 id 또는 ids 배열 모두 허용)
+        let ids = [];
+        if (body && Array.isArray(body.ids)) ids = body.ids;
+        else if (body && body.id) ids = [body.id];
+        ids = ids.map(function (v) { return String(v); }).filter(Boolean);
+        if (!ids.length) {
+            return res.status(400).json({ success: false, error: '삭제할 id가 없습니다.' });
+        }
+
+        try {
+            const result = await redis(url, token, ['LRANGE', REDIS_KEY, '0', '-1']);
+            const all = (result || [])
+                .map(function (s) { try { return JSON.parse(s); } catch (e) { return null; } })
+                .filter(Boolean);
+
+            const idSet = {};
+            ids.forEach(function (i) { idSet[i] = true; });
+            const remain = all.filter(function (r) { return !idSet[r.id]; });
+            const removed = all.length - remain.length;
+
+            // 리스트 통째로 교체: 비운 뒤 남은 것 다시 넣기 (최신순 유지)
+            await redis(url, token, ['DEL', REDIS_KEY]);
+            if (remain.length) {
+                // LPUSH는 넣는 순서를 뒤집으므로, 역순으로 넣어 원래 순서(최신이 앞) 유지
+                const args = ['RPUSH', REDIS_KEY];
+                remain.forEach(function (r) { args.push(JSON.stringify(r)); });
+                await redis(url, token, args);
+            }
+            return res.status(200).json({ success: true, removed: removed, remaining: remain.length });
+        } catch (err) {
+            console.error('삭제 실패:', err);
             return res.status(500).json({ success: false, error: err.message });
         }
     }
