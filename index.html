@@ -284,7 +284,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .admin-login p { font-size:13px; color:#666; margin:0 0 20px; }
 .admin-login input { width:100%; padding:13px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; margin-bottom:12px; }
 .admin-login input:focus { outline:none; border-color:#001780; }
-.admin-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+.admin-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
 .admin-stat { background:#f7f9fc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; }
 .admin-stat-label { font-size:11px; font-weight:800; color:#94a3b8; letter-spacing:1px; margin-bottom:6px; }
 .admin-stat-value { font-size:20px; font-weight:900; color:#001780; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
@@ -305,6 +305,15 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .adm-detail-btn:hover { border-color:#001780; color:#001780; }
 .adm-del-btn { padding:6px 11px; font-size:11.5px; font-weight:700; border:1px solid #fecaca; background:white; border-radius:6px; cursor:pointer; color:#dc2626; white-space:nowrap; }
 .adm-del-btn:hover { background:#dc2626; border-color:#dc2626; color:white; }
+.adm-status-badge { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; white-space:nowrap; }
+.adm-status-badge.none { background:#f1f5f9; color:#94a3b8; }
+.adm-status-badge.done { background:#dcfce7; color:#15803d; }
+.adm-status-badge.fail { background:#fee2e2; color:#b91c1c; }
+.adm-status-badge.miss { background:#fef3c7; color:#b45309; }
+.adm-status-badge.ing  { background:#dbeafe; color:#1d4ed8; }
+.adm-status-badge.end  { background:#e5e7eb; color:#6b7280; }
+.adm-status-select { display:block; margin-top:6px; padding:5px 6px; font-size:11.5px; font-family:inherit; border:1px solid #cbd5e1; border-radius:6px; background:white; color:#334155; cursor:pointer; max-width:110px; }
+.adm-status-select:focus { outline:none; border-color:#001780; }
 .admin-empty { padding:60px 20px; text-align:center; color:#94a3b8; font-size:14px; }
 .admin-err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:16px; line-height:1.6; }
 .adm-items { margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0; }
@@ -1143,6 +1152,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                     <div class="admin-stat-label">견적 합계</div>
                     <div class="admin-stat-value" id="adm-stat-sum">-</div>
                 </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">미처리</div>
+                    <div class="admin-stat-value" id="adm-stat-todo">-</div>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -1153,6 +1166,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                             <th>구분</th>
                             <th>주소 / 면적</th>
                             <th>견적금액</th>
+                            <th>연락상태</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -1755,6 +1769,8 @@ function adminRender(){
     document.getElementById('adm-stat-total').textContent = ADMIN_DATA.length + '건';
     document.getElementById('adm-stat-week').textContent = week + '건';
     document.getElementById('adm-stat-sum').textContent = formatCurrency(sum);
+    const todo = ADMIN_DATA.filter(function(r){ return !r.status; }).length;
+    document.getElementById('adm-stat-todo').textContent = todo + '건';
 
     if(ADMIN_DATA.length === 0){ empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
@@ -1776,6 +1792,16 @@ function adminRender(){
                 '<span class="adm-sub">' + (r.area ? Number(r.area).toLocaleString() + '㎡ (' + (r.area/3.3).toFixed(1) + '평)' : '면적 -') +
                 (r.drawing ? ' · ' + esc(r.drawing) : '') + '</span></td>' +
             '<td class="adm-total">' + formatCurrency(r.total||0) + '</td>' +
+            '<td>' + statusBadge(r.status) +
+                '<select class="adm-status-select" onchange="adminSetStatus(\'' + esc(r.id) + '\', this.value, this)">' +
+                    statusOption('', r.status, '- 상태 -') +
+                    statusOption('연락완료', r.status, '연락완료') +
+                    statusOption('연락불가', r.status, '연락불가') +
+                    statusOption('부재중', r.status, '부재중') +
+                    statusOption('상담중', r.status, '상담중') +
+                    statusOption('계약', r.status, '계약') +
+                    statusOption('종료', r.status, '종료') +
+                '</select></td>' +
             '<td style="white-space:nowrap;">' +
                 '<button class="adm-detail-btn" onclick="adminToggleDetail(' + idx + ', this)">내역</button> ' +
                 '<button class="adm-del-btn" onclick="adminDelete(\'' + esc(r.id) + '\', \'' + esc(r.name) + '\')">삭제</button>' +
@@ -1792,9 +1818,47 @@ function adminRender(){
         });
         if(!(r.items||[]).length) itemsHtml += '<div class="adm-item-row"><span>세부 내역 없음</span></div>';
         itemsHtml += '</div>';
-        detail.innerHTML = '<td colspan="7" style="background:#fafbfd;">' + itemsHtml + '</td>';
+        detail.innerHTML = '<td colspan="8" style="background:#fafbfd;">' + itemsHtml + '</td>';
         tbody.appendChild(detail);
     });
+}
+
+// 연락 상태 배지
+function statusBadge(status){
+    if(!status) return '<span class="adm-status-badge none">미처리</span>';
+    var cls = 'none';
+    if(status === '연락완료' || status === '계약') cls = 'done';
+    else if(status === '연락불가') cls = 'fail';
+    else if(status === '부재중') cls = 'miss';
+    else if(status === '상담중') cls = 'ing';
+    else if(status === '종료') cls = 'end';
+    return '<span class="adm-status-badge ' + cls + '">' + esc(status) + '</span>';
+}
+function statusOption(value, current, label){
+    var sel = (value === (current||'')) ? ' selected' : '';
+    return '<option value="' + value + '"' + sel + '>' + label + '</option>';
+}
+// 연락 상태 변경 → 서버 저장
+async function adminSetStatus(id, status, selEl){
+    try {
+        const res = await fetch('/api/submissions', {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password: ADMIN_PW, id: id, status: status })
+        });
+        const data = await res.json();
+        if(!data.success){
+            alert('상태 저장 실패: ' + (data.error || '오류'));
+            return;
+        }
+        // 로컬 데이터 갱신 후 그 행의 배지만 다시 그림
+        ADMIN_DATA.forEach(function(r){ if(r.id === id) r.status = status; });
+        const badge = selEl.parentNode.querySelector('.adm-status-badge');
+        if(badge) badge.outerHTML = statusBadge(status);
+    } catch(err){
+        console.error(err);
+        alert('상태 저장 중 오류: ' + err.message);
+    }
 }
 
 // 견적 접수 삭제
@@ -1843,9 +1907,9 @@ function esc(s){
 
 function adminExportCSV(){
     if(!ADMIN_DATA.length){ alert('내려받을 데이터가 없습니다.'); return; }
-    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액'];
+    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액','연락상태'];
     const rows = ADMIN_DATA.map(function(r){
-        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total]
+        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total, r.status||'미처리']
             .map(function(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }).join(',');
     });
     const csv = '\uFEFF' + head.join(',') + '\n' + rows.join('\n');
