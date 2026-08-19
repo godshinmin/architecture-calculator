@@ -13,7 +13,7 @@ const MAX_RECORDS = 500; // 최근 500건만 보관
 
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -48,6 +48,7 @@ module.exports = async function handler(req, res) {
             area: Number(body.area) || 0,
             drawing: str(body.drawing),
             total: Number(body.total) || 0,
+            status: '',
             items: Array.isArray(body.items)
                 ? body.items.slice(0, 12).map(function (it) {
                       return { name: str(it.name).slice(0, 120), amount: Number(it.amount) || 0 };
@@ -91,6 +92,54 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ success: true, count: list.length, submissions: list });
         } catch (err) {
             console.error('조회 실패:', err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+    }
+
+    // ---------- 상태 변경 (관리자) ----------
+    if (req.method === 'PATCH') {
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminPassword) {
+            return res.status(500).json({ success: false, error: 'ADMIN_PASSWORD 미설정' });
+        }
+        let body;
+        try {
+            body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        } catch (e) {
+            body = {};
+        }
+        const given = (body && body.password) || '';
+        if (given !== adminPassword) {
+            return res.status(401).json({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+        }
+        const targetId = body && body.id ? String(body.id) : '';
+        const newStatus = str(body && body.status);
+        if (!targetId) {
+            return res.status(400).json({ success: false, error: '대상 id가 없습니다.' });
+        }
+
+        try {
+            const result = await redis(url, token, ['LRANGE', REDIS_KEY, '0', '-1']);
+            const all = (result || [])
+                .map(function (s) { try { return JSON.parse(s); } catch (e) { return null; } })
+                .filter(Boolean);
+
+            let found = false;
+            all.forEach(function (r) {
+                if (r.id === targetId) { r.status = newStatus; found = true; }
+            });
+            if (!found) {
+                return res.status(404).json({ success: false, error: '해당 접수를 찾을 수 없습니다.' });
+            }
+
+            // 리스트 통째로 교체 (순서 유지)
+            await redis(url, token, ['DEL', REDIS_KEY]);
+            const args = ['RPUSH', REDIS_KEY];
+            all.forEach(function (r) { args.push(JSON.stringify(r)); });
+            await redis(url, token, args);
+            return res.status(200).json({ success: true, id: targetId, status: newStatus });
+        } catch (err) {
+            console.error('상태 변경 실패:', err);
             return res.status(500).json({ success: false, error: err.message });
         }
     }
