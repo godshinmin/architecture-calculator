@@ -49,6 +49,7 @@ module.exports = async function handler(req, res) {
             drawing: str(body.drawing),
             total: Number(body.total) || 0,
             status: '',
+            memo: '',
             items: Array.isArray(body.items)
                 ? body.items.slice(0, 12).map(function (it) {
                       return { name: str(it.name).slice(0, 120), amount: Number(it.amount) || 0 };
@@ -113,10 +114,14 @@ module.exports = async function handler(req, res) {
             return res.status(401).json({ success: false, error: '비밀번호가 올바르지 않습니다.' });
         }
         const targetId = body && body.id ? String(body.id) : '';
-        const newStatus = str(body && body.status);
         if (!targetId) {
             return res.status(400).json({ success: false, error: '대상 id가 없습니다.' });
         }
+        // status, memo 중 body에 담겨온 것만 반영
+        const hasStatus = body && Object.prototype.hasOwnProperty.call(body, 'status');
+        const hasMemo = body && Object.prototype.hasOwnProperty.call(body, 'memo');
+        const newStatus = str(body && body.status);
+        const newMemo = body && body.memo != null ? String(body.memo).slice(0, 1000) : '';
 
         try {
             const result = await redis(url, token, ['LRANGE', REDIS_KEY, '0', '-1']);
@@ -126,7 +131,11 @@ module.exports = async function handler(req, res) {
 
             let found = false;
             all.forEach(function (r) {
-                if (r.id === targetId) { r.status = newStatus; found = true; }
+                if (r.id === targetId) {
+                    if (hasStatus) r.status = newStatus;
+                    if (hasMemo) r.memo = newMemo;
+                    found = true;
+                }
             });
             if (!found) {
                 return res.status(404).json({ success: false, error: '해당 접수를 찾을 수 없습니다.' });
@@ -137,9 +146,9 @@ module.exports = async function handler(req, res) {
             const args = ['RPUSH', REDIS_KEY];
             all.forEach(function (r) { args.push(JSON.stringify(r)); });
             await redis(url, token, args);
-            return res.status(200).json({ success: true, id: targetId, status: newStatus });
+            return res.status(200).json({ success: true, id: targetId });
         } catch (err) {
-            console.error('상태 변경 실패:', err);
+            console.error('상태/메모 변경 실패:', err);
             return res.status(500).json({ success: false, error: err.message });
         }
     }
