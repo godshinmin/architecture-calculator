@@ -314,6 +314,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .adm-status-badge.end  { background:#e5e7eb; color:#6b7280; }
 .adm-status-select { display:block; margin-top:6px; padding:5px 6px; font-size:11.5px; font-family:inherit; border:1px solid #cbd5e1; border-radius:6px; background:white; color:#334155; cursor:pointer; max-width:110px; }
 .adm-status-select:focus { outline:none; border-color:#001780; }
+.adm-memo-cell { min-width:180px; }
+.adm-memo { width:100%; min-width:170px; min-height:56px; padding:8px 10px; font-size:12.5px; font-family:inherit; line-height:1.5; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; box-sizing:border-box; color:#334155; }
+.adm-memo:focus { outline:none; border-color:#001780; background:#fcfdff; }
+.adm-memo-saved { display:inline-block; margin-top:3px; font-size:11px; font-weight:700; color:#15803d; opacity:0; transition:opacity 0.3s; }
 .admin-empty { padding:60px 20px; text-align:center; color:#94a3b8; font-size:14px; }
 .admin-err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:16px; line-height:1.6; }
 .adm-items { margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0; }
@@ -1167,6 +1171,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
                             <th>주소 / 면적</th>
                             <th>견적금액</th>
                             <th>연락상태</th>
+                            <th>비고</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -1802,6 +1807,10 @@ function adminRender(){
                     statusOption('계약', r.status, '계약') +
                     statusOption('종료', r.status, '종료') +
                 '</select></td>' +
+            '<td class="adm-memo-cell">' +
+                '<textarea class="adm-memo" placeholder="상담 내용 메모..." onchange="adminSetMemo(\'' + esc(r.id) + '\', this.value, this)">' + esc(r.memo || '') + '</textarea>' +
+                '<span class="adm-memo-saved"></span>' +
+            '</td>' +
             '<td style="white-space:nowrap;">' +
                 '<button class="adm-detail-btn" onclick="adminToggleDetail(' + idx + ', this)">내역</button> ' +
                 '<button class="adm-del-btn" onclick="adminDelete(\'' + esc(r.id) + '\', \'' + esc(r.name) + '\')">삭제</button>' +
@@ -1818,7 +1827,7 @@ function adminRender(){
         });
         if(!(r.items||[]).length) itemsHtml += '<div class="adm-item-row"><span>세부 내역 없음</span></div>';
         itemsHtml += '</div>';
-        detail.innerHTML = '<td colspan="8" style="background:#fafbfd;">' + itemsHtml + '</td>';
+        detail.innerHTML = '<td colspan="9" style="background:#fafbfd;">' + itemsHtml + '</td>';
         tbody.appendChild(detail);
     });
 }
@@ -1858,6 +1867,33 @@ async function adminSetStatus(id, status, selEl){
     } catch(err){
         console.error(err);
         alert('상태 저장 중 오류: ' + err.message);
+    }
+}
+
+// 비고 메모 저장 → 서버
+async function adminSetMemo(id, memo, el){
+    try {
+        const res = await fetch('/api/submissions', {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password: ADMIN_PW, id: id, memo: memo })
+        });
+        const data = await res.json();
+        if(!data.success){
+            alert('메모 저장 실패: ' + (data.error || '오류'));
+            return;
+        }
+        ADMIN_DATA.forEach(function(r){ if(r.id === id) r.memo = memo; });
+        // 저장됨 표시 잠깐 노출
+        const tag = el.parentNode.querySelector('.adm-memo-saved');
+        if(tag){
+            tag.textContent = '✓ 저장됨';
+            tag.style.opacity = '1';
+            setTimeout(function(){ tag.style.opacity = '0'; }, 1500);
+        }
+    } catch(err){
+        console.error(err);
+        alert('메모 저장 중 오류: ' + err.message);
     }
 }
 
@@ -1907,9 +1943,9 @@ function esc(s){
 
 function adminExportCSV(){
     if(!ADMIN_DATA.length){ alert('내려받을 데이터가 없습니다.'); return; }
-    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액','연락상태'];
+    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액','연락상태','비고'];
     const rows = ADMIN_DATA.map(function(r){
-        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total, r.status||'미처리']
+        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total, r.status||'미처리', r.memo||'']
             .map(function(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }).join(',');
     });
     const csv = '\uFEFF' + head.join(',') + '\n' + rows.join('\n');
