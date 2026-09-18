@@ -2220,12 +2220,2684 @@ async function sendCompletionSMS(name, phone, type){
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ phone: phone, message: customerMessage })
         });
-        // 관리자 SMS 발송 (별도 발송 - 관리자 번호)
+        // 관리자 SMS 발송 — 여기에 번호를 추가하면 모두에게 발송됩니다
+        const ADMIN_PHONES = [
+            '01099645711',
+            '01074665626',
+            '01065777746'
+        ];
+        for(const adminPhone of ADMIN_PHONES){
+            await fetch('/api/send-sms', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ phone: adminPhone, message: adminMessage })
+            });
+        }
+    } catch(err){
+        console.error('SMS 발송 오류:', err);
+    }
+}
+
+// 견적서에서 SMS용 요약 텍스트 추출 (핵심 금액만)
+function extractEstimateForSMS(resultId){
+    if(!resultId) return '견적 정보 없음';
+    const el = document.getElementById(resultId);
+    if(!el) return '견적 정보 없음';
+    
+    try {
+        const lines = [];
+        // 견적 항목 (item) 추출
+        const items = el.querySelectorAll('.item, .estimate-item, li');
+        items.forEach(function(item){
+            const text = (item.innerText || '').trim().replace(/\s+/g, ' ');
+            if(text && text.length < 100) lines.push('• ' + text);
+        });
+        // 총액 추출
+        const totalEl = el.querySelector('.total-amount, .grand-total, .estimate-total, .price-total');
+        if(totalEl){
+            lines.push('');
+            lines.push('총 견적: ' + totalEl.innerText.trim().replace(/\s+/g, ' '));
+        } else {
+            // 총액 못 찾으면 innerText에서 "총" 또는 "합계" 라인 추출
+            const allText = (el.innerText || '').split('\n');
+            for(let line of allText){
+                if(/총|합계|Total/i.test(line) && /원/.test(line)){
+                    lines.push('');
+                    lines.push(line.trim());
+                    break;
+                }
+            }
+        }
+        const result = lines.join('\n').substring(0, 800); // SMS 글자 제한 고려
+        return result || '견적 상세 - 웹사이트 확인';
+    } catch(e){
+        return '견적 요약 추출 실패';
+    }
+}
+
+function showDoneToast(){
+    document.getElementById('done-toast').classList.add('show');
+}
+
+function closeDoneToast(){
+    document.getElementById('done-toast').classList.remove('show');
+}
+
+let usageChangeCounter = 0;
+
+function usageOptionsHtml(){
+    return USAGE_OPTIONS.map(function(g){
+        return '<optgroup label="'+g.group+'">'+g.items.map(function(it){return '<option>'+it+'</option>';}).join('')+'</optgroup>';
+    }).join('');
+}
+
+function judgeUsageRaw(cur, nw){
+    const g1=FACILITY_GROUP[cur], g2=FACILITY_GROUP[nw];
+    const groupName = {1:'자동차 관련',2:'산업 등',3:'전기통신',4:'문화집회',5:'영업',6:'교육 및 복지',7:'근린생활',8:'주거업무',9:'그 밖의'};
+    if(!cur || !nw) return {cls:'nochange',title:'용도를 입력해주세요',sub:''};
+    if(cur===nw) return {cls:'daejang',title:'<b>"기재변경"</b> 대상입니다',sub:'동일 용도군'};
+    if(!g1 || !g2) return {cls:'nochange',title:'용도 매칭 필요',sub:cur+' → '+nw+' (시설군 자동 판별 불가)'};
+    const dir = g1+'군('+groupName[g1]+') → '+g2+'군('+groupName[g2]+')';
+    if(g1===g2) return {cls:'daejang',title:'<b>"기재변경"</b> 대상입니다',sub:dir+' · 같은 시설군'};
+    if(g1>g2) return {cls:'heoga',title:'용도변경 <b>"허가"</b> 대상입니다',sub:dir+' · 상향'};
+    return {cls:'singo',title:'용도변경 <b>"신고"</b> 대상입니다',sub:dir+' · 하향'};
+}
+
+function validateChangeArea(input){
+    const max = parseFloat(input.getAttribute('max'));
+    const val = parseFloat(input.value) || 0;
+    if(max && val > max){
+        input.value = max;
+        input.classList.add('over');
+        setTimeout(function(){ input.classList.remove('over'); }, 800);
+    }
+}
+
+function addUsageChange(floorData){
+    const idx = usageChangeCounter++;
+    const container = document.getElementById('usage-changes-container');
+    const opts = usageOptionsHtml();
+    const hasFloor = !!floorData;
+    const data = floorData || {floorName:'변경 항목', area:0, purpose:''};
+    const ro = hasFloor ? 'readonly' : '';
+    const maxAttr = (hasFloor && data.area) ? ('max="' + data.area + '"') : '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'change-card';
+    wrap.dataset.idx = idx;
+    wrap.dataset.currentPurpose = data.purpose || '';
+
+    wrap.innerHTML =
+        '<h3><span class="card-title">' + (data.floorName || '변경 항목') + '</span>'
+        + '<button type="button" class="remove-card-btn" onclick="removeUsageChange(' + idx + ')">× 삭제</button></h3>'
+        + '<div class="form-field-row">'
+        + '<div class="form-field"><label>층 면적 <span style="font-weight:400; color:#888;">(건축물대장)</span></label><input type="text" class="floor-area" value="' + (data.area ? data.area + ' ㎡' : '') + '" ' + ro + '></div>'
+        + '<div class="form-field"><label>변경 면적 (㎡)</label><input type="number" class="change-area" value="' + (data.area || 0) + '" min="0" ' + maxAttr + ' oninput="validateChangeArea(this)"></div>'
+        + '</div>'
+        + '<div class="form-field-row">'
+        + '<div class="form-field"><label>현재 용도 <span style="font-weight:400; color:#888;">(건축물대장)</span></label><input type="text" class="current-purpose-input" value="' + (data.purpose || '') + '" ' + ro + '></div>'
+        + '<div class="form-field"><label>변경 용도</label><select class="change-new" onchange="updateChangeBadge(' + idx + ')">' + opts + '</select></div>'
+        + '</div>'
+        + '<div class="permit-mini"></div>';
+    container.appendChild(wrap);
+    wrap.querySelector('.change-new').value = '일반음식점';
+    updateChangeBadge(idx);
+    renumberCards();
+}
+
+function removeUsageChange(idx){
+    const card = document.querySelector('.change-card[data-idx="'+idx+'"]');
+    if(card) card.remove();
+    renumberCards();
+}
+
+function renumberCards(){
+    const cards = document.querySelectorAll('.change-card');
+    cards.forEach(function(c, i){
+        const btn = c.querySelector('.remove-card-btn');
+        if(btn) btn.style.display = (cards.length === 1) ? 'none' : '';
+    });
+}
+
+function updateChangeBadge(idx){
+    const card = document.querySelector('.change-card[data-idx="'+idx+'"]');
+    if(!card) return;
+    const cur = card.dataset.currentPurpose || card.querySelector('.current-purpose-input').value;
+    const nw = card.querySelector('.change-new').value;
+    const j = judgeUsageRaw(cur, nw);
+    card.querySelector('.permit-mini').innerHTML = '<div class="permit-badge '+j.cls+'">'+j.title+(j.sub?'<small>'+j.sub+'</small>':'')+'</div>';
+}
+
+function getUsageChanges(){
+    const cards = document.querySelectorAll('.change-card');
+    return Array.from(cards).map(function(c){
+        const title = c.querySelector('.card-title');
+        return {
+            floor: title ? title.textContent : '',
+            area: parseFloat(c.querySelector('.change-area').value)||0,
+            current: c.dataset.currentPurpose || c.querySelector('.current-purpose-input').value,
+            new: c.querySelector('.change-new').value
+        };
+    });
+}
+
+function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
+    meta = meta || {};
+    // 관리자 기록용 스냅샷
+    STATE.lastEstimate = { total: total, adminType: meta.adminType || '', items: items.filter(function(i){return i.amount>0;}) };
+    const min = Math.round(total * 0.85);
+    const max = Math.round(total * 1.2);
+    let html = '';
+    if(meta.badge){
+        html += '<div style="text-align:center;"><span class="hero-result-badge ' + (meta.badgeClass||'permit') + '">' + meta.badge + '</span></div>';
+    }
+    html += '<h2 class="hero-result-title">예상 비용 산출 결과</h2>';
+    if(meta.subtitle){
+        html += '<p class="hero-result-sub">' + meta.subtitle + '</p>';
+    }
+    html += '<div class="hero-result-card">';
+    html += '<div class="hero-result-label">예상 총 비용</div>';
+    html += '<div class="hero-result-amount">' + formatCurrency(min).replace('원','') + '<span class="hero-result-range">~ ' + formatCurrency(max) + '</span></div>';
+    html += '<div class="hero-result-note">건물 현황에 따라 변동될 수 있습니다</div>';
+    if(meta.duration || meta.adminType){
+        html += '<div class="hero-result-meta">';
+        html += '<div class="hero-meta-item"><div class="hero-meta-label">소요기간</div><div class="hero-meta-value">' + (meta.duration||'-') + '</div></div>';
+        html += '<div class="hero-meta-item"><div class="hero-meta-label">행정유형</div><div class="hero-meta-value">' + (meta.adminType||'-') + '</div></div>';
+        html += '</div>';
+    }
+    html += '</div>';
+    html += '<div class="result-box"><h3>견적 내역</h3><div class="result-items-wrap">';
+    items.forEach(function(it){
+        if(it.amount<=0) return;
+        // 항목명에서 괄호 안 세부사항 분리 → 2줄 레이아웃
+        var name = it.name, desc = '';
+        var m = it.name.match(/^(.*?)\s*\((.+)\)\s*$/);
+        if(m){ name = m[1].trim(); desc = m[2].trim(); }
+        html += '<div class="result-item"><span class="label"><span class="item-name">' + name + '</span>'
+              + (desc ? '<span class="item-desc">' + desc + '</span>' : '')
+              + '</span><span class="amount">' + formatCurrency(it.amount) + '</span></div>';
+    });
+    html += '</div>';
+    if(rf!==1.0) html+='<div style="background:#f8f7f4;padding:14px;border-radius:8px;margin:20px 0;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>소계</span><span>'+formatCurrency(subtotal)+'</span></div><div style="display:flex;justify-content:space-between;font-size:13px;"><span>지역할증 (×'+rf+')</span><span>'+formatCurrency(total-subtotal)+'</span></div></div>';
+    html+='<div class="total-box"><span class="label">총 견적금액</span><span class="amount">'+formatCurrency(total)+'</span></div>';
+    if(extraHtml) html+=extraHtml;
+    html+='<div class="warning-box">⚠️ 본 견적은 개략적인 예상 금액이며, 실제 비용은 현장 여건에 따라 달라질 수 있습니다.</div>';
+    html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
+    html+='<button class="print-btn" onclick="window.print()">🖨️ 견적서 출력</button></div>';
+    document.getElementById(resultId).innerHTML=html;
+}
+
+function calculateIllegal(){
+    const area=parseFloat(document.getElementById('illegal-area').value)||0;
+    const rf = 1.0;
+    
+    const items=[
+        {name:'건축사 설계비 (현황 반영 설계 + 측량도서 정비 포함)',amount:area*PRICING.설계비_양성화},
+        {name:'인허가 대행비 (양성화 허가 + 도서 + 보완·재신청)',amount:PRICING.인허가대행비_양성화}
+    ];
+    const sdf=surveyDocFee('illegal-drawing', area);
+    sdf.items.forEach(it=>items.push(it));
+    const sub=items.reduce((s,i)=>s+i.amount,0);
+    const reviewList = [
+        '위반 시점·시효 검토 (특정건축물 정리법 적용 여부)',
+        '건폐율·용적률 적합성',
+        '일조권·이격거리 (인접 대지 영향)',
+        '정화조 용량 (오수 발생량 적정성)',
+        '부설주차장 (법정 주차대수 충족 여부)',
+        '소방시설 (방화구획·피난설비 등)',
+        '구조 안전성 (보강 필요 여부)',
+        '이행강제금 부과 이력 확인',
+        '대지 접도 요건 (4m 도로 접도)',
+        '건축물대장 등재 (양성화 신청 행정절차)'
+    ];
+    let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 양성화 진행</span></div>';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>약 500만원</b> (필요시, 구조사무실 별도 견적)</div>';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 지적측량비 별도 발생</strong><br>한국국토정보공사(LX) 별도 견적으로 진행됩니다.<br>예상 비용: <b>약 100만원</b> (양성화 시 해당, LX 별도 견적)</div>';
+    const meta = {
+        badge: '위반건축물 양성화',
+        badgeClass: 'violation',
+        subtitle: (STATE.illegalViolation||'위반') + ' · ' + (area>0?area.toFixed(0)+'㎡ ('+(area/3.3).toFixed(1)+'평)':'면적 미입력'),
+        duration: '6~12주',
+        adminType: '양성화'
+    };
+    renderResult(items,sub,sub*rf,rf,'illegal-result',extra,meta);
+}
+
+function calculateUsage(){
+    const changes = getUsageChanges();
+    if(changes.length === 0){ alert('변경 항목을 1개 이상 추가해주세요.'); return false; }
+    const totalChangeArea = changes.reduce(function(s,c){return s+c.area;},0);
+    if(totalChangeArea === 0){ alert('변경 면적을 입력해주세요.'); return false; }
+    STATE.usageTotalArea = totalChangeArea;
+    const rf = 1.0;
+
+    const judges = changes.map(function(c){
+        const j = judgeUsageRaw(c.current, c.new);
+        return {cls:j.cls, title:j.title, sub:j.sub, area:c.area, floor:c.floor, current:c.current, new:c.new};
+    });
+
+    const priority = {'heoga':4,'singo':3,'daejang':2,'nochange':1};
+    const worst = judges.reduce(function(a,b){
+        return (priority[a.cls]||0) > (priority[b.cls]||0) ? a : b;
+    });
+
+    const usageHeoga = (worst.cls === 'heoga');
+    const usageSingo = (worst.cls === 'singo');
+    const usageJaejae = (worst.cls === 'daejang' || worst.cls === 'nochange');
+    
+    // 케이스별 설계비 단가 (엑셀 기준)
+    let designUnit = 0;
+    let designLabel = '건축사 설계비';
+    if(usageHeoga){
+        designUnit = PRICING.설계비_용도변경_허가;
+        designLabel = '건축사 설계비 (용도변경 설계 + 변경 도면)';
+    } else if(usageSingo){
+        designUnit = PRICING.설계비_용도변경_신고;
+        designLabel = '건축사 설계비 (용도변경 설계 + 변경 도면)';
+    } else {
+        designUnit = PRICING.설계비_용도변경_기재변경; // 0원
+    }
+    
+    // 케이스별 인허가 대행비 (면적별 차등)
+    let permitFee = 0;
+    let permitLabel = '';
+    if(usageHeoga){
+        permitFee = 용도변경_허가_대행비(totalChangeArea);
+        permitLabel = '인허가 대행비 (허가 · 도서 · 보완 포함)';
+    } else if(usageSingo){
+        permitFee = 용도변경_신고_대행비(totalChangeArea);
+        permitLabel = '인허가 대행비 (신고 · 도서 · 보완 포함)';
+    } else {
+        permitFee = PRICING.인허가대행비_기재변경;
+        permitLabel = '인허가 대행비 (기재변경 · 서류 접수 · 보완 포함)';
+    }
+    
+    const items = [];
+    if(designUnit > 0){
+        items.push({name: designLabel, amount: totalChangeArea * designUnit});
+    }
+    items.push({name: permitLabel, amount: permitFee});
+    
+    // 기재변경은 도면 불필요
+    if(!usageJaejae){
+        const sdf = surveyDocFee('usage-drawing', totalChangeArea);
+        sdf.items.forEach(it=>items.push(it));
+    }
+    const sub = items.reduce(function(s,i){return s+i.amount;},0);
+
+    let changeListHtml = '<div class="check-result"><strong>변경 항목 리스트 (총 '+changes.length+'건 · '+(Math.round(totalChangeArea*100)/100)+'㎡)</strong>';
+    judges.forEach(function(j,i){
+        let floorTxt = (j.floor || '').trim();
+        // 숫자만 들어온 경우 '층' 붙이기 (예: "2" → "2층")
+        if(/^-?\d+$/.test(floorTxt)) floorTxt = floorTxt + '층';
+        // 의미 없는 기본값이면 순번으로 대체
+        if(!floorTxt || floorTxt === '변경 항목') floorTxt = '변경 ' + (i+1);
+        changeListHtml += '<div style="padding:10px 0; border-bottom:1px dashed #d0d5dd; font-size:13px; line-height:1.6;">'
+            + '<strong style="color:#001780;">' + floorTxt + '</strong>'
+            + '<span style="color:#94a3b8;"> · ' + j.area + '㎡</span><br>'
+            + '<span style="color:#334155;">' + j.current + ' → ' + j.new + '</span> '
+            + '<span class="permit-badge ' + j.cls + '" style="display:inline-block; padding:2px 8px; font-size:11px; margin-left:4px;">' + j.title + '</span>'
+            + '</div>';
+    });
+    changeListHtml += '</div>';
+
+    let reviewTitle = '', reviewList = [];
+    if(worst.cls === 'singo'){
+        reviewTitle = '신고 처리 인허가 업무';
+        reviewList = [
+            '용도변경 신고서 작성 및 관할 행정청 제출',
+            '시설군 분류 적정성 확인 (상위 → 하위 신고 대상)',
+            '신고용 도서 작성 (평면도·배치도 등)',
+            '부설주차장 적정성 (변경 후 용도 법정 주차대수)',
+            '정화조 용량 적정성 (오수 발생량 재산정)',
+            '소방시설 필요 보강 검토',
+            '장애인·노약자 편의시설 대상 여부',
+            '피난·방화 규정 적정성 검토',
+            '건축물대장 표시변경 신청',
+            '신고 수리 모니터링 (통상 5~7일)',
+            '사용승인 필요 여부 확인 및 진행'
+        ];
+    } else if(worst.cls === 'heoga'){
+        reviewTitle = '허가 처리 인허가 업무';
+        reviewList = [
+            '용도변경 허가신청서 작성 및 관할 행정청 제출',
+            '시설군 분류 검토 (하위 → 상위 허가 대상)',
+            '허가용 도서 작성 (정밀 도면 일체)',
+            '건폐율·용적률 적합성 검토',
+            '구조 안전성 정밀진단 (견적에 자동 포함)',
+            '정화조 용량 (오수 발생량 재산정·증설 검토)',
+            '부설주차장 (법정 주차대수 확보)',
+            '소방시설 (스프링클러·방화구획·피난설비)',
+            '장애인·노약자 편의시설 (BF 대상 여부)',
+            '피난·방화 규정 (피난계단·직통계단)',
+            '채광·환기·소음 기준 (주거↔비주거 전환 시)',
+            '에너지절약 설계기준 (단열·기밀)',
+            '건축물대장 변경 신청',
+            '허가 처리 모니터링 및 사용승인'
+        ];
+    } else if(worst.cls === 'daejang'){
+        reviewTitle = '기재내용 변경 행정업무';
+        reviewList = [
+            '건축물대장 기재내용 변경 신청서 작성',
+            '시설군 분류 확인 (동일 시설군 내 변경)',
+            '용도 적합성 간이 검토',
+            '관할 행정청 신청 및 처리 모니터링',
+            '변경 후 건축물대장 발급 확인'
+        ];
+    }
+
+    let extra = changeListHtml;
+    extra += '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#000d4d;">대표 처리 구분</strong>'+worst.title+(worst.sub?' — '+worst.sub:'')+'<br><span style="font-size:12px;opacity:0.85;">여러 변경 항목이 섞이면 가장 까다로운 절차를 기준으로 진행합니다.</span></div>';
+    if(reviewList.length){
+        extra += '<div class="check-result"><strong>견적에 포함된 '+reviewTitle+' 세부사항</strong>'+reviewList.map(function(r){return '· '+r;}).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 진행</span></div>';
+    }
+    if(worst.cls === 'singo' || worst.cls === 'daejang'){
+        extra += '<div class="info-box"><strong>※ 구조변경 동반 시 별도 산정</strong><br>본 견적엔 구조변경 비용이 포함되지 않습니다. 내력벽·기둥 변경 등 구조변경이 수반되면 구조안전진단 및 구조검토비가 추가됩니다 (약 500만원, 구조사무실 별도 견적).</div>';
+    }
+    const adminMap = {'heoga':'허가','singo':'신고','daejang':'기재변경','nochange':'기재변경'};
+    const badgeMap = {'heoga':{label:'허가 대상',cls:'permit'},'singo':{label:'신고 대상',cls:'report'},'daejang':{label:'기재변경 대상',cls:'daejang'},'nochange':{label:'기재변경 대상',cls:'daejang'}};
+    const meta = {
+        badge: (badgeMap[worst.cls]||badgeMap.daejang).label,
+        badgeClass: (badgeMap[worst.cls]||badgeMap.daejang).cls,
+        subtitle: changes.length>0 ? (changes.length+'개 층 · '+totalChangeArea.toFixed(0)+'㎡ ('+(totalChangeArea/3.3).toFixed(1)+'평)') : '용도변경',
+        duration: worst.cls==='heoga'?'6~10주':(worst.cls==='singo'?'4~6주':'1~2주'),
+        adminType: adminMap[worst.cls]||'-'
+    };
+    renderResult(items,sub,sub*rf,rf,'usage-result',extra,meta);
+}
+
+function calculateRemodel(){
+    const area=parseFloat(document.getElementById('repair-area').value)||0;
+    const rf = 1.0;
+    
+    let items=[], reviewList=[];
+    if(STATE.remodelType==='증축'){
+        items=[
+            {name:'건축사 설계비 (건축+구조+기계+전기+통신+소방+인테리어 공용부)',amount:area*PRICING.설계비_증축},
+            {name:'인허가 대행비 (건축허가 + 도서 + 보완·재신청 + 사용승인)',amount:PRICING.인허가대행비_증축}
+        ];
+        reviewList=[
+            '건폐율·용적률 여유분 확인',
+            '일조권·정북 이격거리',
+            '대지 접도·도로 사선 검토',
+            '정화조 용량 증설 (오수 발생량 재산정)',
+            '부설주차장 추가 (법정 주차대수)',
+            '소방시설 추가 (스프링클러·피난설비 등)',
+            '구조 안전성 (기존+증축부 일체 검토)',
+            '에너지절약 설계기준 (단열·기밀)',
+            '장애인 편의시설 (BF 대상 여부)',
+            '건축물대장 변경 신청'
+        ];
+    } else {
+        items=[
+            {name:'건축사 설계비 (구조검토 + 기획설계 + 인허가 도서)',amount:area*PRICING.설계비_대수선},
+            {name:'인허가 대행비 (대수선 허가·신고 + 도서 + 보완)',amount:PRICING.인허가대행비_대수선}
+        ];
+        reviewList=[
+            '구조 안전성 (보·기둥·내력벽 변경 시 보강)',
+            '승강기 설치 기준 (건축법·승강기법)',
+            '피난·방화 규정 (피난계단·직통계단)',
+            '소방시설 (스프링클러·방화구획 등)',
+            '장애인 편의시설 (BF 대상 여부)',
+            '에너지절약 설계기준',
+            '건축물대장 변경 신청'
+        ];
+    }
+    const sdf=surveyDocFee('repair-drawing', area);
+    sdf.items.forEach(it=>items.push(it));
+    const sub=items.reduce((s,i)=>s+i.amount,0);
+    let extra='<div class="check-result"><strong>견적에 포함된 인허가 검토 세부사항</strong>'+reviewList.map(r=>'· '+r).join('<br>')+'<br><br><span style="font-size:12px;opacity:0.85;">상기 항목 종합 검토 후 인허가 진행</span></div>';
+    const structAmount = '약 500만원';
+    const structTitle = '구조사무실 별도 견적';
+    extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>'+structAmount+'</b> ('+structTitle+', 별도 산정)</div>';
+    const isExtension = STATE.remodelType === '증축';
+    const meta = {
+        badge: isExtension ? '증축' : '대수선',
+        badgeClass: isExtension ? 'extension' : 'remodel',
+        subtitle: (area>0?area.toFixed(0)+'㎡ ('+(area/3.3).toFixed(1)+'평)':'면적 미입력') + ' · ' + STATE.remodelType,
+        duration: '8~16주',
+        adminType: '허가'
+    };
+    renderResult(items,sub,sub*rf,rf,'repair-result',extra,meta);
+}
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#001780">
+
+<!-- ===== 기본 SEO ===== -->
+<title>건축 인허가 견적 계산기</title>
+<meta name="description" content="용도변경, 대수선, 증축, 위반건축물 양성화 견적을 10초 만에 확인하세요. 건축물대장 자동조회로 정확한 인허가 비용을 무료로 산출해 드립니다.">
+<meta name="keywords" content="건축 인허가, 용도변경 비용, 대수선 견적, 증축 견적, 위반건축물 양성화, 건축사사무소, 인허가 대행, 건축물대장 조회">
+<meta name="author" content="디바이엠건축사사무소">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://architecture-calculator-six.vercel.app/">
+
+<!-- ===== 네이버 / 구글 사이트 소유확인 ===== -->
+<meta name="google-site-verification" content="hF3MmOnZ86pq6zl8US7KLq05f2rRe7rI94ODopfgyTY">
+<meta name="naver-site-verification" content="71c89d1817b94be06cdaad44e743599d92aa4365">
+
+<!-- ===== 카카오톡 / 페이스북 공유 미리보기 ===== -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="디바이엠건축사사무소">
+<meta property="og:title" content="건축 인허가 견적 계산기">
+<meta property="og:description" content="용도변경·대수선·증축·양성화 견적을 10초 만에. 건축물대장 자동조회로 정확하게.">
+<meta property="og:url" content="https://architecture-calculator-six.vercel.app/">
+<meta property="og:locale" content="ko_KR">
+
+<!-- ===== 검색엔진용 사업자 정보 ===== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "디바이엠건축사사무소",
+  "description": "건축 인허가 대행 및 설계 전문 건축사사무소. 용도변경, 대수선, 증축, 위반건축물 양성화 견적 제공.",
+  "url": "https://architecture-calculator-six.vercel.app/",
+  "telephone": "+82-70-4647-3376",
+  "email": "dbym@dbym.kr",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "송파대로43길 1 (석촌동) 501호",
+    "addressLocality": "송파구",
+    "addressRegion": "서울특별시",
+    "addressCountry": "KR"
+  },
+  "areaServed": "대한민국",
+  "priceRange": "₩₩"
+}
+</script>
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html { background:#f8f7f4; }
+body { font-family:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background:#f8f7f4; color:#2c2c2a; overflow-x:hidden; }
+.container { max-width:720px; margin:0 auto; padding:24px 18px; }
+h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; color:#001780; letter-spacing:-0.5px; }
+.subtitle { text-align:center; color:#666; margin-bottom:40px; }
+.hidden { display:none; }
+.step-label { text-align:center; color:#001780; font-size:13px; font-weight:600; letter-spacing:1px; margin-bottom:8px; }
+.calculator-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:720px; margin:0 auto; }
+@media (max-width:640px){ .calculator-grid { grid-template-columns:1fr; gap:14px; } }
+.calculator-card { background:white; border:1px solid #ecedef; border-radius:20px; cursor:pointer; transition:all 0.22s ease; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:grid; grid-template-columns:1.4fr 1fr; overflow:hidden; min-height:0; }
+.calculator-card:hover { transform:translateY(-4px); box-shadow:0 18px 36px rgba(0,0,0,0.10); }
+.card-content { padding:24px 22px; display:flex; flex-direction:column; text-align:left; }
+.calculator-card h2 { font-size:21px; font-weight:800; margin-bottom:8px; color:#1a1a1a; letter-spacing:-0.4px; line-height:1.3; }
+.calculator-card p { color:#666; font-size:13px; line-height:1.55; margin:0 0 16px 0; }
+.card-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+.card-tags .tag { background:#f3f4f6; color:#4b5563; padding:6px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+.card-cta { align-self:flex-start; padding:11px 20px; border-radius:10px; color:white; font-size:13.5px; font-weight:700; border:none; cursor:pointer; margin-top:auto; transition:all 0.15s; pointer-events:none; }
+.card-image { background-size:cover; background-position:center; background-color:#f3f4f6; min-height:100%; }
+@media (max-width:640px){
+    .calculator-card { grid-template-columns:1fr; }
+    .card-image { min-height:140px; order:-1; }
+    .card-content { padding:20px; }
+}
+.card-illegal .card-cta { background:#001780; }
+.card-illegal:hover .card-cta { background:#000d4d; }
+.card-usage .card-cta { background:#0E7490; }
+.card-usage:hover .card-cta { background:#155E75; }
+.card-daesuseon .card-cta { background:#4338CA; }
+.card-daesuseon:hover .card-cta { background:#3730A3; }
+.card-jeungchuk .card-cta { background:#C2410C; }
+.card-jeungchuk:hover .card-cta { background:#9A3412; }
+.violation-grid { display:grid; grid-template-columns:1fr; gap:16px; max-width:720px; margin:0 auto; }
+.violation-card { background:white; border:1px solid #ecedef; border-radius:18px; cursor:pointer; transition:all 0.22s ease; box-shadow:0 1px 3px rgba(0,0,0,0.04); display:grid; grid-template-columns:1.6fr 1fr; overflow:hidden; min-height:0; }
+.violation-card:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(0,0,0,0.08); }
+.violation-card .card-content { padding:22px 24px; display:flex; flex-direction:column; text-align:left; }
+.violation-card h2 { font-size:20px; font-weight:800; margin-bottom:6px; color:#1a1a1a; letter-spacing:-0.3px; }
+.violation-card p { color:#666; font-size:13px; line-height:1.5; margin:0 0 14px 0; }
+.violation-card .card-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.violation-card .card-tags .tag { background:#e6e9fb; color:#001780; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+.violation-card .card-cta { align-self:flex-start; padding:10px 18px; border-radius:9px; color:white; font-size:13px; font-weight:700; border:none; cursor:pointer; margin-top:auto; transition:all 0.15s; pointer-events:none; background:#001780; }
+.violation-card:hover .card-cta { background:#000d4d; }
+.violation-card .card-image { background-size:cover; background-position:center; background-color:#f3f4f6; min-height:100%; }
+@media (max-width:640px){
+    .violation-card { grid-template-columns:1fr; }
+    .violation-card .card-image { min-height:130px; order:-1; }
+    .violation-card .card-content { padding:18px; }
+}
+.card-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:#eef2f8; }
+.value-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:720px; margin:0 auto 36px; }
+.value-item { background:white; border:1px solid #e8e8e6; border-radius:12px; padding:20px 16px; text-align:center; }
+.value-icon { font-size:28px; margin-bottom:10px; }
+.value-text { font-size:13px; color:#666; line-height:1.5; }
+.value-text strong { display:block; color:#2c2c2a; font-weight:600; margin-bottom:2px; font-size:14px; }
+.disclaimer { text-align:center; color:#999; font-size:13px; margin-top:32px; padding:0 12px; }
+@media (max-width:600px){
+    .value-row { grid-template-columns:1fr; gap:8px; margin-bottom:24px; }
+    .value-item { display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px; }
+    .value-icon { font-size:24px; margin-bottom:0; }
+}
+
+.calc-intro { background:#f0f7ff; border-left:4px solid #001780; border-radius:8px; padding:18px 20px; margin:0 0 20px 0; }
+.calc-intro h4 { font-size:15px; font-weight:800; color:#001780; margin:0 0 10px 0; letter-spacing:-0.3px; }
+.calc-intro p { font-size:13.5px; color:#334155; line-height:1.65; margin:0 0 10px 0; letter-spacing:-0.2px; }
+.calc-intro p:last-child { margin-bottom:0; }
+.calc-intro ul { margin:8px 0 0 0; padding-left:18px; }
+.calc-intro ul li { font-size:13.5px; color:#475569; line-height:1.8; letter-spacing:-0.2px; }
+.calc-intro ul li b { color:#001780; font-weight:800; }
+.calc-intro .note { font-size:12px; color:#64748b; margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1; }
+.back-btn { background:white; border:1px solid #d0d0d0; padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700; color:#1a1a1a; margin-bottom:20px; letter-spacing:-0.2px; transition:all 0.15s; }
+.back-btn:hover { background:#f5f5f5; border-color:#1a1a1a; }
+.next-btn { width:100%; margin-top:20px; padding:16px; background:#001780; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; font-weight:600; }
+.next-btn:hover { background:#000d4d; }
+.btn-row { display:flex; gap:10px; margin-top:20px; }
+.btn-row .back-btn { flex:1; padding:16px; margin:0; font-size:14px; font-weight:500; }
+.btn-row .next-btn { flex:1.5; margin:0; }
+.add-btn { width:100%; padding:14px; background:white; border:1.5px dashed #001780; color:#001780; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; margin-bottom:20px; }
+.add-btn:hover { background:#eef2f8; }
+.usage-helper { background:#001780; color:white; padding:20px 22px; border-radius:12px; margin-bottom:22px; text-align:center; font-weight:700; font-size:16px; line-height:1.65; letter-spacing:-0.3px; box-shadow:0 4px 12px rgba(0,23,128,0.15); }
+.usage-helper small { display:block; margin-top:6px; font-size:13px; opacity:0.85; font-weight:500; }
+.change-card { background:white; border:1.5px solid #001780; border-radius:12px; padding:22px; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,23,128,0.08); }
+.change-card h3 { color:#001780; font-size:20px; font-weight:800; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; letter-spacing:-0.3px; }
+.change-card label { font-weight:800; color:#000; font-size:14px; }
+.change-card .form-field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.change-card input[readonly] { background:#f5f7fa; color:#2c2c2a; font-weight:600; cursor:default; }
+.change-card .change-area, .change-card .change-new { border:1.5px solid #001780; background:#f0f4fb; color:#001780; font-weight:700; }
+.change-card .change-area:focus, .change-card .change-new:focus { outline:3px solid rgba(0,23,128,0.15); border-color:#000d4d; background:white; }
+.change-card .change-area.over { border-color:#c0392b !important; background:#fff5f5; }
+.remove-card-btn { background:none; border:none; color:#c0392b; font-size:14px; font-weight:500; cursor:pointer; padding:4px 10px; border-radius:6px; }
+.remove-card-btn:hover { background:#fde8e8; }
+.permit-mini { margin-top:12px; }
+.usage-change-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px 18px 14px; margin-bottom:14px; position:relative; }
+.usage-change-card .floor-name { font-size:15px; font-weight:800; color:#001780; margin-bottom:14px; letter-spacing:-0.3px; }
+.usage-change-card .form-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; }
+.usage-change-card .form-field-row .form-field { margin-bottom:0; }
+.usage-change-card .form-field label { font-weight:800; color:#000; font-size:13px; margin-bottom:6px; display:block; letter-spacing:-0.1px; }
+.usage-change-card input, .usage-change-card select { width:100%; padding:10px 12px; border:1.5px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+.usage-change-card input:focus, .usage-change-card select:focus { outline:none; border-color:#001780; box-shadow:0 0 0 3px rgba(0,23,128,0.12); }
+.usage-change-card input[readonly] { background:#f1f5f9; color:#64748b; border-color:#e2e8f0; cursor:default; }
+.usage-change-card .change-area-input { border-color:#001780 !important; background:#f0f4fb !important; color:#001780 !important; font-weight:700; }
+.usage-change-card .change-usage-select { border-color:#001780 !important; background:#f0f4fb !important; color:#001780 !important; font-weight:700; }
+.usage-change-card .delete-change-btn { position:absolute; top:14px; right:14px; width:28px; height:28px; background:transparent; border:none; cursor:pointer; color:#9ca3af; font-size:18px; line-height:1; border-radius:50%; transition:all 0.15s; }
+.usage-change-card .delete-change-btn:hover { background:#fee2e2; color:#dc2626; }
+.usage-helper { background:#001780; color:white; padding:14px 18px; border-radius:10px; margin-bottom:18px; font-size:15px; font-weight:700; text-align:center; letter-spacing:-0.3px; }
+
+.building-info-panel { display:none; margin:16px 0; }
+.building-info-panel.shown { display:block; animation:fadeIn 0.3s; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.info-section { background:white; border:1.5px solid #001780; border-radius:12px; padding:22px; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,23,128,0.08); }
+.info-section h3 { color:#001780; font-size:18px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:6px; letter-spacing:-0.3px; }
+.info-section h4 { margin:16px 0 8px; font-size:13px; font-weight:700; color:#555; }
+.floor-section-hint { background:#001780; color:white; padding:18px 20px; border-radius:10px; font-size:18px; font-weight:800; text-align:center; margin-bottom:16px; letter-spacing:-0.3px; box-shadow:0 4px 10px rgba(0,23,128,0.15); }
+.info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px 16px; margin-bottom:14px; }
+.info-grid > div { display:flex; flex-direction:column; gap:2px; }
+.info-grid label { font-size:11px; color:#888; font-weight:500; }
+.info-grid span { font-size:14px; color:#2c2c2a; font-weight:600; }
+.info-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid #eee; font-size:13px; }
+.info-row label { color:#888; font-weight:500; }
+.info-row span { color:#2c2c2a; font-weight:600; }
+.floor-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:15px; table-layout:fixed; }
+.floor-table th { background:#001780; color:white; padding:14px 6px; font-weight:700; font-size:14px; text-align:center; }
+.floor-table td { padding:16px 6px; border-bottom:1px solid #e8e8e6; text-align:center; color:#000; font-weight:700; font-size:15px; }
+.floor-table tr:last-child td { border-bottom:none; }
+.floor-table tr:hover td { background:#f5f8fc; }
+.floor-table td.check-cell, .floor-table th.check-cell { width:60px; }
+.floor-table input[type="checkbox"] { width:22px; height:22px; cursor:pointer; accent-color:#001780; vertical-align:middle; }
+.floor-table-actions { display:flex; gap:10px; margin-top:16px; }
+.floor-table-actions button { flex:1; padding:14px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
+.btn-select-all { background:white; border:1px solid #d0d0d0 !important; color:#666; }
+.btn-select-all:hover { background:#f5f5f5; }
+.btn-apply-floors { background:#001780; color:white; }
+.btn-apply-floors:hover { background:#000d4d; }
+.floors-hint { font-size:12px; color:#888; margin-top:8px; }
+.floors-warning { background:#fff8e1; color:#92400e; padding:10px 12px; border-radius:6px; font-size:13px; margin-top:10px; border-left:3px solid #f59e0b; }
+.postcode-modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
+.postcode-modal.open { display:flex; }
+.postcode-modal-content { background:white; border-radius:12px; width:100%; max-width:500px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
+.postcode-modal-header { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid #e5e5e5; font-weight:500; font-size:15px; }
+.postcode-modal-header button { background:none; border:none; font-size:20px; cursor:pointer; padding:4px 10px; color:#666; }
+#postcode-embed { flex:1; min-height:450px; }
+@media (max-width:480px){
+    .postcode-modal { padding:0; }
+    .postcode-modal-content { max-width:100%; border-radius:0; height:100vh; max-height:100vh; }
+}
+.tab-bar { display:flex; gap:6px; margin-bottom:24px; flex-wrap:nowrap; align-items:stretch; }
+.tab-home { flex:1; min-width:0; padding:11px 6px; border:1.5px solid #001780; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:700; color:#001780; }
+.tab-home:hover { background:#eef2f8; }
+.tab { flex:1; min-width:0; padding:11px 6px; border:1px solid #d0d0d0; background:white; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; color:#666; transition:all 0.15s; white-space:nowrap; }
+.tab:hover { border-color:#001780; color:#001780; }
+.tab.active { background:#001780; color:white; border-color:#001780; }
+@media (max-width:480px){
+    .tab-bar { gap:3px; margin-bottom:18px; }
+    .tab-home { padding:10px 0; font-size:11px; }
+    .tab { padding:10px 0; font-size:11px; }
+}
+.address-row { display:flex; gap:8px; }
+.address-row input { flex:1; }
+.lookup-btn { padding:0 16px; background:#001780; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; transition:all 0.15s; }
+.lookup-btn:hover { background:#000d4d; }
+
+.step-label { display:inline-block; padding:6px 14px; background:#eff6ff; color:#001780; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:0.3px; margin-bottom:14px; }
+.calculator-title { font-size:28px; font-weight:800; margin-bottom:24px; text-align:center; color:#001780; letter-spacing:-0.5px; }
+
+.info-modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100000; align-items:center; justify-content:center; padding:20px; }
+.info-modal-overlay.show { display:flex; }
+.info-modal-box { background:white; border-radius:16px; padding:28px 24px; max-width:420px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+.info-modal-title { font-size:20px; font-weight:800; color:#001780; margin:0 0 8px 0; letter-spacing:-0.4px; text-align:center; }
+.info-modal-sub { font-size:13.5px; color:#666; margin:0 0 22px 0; text-align:center; line-height:1.6; }
+.info-modal-field { margin-bottom:14px; }
+.info-modal-field label { display:block; font-size:13px; font-weight:800; color:#1a1a1a; margin-bottom:6px; }
+.info-modal-field input { width:100%; padding:12px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+.info-modal-field input:focus { outline:none; border-color:#001780; }
+.info-modal-btn-row { display:flex; gap:10px; margin-top:22px; }
+.info-modal-btn-cancel { flex:1; padding:14px; background:white; color:#666; border:1.5px solid #d0d0d0; border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.info-modal-btn-cancel:hover { background:#f5f5f5; }
+.info-modal-btn-submit { flex:2; padding:14px; background:#001780; color:white; border:none; border-radius:8px; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+.info-modal-btn-submit:hover { background:#000d4d; }
+
+/* 견적 확인 전 인라인 정보 입력 */
+.est-info-form { background:white; border:1px solid #e5e7eb; border-radius:14px; padding:22px 20px; margin-top:16px; }
+.est-info-form h3 { font-size:17px; font-weight:800; color:#001780; margin:0 0 4px; letter-spacing:-0.3px; }
+.est-info-form .est-sub { font-size:13px; color:#666; margin:0 0 18px; line-height:1.55; }
+.est-info-field { margin-bottom:14px; }
+.est-info-field label { display:block; font-size:13px; font-weight:800; color:#1a1a1a; margin-bottom:6px; }
+.est-info-field label .opt { color:#94a3b8; font-weight:600; }
+.est-info-field input, .est-info-field select { width:100%; padding:13px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:15px; font-family:inherit; box-sizing:border-box; background:white; }
+.est-info-field input:focus, .est-info-field select:focus { outline:none; border-color:#001780; }
+
+/* 견적 완료 알림 팝업 */
+.done-toast-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:100001; align-items:center; justify-content:center; padding:20px; }
+.done-toast-overlay.show { display:flex; }
+.done-toast-box { background:white; border-radius:16px; padding:32px 28px; max-width:400px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+.done-toast-icon { font-size:56px; margin-bottom:12px; }
+.done-toast-title { font-size:16px; font-weight:800; color:#001780; margin:0 0 8px 0; letter-spacing:-0.3px; }
+.done-toast-msg { font-size:14px; color:#334155; line-height:1.7; margin:0 0 22px 0; }
+.done-toast-btn { padding:12px 32px; background:#001780; color:white; border:none; border-radius:8px; font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+.done-toast-btn:hover { background:#000d4d; }
+
+.form-section { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:24px; margin-bottom:20px; }
+.form-section h3 { font-size:18px; font-weight:800; color:#1a1a1a; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; letter-spacing:-0.3px; }
+.form-field { margin-bottom:20px; }
+.form-field label { display:block; font-size:14px; font-weight:500; color:#666; margin-bottom:8px; }
+.form-field input, .form-field select { width:100%; padding:10px 12px; border:1px solid #d0d0d0; border-radius:6px; font-size:14px; }
+.form-field input[readonly] { background:#f5f5f5; color:#444; cursor:default; }
+.form-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-field-row .form-field { margin-bottom:0; }
+.helper-text { font-size:13px; color:#999; margin-top:4px; }
+.check-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:14px; }
+.check-row input[type=checkbox] { width:18px; height:18px; margin-top:2px; flex-shrink:0; }
+.check-row label { font-size:14px; color:#444; margin:0; font-weight:400; line-height:1.4; }
+.permit-badge { margin-top:10px; padding:16px 18px; border-radius:10px; font-size:16px; font-weight:800; letter-spacing:-0.3px; border:2px solid; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.permit-badge.heoga { background:#fef2f2; color:#b91c1c; border-color:#fca5a5; }
+.permit-badge.singo { background:#eef4ff; color:#001780; border-color:#a3b3e8; }
+.permit-badge.daejang { background:#f0fdf4; color:#15803d; border-color:#86efac; }
+.permit-badge.nochange { background:#f3f4f6; color:#6b7280; border-color:#d1d5db; }
+.permit-badge b { font-weight:900; }
+.permit-badge small { display:block; font-weight:500; font-size:12px; margin-top:6px; opacity:0.78; letter-spacing:-0.1px; }
+.chosen-badge { display:inline-block; background:#eaf2fb; color:#000d4d; padding:6px 14px; border-radius:20px; font-size:14px; font-weight:500; margin-bottom:20px; }
+
+/* ===== 관리자 페이지 ===== */
+.admin-wrap { max-width:1100px; margin:0 auto; }
+.admin-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.admin-title { font-size:24px; font-weight:800; color:#1a1a1a; letter-spacing:-0.5px; margin:0; }
+.admin-actions { display:flex; gap:8px; }
+.admin-btn { padding:9px 16px; border-radius:8px; border:1.5px solid #cbd5e1; background:white; color:#475569; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+.admin-btn:hover { border-color:#001780; color:#001780; }
+.admin-btn.primary { background:#001780; border-color:#001780; color:white; }
+.admin-btn.primary:hover { background:#000d4d; }
+.admin-login { max-width:380px; margin:60px auto; background:white; border:1px solid #e8eaee; border-radius:14px; padding:32px 26px; text-align:center; }
+.admin-login h3 { font-size:19px; font-weight:800; color:#001780; margin:0 0 6px; }
+.admin-login p { font-size:13px; color:#666; margin:0 0 20px; }
+.admin-login input { width:100%; padding:13px 14px; border:1.5px solid #d0d0d0; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; margin-bottom:12px; }
+.admin-login input:focus { outline:none; border-color:#001780; }
+.admin-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+.admin-stat { background:#f7f9fc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; }
+.admin-stat-label { font-size:11px; font-weight:800; color:#94a3b8; letter-spacing:1px; margin-bottom:6px; }
+.admin-stat-value { font-size:20px; font-weight:900; color:#001780; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+.admin-table-wrap { background:white; border:1px solid #e8eaee; border-radius:14px; overflow:hidden; }
+.admin-table { width:100%; border-collapse:collapse; font-size:13px; }
+.admin-table th { background:#f7f9fc; text-align:left; padding:13px 12px; font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.6px; border-bottom:1.5px solid #e2e8f0; white-space:nowrap; }
+.admin-table td { padding:14px 12px; border-bottom:1px solid #f1f3f5; vertical-align:top; color:#334155; }
+.admin-table tr:last-child td { border-bottom:none; }
+.admin-table tr:hover td { background:#fafbfd; }
+.adm-name { font-weight:800; color:#1a1a1a; }
+.adm-sub { display:block; font-size:11.5px; color:#94a3b8; margin-top:3px; }
+.adm-total { font-weight:800; color:#001780; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.adm-tag { display:inline-block; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:800; background:#eef4ff; color:#001780; white-space:nowrap; }
+.adm-tag.violation { background:#fee2e2; color:#b91c1c; }
+.adm-tag.remodel { background:#e0e7ff; color:#3730a3; }
+.adm-addr { max-width:220px; font-size:12.5px; line-height:1.5; }
+.adm-detail-btn { padding:6px 11px; font-size:11.5px; font-weight:700; border:1px solid #cbd5e1; background:white; border-radius:6px; cursor:pointer; color:#475569; white-space:nowrap; }
+.adm-detail-btn:hover { border-color:#001780; color:#001780; }
+.adm-del-btn { padding:6px 11px; font-size:11.5px; font-weight:700; border:1px solid #fecaca; background:white; border-radius:6px; cursor:pointer; color:#dc2626; white-space:nowrap; }
+.adm-del-btn:hover { background:#dc2626; border-color:#dc2626; color:white; }
+.adm-status-badge { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; white-space:nowrap; }
+.adm-status-badge.none { background:#f1f5f9; color:#94a3b8; }
+.adm-status-badge.done { background:#dcfce7; color:#15803d; }
+.adm-status-badge.fail { background:#fee2e2; color:#b91c1c; }
+.adm-status-badge.miss { background:#fef3c7; color:#b45309; }
+.adm-status-badge.ing  { background:#dbeafe; color:#1d4ed8; }
+.adm-status-badge.end  { background:#e5e7eb; color:#6b7280; }
+.adm-status-select { display:block; margin-top:6px; padding:5px 6px; font-size:11.5px; font-family:inherit; border:1px solid #cbd5e1; border-radius:6px; background:white; color:#334155; cursor:pointer; max-width:110px; }
+.adm-status-select:focus { outline:none; border-color:#001780; }
+.adm-memo-cell { min-width:180px; }
+.adm-memo { width:100%; min-width:170px; min-height:56px; padding:8px 10px; font-size:12.5px; font-family:inherit; line-height:1.5; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; box-sizing:border-box; color:#334155; }
+.adm-memo:focus { outline:none; border-color:#001780; background:#fcfdff; }
+.adm-memo-saved { display:inline-block; margin-top:3px; font-size:11px; font-weight:700; color:#15803d; opacity:0; transition:opacity 0.3s; }
+.admin-empty { padding:60px 20px; text-align:center; color:#94a3b8; font-size:14px; }
+.admin-err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:16px; line-height:1.6; }
+.adm-items { margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0; }
+.adm-item-row { display:flex; justify-content:space-between; gap:10px; font-size:11.5px; color:#64748b; padding:2px 0; }
+@media (max-width:768px){
+    .admin-stats { grid-template-columns:1fr; }
+    .admin-table thead { display:none; }
+    .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display:block; width:100%; box-sizing:border-box; }
+    .admin-table tr { border-bottom:8px solid #f4f6f9; padding:6px 0; }
+    .admin-table td { border:none; padding:6px 14px; }
+    .adm-addr { max-width:none; }
+}
+.result-box { background:white; border:1px solid #e8eaee; border-radius:14px; padding:26px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.03); }
+.result-box h3 { font-size:13px; font-weight:800; color:#94a3b8; margin-bottom:6px; padding-bottom:0; border-bottom:none; letter-spacing:1.2px; text-transform:uppercase; }
+.result-items-wrap { border-top:2px solid #1a1a1a; margin-top:12px; }
+.result-item { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:16px 0; border-bottom:1px solid #f1f3f5; }
+.result-item .label { flex:1; min-width:0; }
+.result-item .item-name { display:block; font-size:14.5px; font-weight:700; color:#1a1a1a; letter-spacing:-0.2px; line-height:1.45; }
+.result-item .item-desc { display:block; font-size:11.5px; font-weight:500; color:#94a3b8; margin-top:5px; line-height:1.5; letter-spacing:-0.1px; }
+.result-item .amount { flex-shrink:0; font-size:15px; font-weight:800; color:#1a1a1a; font-variant-numeric:tabular-nums; letter-spacing:-0.3px; white-space:nowrap; padding-top:1px; }
+.total-box { padding:20px 18px; margin-top:14px; background:#f7f9fc; border:1.5px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.total-box .label { font-size:14px; font-weight:800; color:#475569; letter-spacing:-0.2px; }
+.total-box .amount { font-size:26px; font-weight:900; color:#001780; font-variant-numeric:tabular-nums; letter-spacing:-1px; white-space:nowrap; }
+@media (max-width:480px){
+    .result-box { padding:22px 18px; }
+    .result-item { gap:10px; }
+    .result-item .item-name { font-size:14px; }
+    .result-item .amount { font-size:14px; }
+    .total-box { padding:18px 16px; }
+    .total-box .amount { font-size:22px; }
+}
+.check-result { margin-top:20px; padding:18px 16px; background:#f4f7fc; border-radius:10px; font-size:12.5px; color:#334155; line-height:1.8; }
+.check-result strong { display:block; margin-bottom:10px; color:#001780; font-size:13px; font-weight:800; letter-spacing:-0.2px; }
+.warning-box { margin-top:14px; padding:15px 16px; background:#fff8ed; border-radius:10px; font-size:12.5px; color:#9a3412; line-height:1.6; font-weight:600; }
+.info-box { margin-top:12px; padding:16px; background:#fafbfc; border-radius:10px; font-size:12.5px; color:#64748b; line-height:1.75; }
+.info-box strong { display:block; margin-bottom:8px; color:#334155; font-size:13px; font-weight:800; letter-spacing:-0.2px; }
+.print-btn { width:100%; margin-top:20px; padding:14px; background:white; border:1.5px solid #cbd5e1; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#475569; transition:all 0.15s; }
+.print-btn:hover { background:#f8fafc; border-color:#001780; color:#001780; }
+.estimate-wrap { max-width:720px; margin:0 auto; }
+.hero-result-badge { display:inline-block; padding:10px 22px; border-radius:999px; font-size:16px; font-weight:800; margin-bottom:14px; letter-spacing:-0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border:1.5px solid; }
+.hero-result-badge.violation { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+.hero-result-badge.permit { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+.hero-result-badge.report { background:#dbeafe; color:#1e40af; border-color:#bfdbfe; }
+.hero-result-badge.daejang { background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
+.hero-result-badge.remodel { background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; }
+.hero-result-badge.extension { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+.hero-result-title { font-size:24px; font-weight:800; color:#1a1a1a; margin:0 0 6px 0; text-align:center; letter-spacing:-0.5px; }
+.hero-result-sub { color:#666; font-size:13px; text-align:center; margin:0 0 24px 0; line-height:1.5; }
+.hero-result-card { background:#1a1d24; color:white; border-radius:18px; padding:38px 28px 32px; text-align:center; margin-bottom:30px; position:relative; }
+.hero-result-label { color:rgba(255,255,255,0.55); font-size:13px; font-weight:600; margin-bottom:16px; letter-spacing:3px; }
+.hero-result-amount { font-size:30px; font-weight:800; color:white; line-height:1.15; letter-spacing:-1px; word-break:keep-all; }
+.hero-result-amount .hero-result-range { font-size:15px; color:rgba(255,255,255,0.6); font-weight:600; margin-left:2px; display:inline-block; }
+.hero-result-note { color:rgba(255,255,255,0.45); font-size:12px; margin-top:10px; }
+.hero-result-meta { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-top:26px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.12); position:relative; }
+.hero-result-meta::after { content:''; position:absolute; top:24px; bottom:0; left:50%; width:1px; background:rgba(255,255,255,0.12); }
+.hero-meta-item { padding:0 8px; }
+.hero-meta-label { color:rgba(255,255,255,0.5); font-size:12px; font-weight:600; margin-bottom:8px; }
+.hero-meta-value { color:white; font-size:18px; font-weight:800; letter-spacing:-0.3px; }
+.form-wrap { max-width:720px; margin:0 auto; }
+.site-header { position:sticky; top:0; background:white; border-bottom:1px solid #ecedef; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; z-index:100; max-width:720px; margin:0 auto 16px; }
+.site-header .logo { display:flex; align-items:baseline; gap:8px; cursor:pointer; }
+.site-header .logo-main { font-size:18px; font-weight:800; color:#1a1a1a; letter-spacing:-0.4px; }
+.site-header .logo-sub { font-size:11px; color:#888; font-weight:600; letter-spacing:-0.1px; }
+.hamburger { background:none; border:none; font-size:24px; cursor:pointer; padding:4px 10px; color:#1a1a1a; }
+.side-menu { position:fixed; top:0; right:-320px; width:300px; max-width:85vw; height:100%; background:white; box-shadow:-4px 0 16px rgba(0,0,0,0.1); transition:right 0.3s; z-index:200; padding:22px 20px; overflow-y:auto; box-sizing:border-box; }
+.side-menu.open { right:0; }
+.side-menu-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:199; }
+.side-menu-overlay.open { display:block; }
+.side-menu-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid #ecedef; margin-bottom:12px; }
+.side-menu-header h3 { font-size:16px; font-weight:800; color:#1a1a1a; margin:0; }
+.side-menu-header .close-btn { background:none; border:none; font-size:24px; cursor:pointer; color:#666; line-height:1; }
+.side-menu ul { list-style:none; padding:0; margin:0; }
+.side-menu li { padding:13px 12px; font-size:15px; font-weight:700; color:#1a1a1a; cursor:pointer; border-radius:8px; margin-bottom:2px; transition:background 0.15s; }
+.side-menu li:hover { background:#f3f4f6; }
+.side-menu li .side-sub { display:block; font-size:12px; color:#888; font-weight:500; margin-top:3px; }
+.side-menu .menu-section-title { font-size:11px; color:#999; font-weight:700; margin:14px 12px 6px; letter-spacing:1px; }
+.hero-section { background:linear-gradient(135deg, #f4f7fb 0%, #e6eef7 100%); padding:64px 28px 54px; border-radius:24px; text-align:center; margin-bottom:28px; border:1px solid #e2e8f0; position:relative; overflow:hidden; }
+.hero-section::before { content:''; position:absolute; top:-50px; right:-50px; width:200px; height:200px; background:radial-gradient(circle, rgba(0,23,128,0.06) 0%, transparent 70%); border-radius:50%; }
+.hero-section::after { content:''; position:absolute; bottom:-80px; left:-80px; width:240px; height:240px; background:radial-gradient(circle, rgba(0,23,128,0.04) 0%, transparent 70%); border-radius:50%; }
+.hero-tag { display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid #d4dce8; color:#001780; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:22px; position:relative; box-shadow:0 2px 8px rgba(0,23,128,0.06); }
+.hero-tag::before { content:''; width:6px; height:6px; background:#10b981; border-radius:50%; }
+.hero-title { font-size:34px; font-weight:800; line-height:1.25; margin:0 0 18px 0; letter-spacing:-0.8px; color:#0f1a2e; position:relative; }
+.hero-accent { color:#001780; position:relative; display:inline-block; }
+.hero-accent::after { content:''; position:absolute; bottom:2px; left:0; right:0; height:8px; background:rgba(0,23,128,0.12); z-index:-1; border-radius:4px; }
+.hero-sub { color:#475569; font-size:15px; line-height:1.7; margin:0 0 6px 0; font-weight:500; position:relative; }
+.hero-sub-lg { color:#334155; font-size:17px; line-height:1.7; margin:8px 0 28px 0; font-weight:500; position:relative; letter-spacing:-0.2px; }
+.hero-sub-lg b { color:#001780; font-weight:800; }
+.hero-sub b { color:#001780; font-weight:700; }
+.hero-cta { display:inline-block; padding:16px 40px; background:#001780; color:white; border:none; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; margin:26px 0 12px 0; box-shadow:0 8px 24px rgba(0,23,128,0.28); transition:all 0.15s; position:relative; }
+.hero-cta:hover { background:#000d4d; transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,23,128,0.38); }
+.hero-tel { display:inline-block; color:#001780; text-decoration:none; font-size:14px; font-weight:700; padding:11px 22px; border:1.5px solid #001780; border-radius:10px; margin-top:8px; background:white; transition:all 0.15s; position:relative; }
+.hero-tel:hover { background:#001780; color:white; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:720px; margin:0 auto 28px; }
+.quick-calc-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; max-width:720px; margin:0 auto 16px; }
+.quick-calc-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:22px 20px; background:#eff6ff; border:1.5px solid #dbeafe; border-radius:14px; cursor:pointer; transition:all 0.18s; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.04); font-family:inherit; }
+.quick-calc-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,23,128,0.12); border-color:#001780; }
+.qb-emoji { font-size:32px; line-height:1; margin-bottom:4px; }
+.qb-title { font-size:17px; font-weight:800; color:#001780; letter-spacing:-0.4px; word-break:keep-all; white-space:normal; text-align:center; }
+.qb-sub { font-size:12px; font-weight:500; color:#64748b; letter-spacing:-0.1px; }
+.qb-usage:hover { border-color:#0e7490; }
+.qb-extension:hover { border-color:#c2410c; }
+.qb-remodel:hover { border-color:#4338ca; }
+.qb-illegal:hover { border-color:#b91c1c; }
+.daejang-cta { display:flex; align-items:center; justify-content:center; padding:24px 22px; max-width:720px; margin:0 auto 28px; background:linear-gradient(135deg, #1a1a1a 0%, #000000 100%); border:none; border-radius:14px; cursor:pointer; transition:all 0.18s; width:100%; box-shadow:0 4px 14px rgba(0,0,0,0.25); font-family:inherit; }
+.daejang-cta:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
+.daejang-cta-icon { font-size:26px; flex-shrink:0; }
+.daejang-cta-text { display:flex; flex-direction:column; gap:3px; align-items:center; text-align:center; }
+.daejang-cta-title { color:white; font-size:20px; font-weight:800; letter-spacing:-0.3px; }
+.daejang-cta-sub { color:rgba(255,255,255,0.8); font-size:13.5px; font-weight:500; }
+.daejang-cta-arrow { color:white; font-size:20px; font-weight:300; }
+.building-animation { background:linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border:1px solid #e2e8f0; border-radius:18px; padding:32px 22px 28px; margin:0 auto 28px; text-align:center; max-width:720px; }
+.building-animation-title { color:#475569; font-size:13px; font-weight:700; margin:0 0 4px 0; letter-spacing:-0.2px; }
+.building-animation-subtitle { color:#001780; font-size:18px; font-weight:800; margin:0 0 20px 0; letter-spacing:-0.4px; }
+.building-stage { position:relative; height:170px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.building-icon { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; opacity:0; }
+.building-emoji { font-size:96px; line-height:1; filter:drop-shadow(0 12px 24px rgba(0,23,128,0.22)) drop-shadow(0 4px 8px rgba(0,23,128,0.15)); transform-origin:center bottom; }
+.building-label { color:#001780; font-size:14px; font-weight:600; letter-spacing:-0.2px; font-family:'Pretendard Variable', Pretendard, -apple-system, sans-serif; }
+@keyframes buildingCycle {
+    0%, 100% { opacity:0; transform:translateY(20px) scale(0.85); }
+    2.5%, 7.5% { opacity:1; transform:translateY(0) scale(1); }
+    10% { opacity:0; transform:translateY(-20px) scale(0.85); }
+}
+.building-icon { animation:buildingCycle 24s infinite; }
+.building-icon:nth-child(1) { animation-delay:0s; }
+.building-icon:nth-child(2) { animation-delay:2s; }
+.building-icon:nth-child(3) { animation-delay:4s; }
+.building-icon:nth-child(4) { animation-delay:6s; }
+.building-icon:nth-child(5) { animation-delay:8s; }
+.building-icon:nth-child(6) { animation-delay:10s; }
+.building-icon:nth-child(7) { animation-delay:12s; }
+.building-icon:nth-child(8) { animation-delay:14s; }
+.building-icon:nth-child(9) { animation-delay:16s; }
+.building-icon:nth-child(10) { animation-delay:18s; }
+.building-icon:nth-child(11) { animation-delay:20s; }
+.building-icon:nth-child(12) { animation-delay:22s; }
+.building-arrow-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:18px; color:#94a3b8; font-size:13px; font-weight:600; }
+.building-arrow-row .arrow { display:inline-block; font-size:18px; color:#001780; animation:arrowPulse 1.5s infinite; }
+@keyframes arrowPulse {
+    0%, 100% { opacity:0.4; transform:translateX(0); }
+    50% { opacity:1; transform:translateX(4px); }
+}
+.hero-combined { padding:32px 4px 24px; text-align:center; margin-bottom:8px; }
+.hero-combined .hero-title { font-size:32px; font-weight:800; line-height:1.25; margin:0 0 14px 0; letter-spacing:-0.8px; color:#0f1a2e; }
+.hero-combined .hero-sub-lg { color:#475569; font-size:15px; font-weight:600; margin:0 0 14px 0; letter-spacing:-0.2px; }
+.hero-combined .hero-sub-lg mark { background:linear-gradient(transparent 55%, #fde68a 55%); color:#1a1a1a; font-weight:800; padding:0 3px; }
+.hero-highlight-box { color:#001780; padding:0; font-size:17px; font-weight:800; margin:0 auto 22px; letter-spacing:-0.3px; }
+.hero-combined .building-stage { position:relative; height:160px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+.hero-combined .hero-cta { margin-top:8px; }
+
+@media (min-width:900px){
+
+}
+
+.banner-illegal 
+.banner-usage 
+.banner-remodel 
+.banner-extension 
+@media (max-width:640px){ .stats-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
+.stat-card { background:white; border:1px solid #ecedef; border-radius:14px; padding:22px 14px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.04); transition:all 0.15s; }
+.stat-card:hover { border-color:#001780; transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,23,128,0.08); }
+.stat-num { font-size:26px; font-weight:800; color:#001780; line-height:1; margin-bottom:10px; letter-spacing:-1px; }
+.stat-num small { font-size:14px; color:#1a1a1a; font-weight:700; margin-left:2px; }
+.stat-label { color:#666; font-size:12px; font-weight:600; line-height:1.4; }
+.home-section { max-width:720px; margin:50px auto 0; padding:0 20px; }
+
+.home-daejang-section { max-width:720px; margin:0 auto 32px; }
+.home-daejang-section .home-section-title { margin-bottom:6px; }
+.home-section-sub { font-size:13.5px; color:#64748b; margin:0 0 16px 0; letter-spacing:-0.2px; }
+.home-daejang-form { background:#fafbfd; border:1px solid #e2e8f0; }
+.home-section-title { font-size:22px; font-weight:800; color:#1a1a1a; margin-bottom:18px; letter-spacing:-0.4px; }
+.about-card { background:#fafbfc; border:1px solid #ecedef; border-radius:14px; padding:24px; }
+.about-card h3 { font-size:18px; font-weight:800; color:#1a1a1a; margin:0 0 12px 0; letter-spacing:-0.3px; }
+.about-card p { color:#666; font-size:14px; line-height:1.7; margin:0 0 8px 0; }
+.about-card p:last-child { margin-bottom:0; }
+.service-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+@media (max-width:640px){ .service-grid { grid-template-columns:1fr; } }
+.service-item { background:white; border:1px solid #ecedef; border-radius:12px; padding:18px 20px; }
+.service-item h4 { font-size:15px; font-weight:800; color:#1a1a1a; margin:0 0 6px 0; letter-spacing:-0.2px; }
+.service-item p { color:#666; font-size:13px; line-height:1.55; margin:0; }
+.testimonial { background:white; border:1px solid #ecedef; border-radius:14px; padding:22px 24px; margin-bottom:12px; }
+.testimonial .quote-mark { font-size:36px; color:#cbd5e1; font-weight:700; line-height:0.5; font-family:Georgia, serif; }
+.testimonial .quote-body { color:#1a1a1a; font-size:14.5px; line-height:1.7; margin:14px 0 14px 0; }
+.testimonial .quote-body mark { background:linear-gradient(transparent 60%, #fde68a 60%); color:#1a1a1a; padding:0 2px; font-weight:700; }
+.testimonial .quote-tags { display:flex; gap:8px; flex-wrap:wrap; }
+.testimonial .quote-tag { padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:600; }
+.testimonial .quote-tag.blue { background:#dbeafe; color:#1e40af; }
+.testimonial .quote-tag.gray { background:#f3f4f6; color:#4b5563; }
+
+.more-cases-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:280px; margin:14px auto 0; padding:12px 20px; background:white; border:1.5px solid #001780; border-radius:999px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#001780; transition:all 0.18s; }
+.more-cases-btn:hover { background:#001780; color:white; }
+.more-cases-btn .more-arrow { font-size:11px; transition:transform 0.18s; }
+.more-cases-btn.expanded .more-arrow { transform:rotate(180deg); }
+
+
+@media print {
+    body.printing * { visibility: hidden !important; }
+    body.printing #illegal-result, body.printing #illegal-result *,
+    body.printing #usage-result, body.printing #usage-result *,
+    body.printing #repair-result, body.printing #repair-result * { visibility: visible !important; }
+    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result {
+        position: absolute !important; top: 0 !important; left: 0 !important; 
+        width: 100% !important; margin: 0 !important; padding: 20px !important;
+    }
+    body.printing .print-btn, body.printing .estimate-actions, body.printing .back-btn { display:none !important; }
+    @page { margin: 15mm; size: A4; }
+}
+.estimate-actions { display:flex; gap:10px; margin:16px 0 24px; max-width:720px; margin-left:auto; margin-right:auto; }
+.estimate-action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:800; letter-spacing:-0.2px; transition:all 0.15s; border:none; }
+.estimate-action-btn.pdf { background:#001780; color:white; }
+.estimate-action-btn.pdf:hover { background:#000d4d; transform:translateY(-1px); }
+.estimate-action-btn.share { background:white; color:#001780; border:1.5px solid #001780; }
+.estimate-action-btn.share:hover { background:#eff6ff; }
+.estimate-action-btn .action-icon { font-size:16px; }
+@media (max-width:480px){
+    .estimate-actions { flex-direction:column; padding:0 4px; }
+    .estimate-action-btn { padding:14px; font-size:14px; }
+}
+.pdf-loading { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; color:white; font-size:16px; font-weight:700; }
+.consult-form-section { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:14px; padding:28px 24px; margin-top:30px; }
+.consult-form-section h3 { font-size:20px; font-weight:800; color:#001780; margin-bottom:6px; text-align:center; letter-spacing:-0.3px; }
+.consult-form-section .consult-sub { color:#666; font-size:13px; text-align:center; margin-bottom:20px; }
+.consult-form-section .consult-lead { color:#001780; font-size:19px; font-weight:800; text-align:center; margin-bottom:20px; letter-spacing:-0.4px; line-height:1.4; }
+.consult-form-section .form-field { margin-bottom:14px; }
+.consult-form-section .form-field label { display:block; font-weight:800; color:#000; font-size:13px; margin-bottom:6px; }
+.consult-form-section input, .consult-form-section select { width:100%; padding:12px 14px; border:1.5px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+.consult-form-section input:focus, .consult-form-section select:focus { outline:none; border-color:#001780; box-shadow:0 0 0 3px rgba(0,23,128,0.12); }
+
+.home-consult-form h3 { color:#1a1a1a; }
+.home-consult-form .consult-submit-btn { background:#1a1a1a; }
+.home-consult-form .consult-submit-btn:hover { background:#000; }
+.home-kakao-cta { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:14px; padding:32px 24px; margin:30px auto; max-width:720px; text-align:center; }
+.home-kakao-cta h3 { font-size:22px; font-weight:800; color:#1a1a1a; margin:0 0 8px 0; letter-spacing:-0.4px; }
+.home-kakao-cta .kakao-cta-sub { color:#666; font-size:14px; margin:0 0 22px 0; }
+.kakao-channel-btn-lg { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:18px 40px; background:#FEE500; border:none; border-radius:10px; cursor:pointer; font-family:inherit; font-size:17px; font-weight:800; color:#3C1E1E; letter-spacing:-0.3px; transition:all 0.15s; box-shadow:0 3px 10px rgba(254,229,0,0.45); }
+.kakao-channel-btn-lg:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(254,229,0,0.6); }
+.kakao-channel-btn-lg .kakao-icon { font-size:22px; }
+@media (max-width:480px){
+    .kakao-channel-btn-lg { padding:16px 28px; font-size:15px; width:100%; }
+}
+
+.consult-btn-row { display:flex; gap:10px; margin-top:8px; }
+.consult-btn-row .consult-submit-btn { flex:1; margin-top:0; }
+.kakao-channel-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; background:#FEE500; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14.5px; font-weight:800; color:#3C1E1E; letter-spacing:-0.3px; transition:all 0.15s; box-shadow:0 2px 6px rgba(254,229,0,0.4); }
+.kakao-channel-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(254,229,0,0.55); }
+.kakao-channel-btn .kakao-icon { font-size:18px; }
+@media (max-width:480px){
+    .consult-btn-row { flex-direction:column; }
+    .kakao-channel-btn { font-size:14px; }
+}
+
+.consult-submit-btn { width:100%; padding:15px; background:#001780; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; margin-top:8px; transition:background 0.15s; }
+.consult-submit-btn:hover { background:#000d4d; }
+.kakao-channel-btn-estimate { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; background:#FEE500; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-size:14.5px; font-weight:800; color:#3C1E1E; letter-spacing:-0.3px; margin-top:10px; transition:all 0.15s; box-shadow:0 2px 8px rgba(254,229,0,0.4); }
+.kakao-channel-btn-estimate:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(254,229,0,0.55); }
+.kakao-channel-btn-estimate .kakao-icon { font-size:16px; }
+
+.site-footer { max-width:720px; margin:60px auto 24px; padding:36px 22px 24px; border-top:1px solid #e8e8e6; background:#fafbfc; border-radius:14px; }
+.footer-brand { font-size:24px; font-weight:800; color:#1a1a1a; margin:0 0 14px 0; letter-spacing:-0.5px; }
+.footer-slogan { color:#888; font-size:14px; line-height:1.65; margin:0 0 6px 0; }
+.footer-highlight { color:#001780; font-size:14px; font-weight:700; margin:8px 0 28px 0; }
+.footer-section { margin-bottom:24px; }
+.footer-section h5 { font-size:14px; font-weight:800; color:#1a1a1a; margin:0 0 12px 0; letter-spacing:-0.2px; }
+.footer-section ul { list-style:none; padding:0; margin:0; }
+.footer-section li { color:#888; font-size:14px; padding:6px 0; cursor:pointer; transition:color 0.15s; }
+.footer-section li:hover { color:#001780; }
+.footer-divider { border:none; border-top:1px solid #e5e7eb; margin:20px 0 18px 0; }
+.footer-company { color:#999; font-size:12px; line-height:1.7; }
+.footer-company .footer-row { margin-bottom:3px; }
+.footer-company .footer-row span:not(:last-child)::after { content:'｜'; margin:0 6px; color:#d4d4d4; }
+.footer-company a { color:#999; text-decoration:none; }
+.footer-copyright { margin-top:14px; font-size:11px; color:#bbb; }
+</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header class="site-header">
+    <div class="logo" onclick="goMain()">
+        <span class="logo-main">건축 인허가 견적 계산기</span>
+    </div>
+    <button class="hamburger" onclick="toggleSideMenu()" aria-label="메뉴">☰</button>
+</header>
+
+<aside id="side-menu" class="side-menu">
+    <div class="side-menu-header">
+        <h3>메뉴</h3>
+        <button class="close-btn" onclick="toggleSideMenu()">×</button>
+    </div>
+    <ul>
+        <li onclick="goMain(); toggleSideMenu();">홈</li>
+    </ul>
+    <div class="menu-section-title">견적 계산기</div>
+    <ul>
+        <li onclick="selectIllegal(); toggleSideMenu();">위반건축물 양성화 계산기</li>
+        <li onclick="selectUsage(); toggleSideMenu();">용도변경 계산기</li>
+        <li onclick="selectRemodel('대수선 (엘리베이터 설치)'); toggleSideMenu();">대수선 계산기</li>
+        <li onclick="selectRemodel('증축'); toggleSideMenu();">증축 계산기</li>
+    </ul>
+    <div class="menu-section-title">고객지원</div>
+    <ul>
+        <li onclick="alert('무료 상담은 견적 결과 페이지 또는 홈에서 신청 가능합니다.'); toggleSideMenu();">무료 상담</li>
+        <li onclick="alert('준비 중입니다.'); toggleSideMenu();">자주 묻는 질문</li>
+    </ul>
+    <div class="menu-section-title">관리자</div>
+    <ul>
+        <li onclick="openAdmin(); toggleSideMenu();">견적 접수 목록</li>
+    </ul>
+</aside>
+<div id="side-menu-overlay" class="side-menu-overlay" onclick="toggleSideMenu()"></div>
+
+<div class="container">
+
+<!-- 탭바 제거됨, 사이드 메뉴로 대체 -->
+
+<!-- ===== 메인 ===== -->
+<div id="selector-screen">
+    <section class="hero-combined">
+        <h1 class="hero-title">건축물대장 자동조회로<br><span class="hero-accent">더 정확한 건축 견적</span></h1>
+        <p class="hero-sub-lg">모든 건물 용도 견적을, <mark>단 10초만에!</mark></p>
+        <div class="building-stage">
+            <div class="building-icon"><div class="building-emoji">🏠</div><div class="building-label">단독주택</div></div>
+            <div class="building-icon"><div class="building-emoji">🏪</div><div class="building-label">근린생활시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🍽️</div><div class="building-label">음식점·카페</div></div>
+            <div class="building-icon"><div class="building-emoji">🛒</div><div class="building-label">대형슈퍼·판매시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🎓</div><div class="building-label">학원·교육시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🏘️</div><div class="building-label">노유자시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🏋️</div><div class="building-label">운동센터·체육시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🏢</div><div class="building-label">업무·아파트</div></div>
+            <div class="building-icon"><div class="building-emoji">⛽</div><div class="building-label">주유소</div></div>
+            <div class="building-icon"><div class="building-emoji">🏭</div><div class="building-label">공장</div></div>
+            <div class="building-icon"><div class="building-emoji">🏬</div><div class="building-label">문화·집회시설</div></div>
+            <div class="building-icon"><div class="building-emoji">🏨</div><div class="building-label">숙박시설</div></div>
+        </div>
+    </section>
+
+    <div class="quick-calc-grid">
+        <button class="quick-calc-btn qb-usage" onclick="selectUsage()">
+            <span class="qb-emoji">🔄</span>
+            <span class="qb-title">용도변경</span>
+        </button>
+        <button class="quick-calc-btn qb-extension" onclick="selectRemodel('증축')">
+            <span class="qb-emoji">🏗️</span>
+            <span class="qb-title">증축</span>
+        </button>
+        <button class="quick-calc-btn qb-remodel" onclick="selectRemodel('대수선 (엘리베이터 설치)')">
+            <span class="qb-emoji">🛗</span>
+            <span class="qb-title">대수선</span>
+        </button>
+        <button class="quick-calc-btn qb-illegal" onclick="selectIllegal()">
+            <span class="qb-emoji">⚠️</span>
+            <span class="qb-title">위반건축물 양성화</span>
+        </button>
+    </div>
+    
+    <section class="home-daejang-section">
+        <h2 class="home-section-title">건축물대장 자동조회</h2>
+        <p class="home-section-sub">주소만 입력하면 건물 개요, 층별 면적·용도가 자동 표시됩니다</p>
+        <div class="form-section home-daejang-form">
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="home-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('home')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('home')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회하기</button>
+            <div id="home-building-info" class="building-info-panel"></div>
+        </div>
+    </section>
+
+    <section class="home-section">
+        <h2 class="home-section-title">상담 사례</h2>
+        <div class="testimonial">
+            <div class="quote-mark">"</div>
+            <p class="quote-body">음식점 변경 검토 중 <mark>정화조·배기덕트 비용</mark>이 커 카페로 전환, <mark>인허가 비용 60% 절감</mark>했습니다.</p>
+            <div class="quote-tags">
+                <span class="quote-tag blue">용도변경 방향 전환</span>
+                <span class="quote-tag gray">서울 영등포구</span>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="quote-mark">"</div>
+            <p class="quote-body">옥상 가건물이 위반건축물로 적발됐지만 <mark>철거 없이 양성화에 성공</mark>했습니다.</p>
+            <div class="quote-tags">
+                <span class="quote-tag blue">위반건축물 양성화 완료</span>
+                <span class="quote-tag gray">경기 화성시</span>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="quote-mark">"</div>
+            <p class="quote-body">엘리베이터 신설 전 <mark>구조 보강·주차 확보</mark> 문제를 파악해 <mark>예산을 정확히 세웠습니다</mark>.</p>
+            <div class="quote-tags">
+                <span class="quote-tag blue">대수선 (EV 설치)</span>
+                <span class="quote-tag gray">경기 성남시</span>
+            </div>
+        </div>
+
+        <div id="more-cases" style="display:none;">
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">3층 사무실을 <mark>학원으로 용도변경</mark>하면서 피난·소방 기준을 한 번에 검토받아 <mark>인허가 기간을 절반으로 단축</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">용도변경 (허가)</span>
+                    <span class="quote-tag gray">서울 강남구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">1층 일반음식점을 <mark>키즈카페로 변경</mark>할 때 다중이용시설 안전기준을 사전 검토해 <mark>설비 비용을 30% 절감</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">용도변경 (신고)</span>
+                    <span class="quote-tag gray">경기 용인시</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">노후 상가 <mark>대수선 + 엘리베이터 설치</mark>를 동시 진행해 공사·인허가를 한 번에 정리. <mark>임대 공실 기간을 최소화</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">대수선 + EV</span>
+                    <span class="quote-tag gray">서울 마포구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">건축물대장과 실제 면적이 다른 노후 주택의 <mark>현황을 정비</mark>해 매매 진행. <mark>법적 리스크를 정리</mark>한 뒤 거래가 성사됐습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">기재변경</span>
+                    <span class="quote-tag gray">인천 부평구</span>
+                </div>
+            </div>
+            <div class="testimonial">
+                <div class="quote-mark">"</div>
+                <p class="quote-body">옥탑 컨테이너와 1층 출입구 확장 부분을 <mark>한 번에 양성화</mark>. 임차인 문제도 함께 해소해 <mark>건물 가치가 상승</mark>했습니다.</p>
+                <div class="quote-tags">
+                    <span class="quote-tag blue">위반건축물 양성화</span>
+                    <span class="quote-tag gray">경기 안양시</span>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="more-cases-btn" id="more-cases-btn" onclick="toggleMoreCases()">사례 더보기 <span class="more-arrow">▼</span></button>
+    </section>
+
+    <div class="home-kakao-cta">
+        <h3>건축사 무료 상담</h3>
+        <p class="kakao-cta-sub">카카오톡 채널로 바로 상담받으세요</p>
+        <button type="button" class="kakao-channel-btn-lg" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>
+            <span class="kakao-label">카카오톡 채널 상담</span>
+        </button>
+        </div>
+    </div>
+<!-- ===== 위반건축물 STEP1 ===== -->
+<div id="illegal-step1" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <h1 class="calculator-title">STEP 1. 위반 유형 선택</h1>
+    <div class="calc-intro">
+        <h4>위반건축물 양성화란?</h4>
+        <p>허가·신고 없이 건축·증축·용도변경한 부분을 사후에 합법화하는 절차입니다.</p>
+        <ul>
+            <li><b>무허가 건축</b> — 허가·신고 없이 신축한 건물</li>
+            <li><b>불법 증축</b> — 허가 없이 면적이나 층을 늘린 부분 (옥상 가건물·테라스 확장 등)</li>
+            <li><b>용도위반</b> — 허가받은 용도와 다르게 사용 (예: 창고를 사무실로)</li>
+        </ul>
+        <p class="note">양성화 신청 시 구조 안전성·소방·주차 등 현행 법규 충족 여부를 검토합니다.</p>
+    </div>
+    <div class="violation-grid">
+        <div class="violation-card" onclick="pickViolation('무허가')">
+            <div class="card-content">
+                <h2>무허가 건축물 양성화</h2>
+                <p>건축 허가·신고 없이 지어진 건축물<br>철거 또는 양성화 절차 검토</p>
+                <div class="card-tags">
+                    <span class="tag">허가 누락</span>
+                    <span class="tag">사후 신고</span>
+                    <span class="tag">철거 검토</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="violation-card" onclick="pickViolation('불법증축')">
+            <div class="card-content">
+                <h2>불법증축 양성화</h2>
+                <p>허가 범위를 초과하여 증축된 부분<br>옥상 가건물·발코니 확장 등</p>
+                <div class="card-tags">
+                    <span class="tag">면적 초과</span>
+                    <span class="tag">이행강제금</span>
+                    <span class="tag">원상복구</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+        <div class="violation-card" onclick="pickViolation('용도위반')">
+            <div class="card-content">
+                <h2>용도위반 양성화</h2>
+                <p>허가된 용도와 다르게 사용 중인 경우<br>주거→상가 등 무단 용도 변경</p>
+                <div class="card-tags">
+                    <span class="tag">무단 변경</span>
+                    <span class="tag">용도 정정</span>
+                    <span class="tag">신고 누락</span>
+                </div>
+                <button type="button" class="card-cta">이 유형으로 계산 →</button>
+            </div>
+            <div class="card-image" style="background-image:url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80&auto=format&fit=crop')"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 위반건축물 STEP2: 입력 ===== -->
+<div id="illegal-step2" class="hidden">
+    <button class="back-btn" onclick="showScreen('illegal-step1')">← 이전</button>
+    <h1 class="calculator-title">STEP 2. 기본 정보 입력</h1>
+    <div class="calc-intro">
+        <h4>안내</h4>
+        <p>건축물대장 자동조회로 건물 정보가 빠르게 입력됩니다. 위반 부분의 면적·위치를 정확히 기입해 주세요.</p>
+    </div>
+    <div class="form-wrap">
+        <input type="hidden" id="illegal-area" value="0">
+        <input type="hidden" id="illegal-floor" value="0">
+        <input type="hidden" id="illegal-basement" value="0">
+        <div class="form-section">
+            <h3>건물 주소</h3>
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="illegal-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('illegal')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('illegal')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회</button>
+            <div id="illegal-building-info" class="building-info-panel"></div>
+        </div>
+        <div class="form-section">
+            <h3>불법부분 정보</h3>
+            <div class="form-field"><label>불법 면적 (㎡)</label><input type="number" id="illegal-unlawful-area" value="0" oninput="document.getElementById('illegal-unlawful-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="illegal-unlawful-pyeong">0평</p></div>
+            <div class="form-field"><label>불법 층수 (층)</label><input type="number" id="illegal-unlawful-floor" value="0"></div>
+        </div>
+        <div class="form-section">
+            <h3>현황도면 여부</h3>
+            <div class="form-field"><select id="illegal-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
+        </div>
+        <div class="form-section">
+            <h3>소유 여부</h3>
+            <div class="form-field"><select id="illegal-ownership"><option>소유</option><option>매수 검토중</option></select></div>
+        </div>
+        <div class="form-section">
+            <h3>인허가 검토 정보</h3>
+            <div class="form-field"><label>위반 시점</label><select id="illegal-when"><option>2006.5.9 이전 (특정건축물 정리 검토 가능)</option><option>2006.5.9 이후</option><option>모름</option></select></div>
+            <div class="check-row"><input type="checkbox" id="illegal-far"><label>건폐율 또는 용적률 초과 (초과 시 양성화 제한될 수 있음)</label></div>
+        </div>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="illegal-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="illegal-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="illegal-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="illegal-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('illegal')">견적 바로 확인하기</button>
+    </div>
+</div>
+
+<!-- ===== 위반건축물 STEP3: 견적 ===== -->
+<div id="illegal-step3" class="hidden">
+    <button class="back-btn" onclick="showScreen('illegal-step2')">← 입력 수정</button>
+    <h1 class="calculator-title">위반건축물 양성화 견적 계산기</h1>
+    <div class="estimate-wrap"><div id="illegal-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('illegal-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
+    </div>
+    <div class="consult-form-section">
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
+        </div>
+    </div>
+<!-- ===== 용도변경 STEP1 ===== -->
+<div id="usage-step1" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <h1 class="calculator-title">STEP 1. 기본 정보 입력</h1>
+    <div class="calc-intro">
+        <h4>용도변경이란?</h4>
+        <p>기존 건축물의 용도를 다른 용도로 바꾸는 절차입니다. 건축법상 기존 용도와 변경 용도에 따라 행정 절차가 달라집니다.</p>
+    </div>
+    <div class="form-wrap">
+        <div class="form-section">
+            <h3>건물 주소</h3>
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="usage-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('usage')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('usage')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회</button>
+            <div id="usage-building-info" class="building-info-panel"></div>
+        </div>
+        <div class="form-section">
+            <h3>현황도면 여부</h3>
+            <div class="form-field"><select id="usage-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
+        </div>
+        <div class="form-section">
+            <h3>소유 여부</h3>
+            <div class="form-field"><select id="usage-ownership"><option>소유</option><option>매수 검토중</option></select></div>
+        </div>
+        <button class="next-btn" onclick="usageNext()">용도변경하기 →</button>
+    </div>
+</div>
+
+<!-- ===== 용도변경 STEP2: 입력 ===== -->
+<div id="usage-step2" class="hidden">
+    <button class="back-btn" onclick="showScreen('usage-step1')">← 이전</button>
+    <h1 class="calculator-title">STEP 2. 변경 용도 선택</h1>
+    <div class="form-wrap">
+        <div class="usage-helper">항목별로 신고/허가/기재변경이 자동 판별됩니다</div>
+        <div id="usage-changes-container"></div>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="usage-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="usage-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="usage-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="usage-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('usage')">견적 바로 확인하기</button>
+    </div>
+</div>
+
+<!-- ===== 용도변경 STEP3: 견적 ===== -->
+<div id="usage-step3" class="hidden">
+    <button class="back-btn" onclick="showScreen('usage-step2')">← 입력 수정</button>
+    <h1 class="calculator-title">용도변경 견적 계산기</h1>
+    <div class="estimate-wrap"><div id="usage-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('usage-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
+    </div>
+    <div class="consult-form-section">
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
+        </div>
+    </div>
+<!-- ===== 리모델링 STEP1: 입력 ===== -->
+<div id="remodel-step2" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
+    <div class="calc-intro" id="remodel-intro">
+        <h4 id="remodel-intro-title">대수선이란?</h4>
+        <div id="remodel-intro-body">
+            <p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>
+        </div>
+    </div>
+    <div class="form-wrap">
+        <input type="hidden" id="repair-area" value="0">
+        <input type="hidden" id="repair-parking" value="0">
+        <div class="form-section">
+            <h3>건물 주소</h3>
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="repair-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('repair')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('repair')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회</button>
+            <div id="repair-building-info" class="building-info-panel"></div>
+        </div>
+        <div class="form-section">
+            <h3>현황도면 여부</h3>
+            <div class="form-field"><select id="repair-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
+        </div>
+        <div class="form-section">
+            <h3>소유 여부</h3>
+            <div class="form-field"><select id="repair-ownership"><option>소유</option><option>매수 검토중</option></select></div>
+        </div>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="remodel-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="remodel-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="remodel-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="remodel-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('remodel')">견적 바로 확인하기</button>
+    </div>
+</div>
+
+<!-- ===== 리모델링 STEP3: 견적 ===== -->
+<div id="remodel-step3" class="hidden">
+    <button class="back-btn" onclick="showScreen('remodel-step2')">← 입력 수정</button>
+    <h1 class="calculator-title remodel-title">대수선 견적 계산기</h1>
+    <div class="estimate-wrap"><div id="repair-result"><div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:32px 24px;text-align:center;color:#666;"><div style="font-size:16px;font-weight:700;color:#333;margin-bottom:8px;">견적 결과 준비 중</div><div style="font-size:13px;">입력 화면으로 돌아가 정보를 다시 확인해주세요.</div></div></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('repair-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
+    </div>
+    <div class="consult-form-section">
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
+        </div>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <h4 class="footer-brand" onclick="document.querySelector('.home-kakao-cta')?.scrollIntoView({behavior:'smooth'}) || alert('견적 확인 후 상담 신청이 가능합니다.')" style="cursor:pointer;">건축사사무소 무료상담</h4>
+
+    <hr class="footer-divider">
+
+    <div class="footer-company">
+        <div class="footer-row">
+            <span>디바이엠건축사사무소</span>
+            <span>대표 신민철</span>
+        </div>
+        <div class="footer-row">
+            <span>사업자등록번호 225-04-69213</span>
+        </div>
+        <div class="footer-row">
+            <span>서울특별시 송파구 송파대로43길 1 (석촌동) 501호</span>
+        </div>
+        <div class="footer-row">
+            <span>TEL <a href="tel:070-4647-3376">070-4647-3376</a></span>
+            <span>E-MAIL <a href="mailto:dbym@dbym.kr">dbym@dbym.kr</a></span>
+        </div>
+    </div>
+</footer>
+
+<!-- 주소 검색 모달 -->
+<div id="postcode-modal" class="postcode-modal" onclick="if(event.target===this) closePostcodeModal()">
+    <div class="postcode-modal-content">
+        <div class="postcode-modal-header">
+            <span>주소 검색</span>
+            <button type="button" onclick="closePostcodeModal()" aria-label="닫기">✕</button>
+        </div>
+        <div id="postcode-embed"></div>
+    </div>
+</div>
+
+
+<!-- ===== 관리자: 견적 접수 목록 ===== -->
+<div id="admin-screen" class="hidden">
+    <div class="admin-wrap">
+        <button class="back-btn" onclick="goMain()">← 홈으로</button>
+
+        <div id="admin-login-box" class="admin-login">
+            <h3>관리자 로그인</h3>
+            <p>견적 접수 목록을 확인하려면<br>비밀번호를 입력해주세요.</p>
+            <input type="password" id="admin-password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')adminLogin()">
+            <button class="admin-btn primary" style="width:100%;padding:13px;" onclick="adminLogin()">로그인</button>
+        </div>
+
+        <div id="admin-panel" class="hidden">
+            <div class="admin-head">
+                <h1 class="admin-title">견적 접수 목록</h1>
+                <div class="admin-actions">
+                    <button class="admin-btn" onclick="adminExportCSV()">CSV 내려받기</button>
+                    <button class="admin-btn primary" onclick="adminLoad()">새로고침</button>
+                </div>
+            </div>
+            <div id="admin-error"></div>
+            <div class="admin-stats">
+                <div class="admin-stat">
+                    <div class="admin-stat-label">전체 접수</div>
+                    <div class="admin-stat-value" id="adm-stat-total">-</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">최근 7일</div>
+                    <div class="admin-stat-value" id="adm-stat-week">-</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">견적 합계</div>
+                    <div class="admin-stat-value" id="adm-stat-sum">-</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat-label">미처리</div>
+                    <div class="admin-stat-value" id="adm-stat-todo">-</div>
+                </div>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>접수일시</th>
+                            <th>신청자</th>
+                            <th>구분</th>
+                            <th>주소 / 면적</th>
+                            <th>견적금액</th>
+                            <th>연락상태</th>
+                            <th>비고</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody"></tbody>
+                </table>
+                <div id="admin-empty" class="admin-empty hidden">아직 접수된 견적이 없습니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 견적 완료 알림 팝업 -->
+<div id="done-toast" class="done-toast-overlay">
+    <div class="done-toast-box">
+        <div class="done-toast-icon">✅</div>
+        <h3 class="done-toast-title">검토 요청이 완료되었습니다</h3>
+        <p class="done-toast-msg">건축 인허가 계산기 견적서가<br>담당 건축사에게 검토 요청되었습니다.<br><br>추가 상담은 카카오톡 채널을 이용해주세요.</p>
+        <button type="button" class="done-toast-btn" onclick="closeDoneToast()">확인</button>
+    </div>
+</div>
+
+<script>
+const PRICING = {
+    // ==== 케이스별 설계비 m² 단가 (엑셀 기준) ====
+    설계비_대수선: 33000,          // 대수선 33,000원/m²
+    설계비_증축: 76000,             // 증축 76,000원/m² (평당 25만)
+    설계비_용도변경_허가: 3000,     // 용도변경 허가 3,000원/m²
+    설계비_용도변경_신고: 2000,     // 용도변경 신고 2,000원/m²
+    설계비_용도변경_기재변경: 0,    // 기재변경 설계비 없음
+    설계비_양성화: 15000,           // 위반건축물 양성화 15,000원/m²
+    
+    // ==== 인허가 대행비 - 고정 케이스 ====
+    인허가대행비_기재변경: 1500000,    // 기재변경 150만원 (고정)
+    인허가대행비_대수선: 3000000,      // 대수선 300만원
+    인허가대행비_증축: 3000000,        // 증축 300만원
+    인허가대행비_양성화: 3000000,      // 양성화 300만원
+    
+    // ==== 도면 비용 (원/m²) ====
+    도면단가_pdf: 1000,               // PDF·종이 → 1,000원/m²
+    도면단가_도면작성: 1000,          // 도면 없음 → 도면작성 1,000원/m²
+    
+    // ==== 별도 안내 (예상 견적) ====
+    구조안전진단비: 5000000,          // 500만원 (안내만)
+    LX측량비: 1000000                 // 100만원 (양성화 시 안내)
+};
+
+// 용도변경 인허가 대행비 - 면적별 차등
+function 용도변경_허가_대행비(area){
+    if(area <= 500) return 2500000;
+    if(area <= 1000) return 3000000;
+    if(area <= 2000) return 3500000;
+    if(area <= 5000) return 4000000;
+    return 6000000;
+}
+function 용도변경_신고_대행비(area){
+    if(area <= 500) return 1500000;
+    if(area <= 1000) return 2000000;
+    if(area <= 2000) return 2500000;
+    if(area <= 5000) return 3000000;
+    return 4000000;
+}
+
+// 도면 없음 - 현황실측비 (면적별 차등)
+function 현황실측비(area){
+    if(area <= 100) return 500000;
+    if(area <= 300) return 800000;
+    if(area <= 1000) return 1000000;
+    if(area <= 2000) return 1300000;
+    return 1500000;
+}
+const REGION_FACTOR = {'서울':1.0,'경기':1.0,'인천':1.0,'기타':1.0};
+const STATE = { illegalViolation:'', remodelType:'' };
+
+const FACILITY_GROUP = {
+    // 1군 자동차 관련 시설군
+    '주차장':1,'자동차정비공장':1,'운전학원':1,'세차장':1,
+    // 2군 산업 등 시설군
+    '공장':2,'창고':2,'물류터미널':2,'주유소':2,'액화가스충전소':2,'여객터미널':2,'장례식장':2,'자원순환관련시설':2,'묘지관련시설':2,
+    // 3군 전기통신시설군
+    '방송국·데이터센터':3,'발전시설':3,
+    // 4군 문화 및 집회시설군
+    '공연장':4,'전시장(박물관·미술관)':4,'관람장':4,'종교집회장(교회·성당·사찰)':4,'봉안당':4,'유흥주점·단란주점':4,'무도장·무도학원':4,'카지노':4,'휴게소·관광휴게시설':4,
+    // 5군 영업시설군
+    '고시원(다중생활시설)':5,'도소매시장':5,'상점·매장':5,'전통시장':5,'체육관':5,'운동장':5,'체력단련장(500㎡이상)':5,'일반숙박시설(호텔·여관)':5,'생활숙박시설':5,'관광숙박시설':5,
+    // 6군 교육 및 복지시설군
+    '병원·종합병원':6,'요양병원':6,'학교':6,'학원(500㎡이상)':6,'직업훈련소':6,'연구소':6,'도서관':6,'어린이집':6,'노인복지시설':6,'사회복지시설':6,'청소년수련관':6,'유스호스텔':6,'야영장시설':6,
+    // 7군 근린생활시설군 (제1종·제2종)
+    '소매점(1종)':7,'휴게음식점·제과점(1종)':7,'이용원·미용원':7,'의원·한의원·치과':7,'약국':7,'탁구장·체육도장(500㎡미만)':7,'공공업무시설(1000㎡미만)':7,
+    '일반음식점':7,'학원·교습소(500㎡미만)':7,'독서실·기원':7,'체력단련장·당구장(500㎡미만)':7,'동물병원':7,'제조업소(500㎡미만)':7,'노래연습장':7,'사무소(500㎡미만)':7,'단란주점(150㎡미만)':7,'자동차영업소(1000㎡미만)':7,'서점(1000㎡이상)':7,'사진관·표구점':7,
+    // 8군 주거업무시설군
+    '단독주택':8,'다중주택':8,'다가구주택':8,'아파트':8,'연립주택':8,'다세대주택':8,'기숙사':8,'일반업무시설(사무소)':8,'오피스텔':8,'금융업소':8,'공공업무시설(1000㎡이상)':8,
+    // 9군 그 밖의 시설군
+    '축사':9,'작물재배사·온실':9
+};
+const USAGE_OPTIONS = [
+    {group:'1군 (자동차 관련 시설군)',items:['주차장','자동차정비공장','운전학원','세차장']},
+    {group:'2군 (산업 등 시설군)',items:['공장','창고','물류터미널','주유소','액화가스충전소','여객터미널','장례식장','자원순환관련시설','묘지관련시설']},
+    {group:'3군 (전기통신시설군)',items:['방송국·데이터센터','발전시설']},
+    {group:'4군 (문화집회시설군)',items:['공연장','전시장(박물관·미술관)','관람장','종교집회장(교회·성당·사찰)','봉안당','유흥주점·단란주점','무도장·무도학원','카지노','휴게소·관광휴게시설']},
+    {group:'5군 (영업시설군)',items:['고시원(다중생활시설)','도소매시장','상점·매장','전통시장','체육관','운동장','체력단련장(500㎡이상)','일반숙박시설(호텔·여관)','생활숙박시설','관광숙박시설']},
+    {group:'6군 (교육 및 복지시설군)',items:['병원·종합병원','요양병원','학교','학원(500㎡이상)','직업훈련소','연구소','도서관','어린이집','노인복지시설','사회복지시설','청소년수련관','유스호스텔','야영장시설']},
+    {group:'7군 (근린생활시설군)',items:['소매점(1종)','휴게음식점·제과점(1종)','이용원·미용원','의원·한의원·치과','약국','탁구장·체육도장(500㎡미만)','공공업무시설(1000㎡미만)','일반음식점','학원·교습소(500㎡미만)','독서실·기원','체력단련장·당구장(500㎡미만)','동물병원','제조업소(500㎡미만)','노래연습장','사무소(500㎡미만)','단란주점(150㎡미만)','자동차영업소(1000㎡미만)','서점(1000㎡이상)','사진관·표구점']},
+    {group:'8군 (주거업무시설군)',items:['단독주택','다중주택','다가구주택','아파트','연립주택','다세대주택','기숙사','일반업무시설(사무소)','오피스텔','금융업소','공공업무시설(1000㎡이상)']},
+    {group:'9군 (그 밖의 시설군)',items:['축사','작물재배사·온실']}
+];
+
+function formatCurrency(n){ return Math.round(n).toLocaleString('ko-KR')+'원'; }
+function calculateDesignFee(a){ const p=a/3.3; if(p<50)return a*PRICING.설계비.소형; if(p<100)return a*PRICING.설계비.중형; return a*PRICING.설계비.대형; }
+function getSurveyFee(a){ const p=a/3.3; if(p<50)return PRICING.현황측량비.소형; if(p<100)return PRICING.현황측량비.중형; return PRICING.현황측량비.대형; }
+function surveyDocFee(drawingId, area){
+    // 면적 비례 도면 비용 - 엑셀 기준
+    const d = document.getElementById(drawingId).value;
+    const a = area || 0;
+    if(d === 'cad') return {items:[]};
+    if(d === 'pdf') return {items:[{name:'도면 디지털 변환비 (PDF·종이 도면)', amount:a*PRICING.도면단가_pdf}]};
+    if(d === 'none') return {items:[
+        {name:'현황 실측비 (도면 미보유)', amount:현황실측비(a)},
+        {name:'도면 작성비 (도면 미보유)', amount:a*PRICING.도면단가_도면작성}
+    ]};
+    return {items:[]};
+}
+
+let currentLookupType = null;
+
+function ensurePostcodeLoaded(callback){
+    if(typeof daum !== 'undefined' && daum.Postcode){
+        callback();
+        return;
+    }
+    const existing = document.querySelector('script[src*="postcode.v2.js"]');
+    if(existing){
+        existing.addEventListener('load', callback);
+        existing.addEventListener('error', function(){
+            alert('⚠️ 주소 검색 서비스 로드 실패\n인터넷 연결을 확인하세요.');
+        });
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    script.onload = callback;
+    script.onerror = function(){
+        alert('⚠️ 주소 검색 서비스를 불러올 수 없습니다.');
+    };
+    document.head.appendChild(script);
+}
+
+function handlePostcodeData(data){
+    const t = currentLookupType;
+    const addrEl = document.getElementById(t+'-address');
+    addrEl.value = data.address || data.jibunAddress || '';
+    const jibun = data.jibunAddress || '';
+    addrEl.dataset.sigungu = data.sigunguCode || '';
+    addrEl.dataset.bjdong = (data.bcode || '').substring(5);
+    addrEl.dataset.platgb = jibun.includes('산 ') ? '1' : '0';
+    const bunjiMatch = jibun.match(/(\d+)(?:-(\d+))?$/);
+    addrEl.dataset.bun = (bunjiMatch && bunjiMatch[1] ? bunjiMatch[1] : '0').padStart(4,'0');
+    addrEl.dataset.ji = (bunjiMatch && bunjiMatch[2] ? bunjiMatch[2] : '0').padStart(4,'0');
+    const detailEl = document.getElementById(t+'-detail');
+    if(detailEl) detailEl.focus();
+}
+
+function lookupBuilding(type){
+    ensurePostcodeLoaded(function(){
+        currentLookupType = type;
+        // PC = 팝업 새 창 (iframe 차단 회피), 모바일/태블릿 = 임베드 모달
+        const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+        if(isMobile){
+            const modal = document.getElementById('postcode-modal');
+            const embed = document.getElementById('postcode-embed');
+            embed.innerHTML = '';
+            modal.classList.add('open');
+            new daum.Postcode({
+                oncomplete: function(data){
+                    handlePostcodeData(data);
+                    closePostcodeModal();
+                },
+                width: '100%',
+                height: '100%'
+            }).embed(embed);
+        } else {
+            // 데스크탑: 새 창 팝업 방식 (가장 호환성 좋음)
+            new daum.Postcode({
+                oncomplete: handlePostcodeData
+            }).open();
+        }
+    });
+}
+
+function closePostcodeModal(){
+    const modal = document.getElementById('postcode-modal');
+    if(modal) modal.classList.remove('open');
+    const embed = document.getElementById('postcode-embed');
+    if(embed) embed.innerHTML = '';
+}
+
+function fetchBuilding(type){
+    const addrEl = document.getElementById(type+'-address');
+    if(!addrEl || !addrEl.value){
+        alert('먼저 "🔍 주소 검색"으로 주소를 선택해주세요.');
+        return;
+    }
+    const params = {
+        sigunguCd: addrEl.dataset.sigungu || '',
+        bjdongCd: addrEl.dataset.bjdong || '',
+        platGbCd: addrEl.dataset.platgb || '0',
+        bun: addrEl.dataset.bun || '',
+        ji: addrEl.dataset.ji || '0000'
+    };
+    if(!params.sigunguCd || !params.bjdongCd || !params.bun){
+        alert('주소 정보가 불완전합니다. 주소 검색을 다시 시도해주세요.');
+        return;
+    }
+    fetchBuildingInfo(params, type);
+}
+
+async function fetchBuildingInfo(params, type){
+    try {
+        const qs = new URLSearchParams(params).toString();
+        const resp = await fetch('/api/lookup?'+qs);
+        if(!resp.ok){
+            if(resp.status === 404){
+                alert('📋 주소 자동 입력 완료\n\n건축물대장 조회는 Vercel 백엔드 배포 후 활성화됩니다.\n나머지 정보는 수동 입력해주세요.');
+                return;
+            }
+            const errData = await resp.json().catch(()=>({error:'알 수 없는 오류'}));
+            throw new Error(errData.error || ('HTTP '+resp.status));
+        }
+        const info = await resp.json();
+        applyBuildingInfo(info, type);
+    } catch(e){
+        alert('건축물대장 조회 오류: '+e.message+'\n\n주소는 자동 입력되었습니다. 나머지 정보는 수동 입력해주세요.');
+    }
+}
+
+function toggleAllFloors(){
+    const checks = document.querySelectorAll('#usage-building-info .floor-check');
+    if(!checks.length) return;
+    const anyUnchecked = Array.from(checks).some(c => !c.checked);
+    checks.forEach(c => c.checked = anyUnchecked);
+}
+
+function applySelectedFloorsToUsage(){
+    const checks = document.querySelectorAll('#usage-building-info .floor-check:checked');
+    if(checks.length === 0){
+        alert('변경할 층을 1개 이상 체크해주세요.');
+        return;
+    }
+    document.getElementById('usage-changes-container').innerHTML = '';
+    usageChangeCounter = 0;
+    checks.forEach(function(chk){
+        addUsageChange({
+            floorName: chk.dataset.floorName || '',
+            area: parseFloat(chk.dataset.area) || 0,
+            purpose: chk.dataset.purpose || ''
+        });
+    });
+    showScreen('usage-step2');
+    setTimeout(function(){
+        const cont = document.getElementById('usage-changes-container');
+        if(cont) cont.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 200);
+}
+
+function applyBuildingInfo(info, type){
+    // === 폼 자동 채움 ===
+    if(info.totArea){
+        if(type === 'usage'){
+            const firstCard = document.querySelector('.change-card');
+            if(firstCard){
+                firstCard.querySelector('.change-area').value = info.totArea;
+            }
+        } else {
+            const el = document.getElementById(type+'-area');
+            if(el){
+                el.value = info.totArea;
+                const pyeongEl = document.getElementById(type+'-pyeong');
+                if(pyeongEl) pyeongEl.textContent = (info.totArea/3.3).toFixed(1)+'평';
+            }
+        }
+    }
+    if(type==='illegal'){
+        if(info.grndFlrCnt){
+            const fl = document.getElementById('illegal-floor');
+            if(fl) fl.value = info.grndFlrCnt;
+        }
+        if(info.ugrndFlrCnt){
+            const bs = document.getElementById('illegal-basement');
+            if(bs) bs.value = info.ugrndFlrCnt;
+        }
+    }
+    if(type==='repair' && info.parking){
+        const pk = document.getElementById('repair-parking');
+        if(pk) pk.value = info.parking.total || 0;
+    }
+
+    // === 건물 정보 패널 렌더링 ===
+    const panel = document.getElementById(type+'-building-info');
+    if(!panel) return;
+
+    const fv = function(v, unit){ return v ? (v + (unit||'')) : '-'; };
+    const p = info.parking || {};
+    const parkingText = (p.total > 0)
+        ? '총 ' + p.total + '대 (옥내자주 ' + (p.indrAuto||0) + ' · 옥외자주 ' + (p.oudrAuto||0) + ' · 옥내기계 ' + (p.indrMech||0) + ' · 옥외기계 ' + (p.oudrMech||0) + ')'
+        : '정보 없음';
+
+    let html = '';
+
+    // === 섹션 1: 건축물대장 정보 (요약) ===
+    html += '<div class="info-section">';
+    html += '<h3>건축물대장 정보</h3>';
+
+    html += '<div class="info-grid">';
+    html += '<div><label>건물명</label><span>' + fv(info.bldNm) + '</span></div>';
+    html += '<div><label>사용승인일</label><span>' + fv(info.useAprDay) + '</span></div>';
+    html += '<div><label>주용도</label><span>' + fv(info.mainPurps) + '</span></div>';
+    html += '<div><label>주구조</label><span>' + fv(info.strct) + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="info-grid" style="border-top:1px solid #eee;padding-top:14px;">';
+    html += '<div><label>대지면적</label><span>' + fv(info.platArea,'㎡') + '</span></div>';
+    html += '<div><label>건축면적</label><span>' + fv(info.archArea,'㎡') + '</span></div>';
+    html += '<div><label>연면적</label><span>' + fv(info.totArea,'㎡') + '</span></div>';
+    html += '<div><label>건폐율</label><span>' + fv(info.bcRat,'%') + '</span></div>';
+    html += '<div><label>용적률</label><span>' + fv(info.vlRat,'%') + '</span></div>';
+    html += '<div><label>층수</label><span>지상 ' + (info.grndFlrCnt||0) + ' / 지하 ' + (info.ugrndFlrCnt||0) + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="info-row"><label>주차대수</label><span>' + parkingText + '</span></div>';
+    html += '</div>';
+
+    // === 섹션 2: 층별 정보 ===
+    if(info.floors && info.floors.length){
+        const isUsage = (type === 'usage');
+        html += '<div class="info-section">';
+        html += '<h3>층별 정보</h3>';
+        if(info.floorsTotalCount && info.floorsTotalCount > info.floors.length){
+            html += '<div class="floors-warning">⚠️ 건축물대장에 등록된 층은 ' + info.floorsTotalCount + '개인데 ' + info.floors.length + '개만 받아왔습니다. 새로고침 후 다시 시도해보세요.</div>';
+        }
+        if(isUsage){
+            html += '<div class="floor-section-hint">용도변경 원하시는 층을 선택해주세요</div>';
+        }
+        html += '<table class="floor-table"><thead><tr>';
+        if(isUsage) html += '<th class="check-cell">선택</th>';
+        html += '<th>층</th><th>주용도</th><th>면적</th>';
+        html += '</tr></thead><tbody>';
+        info.floors.forEach(function(f, i){
+            const floorName = f.flrNoNm || (f.flrNo + '층');
+            html += '<tr>';
+            if(isUsage){
+                html += '<td class="check-cell"><input type="checkbox" class="floor-check" data-floor-name="' + floorName + '" data-area="' + (f.area || 0) + '" data-purpose="' + (f.mainPurps || '').replace(/"/g,'') + '"></td>';
+            }
+            html += '<td>' + floorName + '</td>';
+            html += '<td>' + (f.mainPurps || '-') + '</td>';
+            html += '<td>' + (f.area ? f.area + '㎡' : '-') + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        html += '</div>';
+    }
+
+    panel.innerHTML = html;
+    panel.classList.add('shown');
+
+    setTimeout(function(){
+        panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 100);
+}
+
+// 화면 전환
+const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','admin-screen'];
+function showScreen(id){
+    SCREENS.forEach(s=>document.getElementById(s).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0,0);
+}
+function goMain(){ showScreen('selector-screen'); }
+function toggleSideMenu(){
+    document.getElementById('side-menu').classList.toggle('open');
+    document.getElementById('side-menu-overlay').classList.toggle('open');
+}
+
+// TODO: 카카오톡 채널 URL 등록 시 아래 변수에 채워주세요 (예: 'http://pf.kakao.com/_xxxxx/chat')
+const KAKAO_CHANNEL_URL = 'http://pf.kakao.com/_ZEPPX/chat';
+function toggleMoreCases(){
+    const div = document.getElementById('more-cases');
+    const btn = document.getElementById('more-cases-btn');
+    if(div.style.display === 'none'){
+        div.style.display = 'block';
+        btn.classList.add('expanded');
+        btn.innerHTML = '접기 <span class="more-arrow">▼</span>';
+    } else {
+        div.style.display = 'none';
+        btn.classList.remove('expanded');
+        btn.innerHTML = '사례 더보기 <span class="more-arrow">▼</span>';
+    }
+}
+
+// ==== 견적서 PDF 다운로드 + 공유 ====
+async function captureEstimate(resultId){
+    const el = document.getElementById(resultId);
+    if(!el) throw new Error('견적 결과를 찾을 수 없습니다.');
+    const loading = document.createElement('div');
+    loading.className = 'pdf-loading';
+    loading.textContent = '견적서 준비 중...';
+    document.body.appendChild(loading);
+    try {
+        window.scrollTo(0, 0);
+        await new Promise(function(r){ setTimeout(r, 100); });
+        const canvas = await html2canvas(el, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+        });
+        return canvas;
+    } finally {
+        loading.remove();
+    }
+}
+
+function downloadImage(resultId, caseType){
+    captureEstimate(resultId).then(function(canvas){
+        const fileName = getEstimateFileName(caseType) + '.png';
+        const dataUrl = canvas.toDataURL('image/png');
+        // 모든 기기에서 100% 작동 - 화면에 모달로 이미지 표시
+        showImageModal(dataUrl, fileName);
+    }).catch(function(err){
+        console.error(err);
+        alert('이미지 생성 중 오류: ' + err.message);
+    });
+}
+
+function showImageModal(dataUrl, fileName){
+    // 기존 모달 있으면 제거
+    const existing = document.getElementById('img-save-modal');
+    if(existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'img-save-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;flex-direction:column;overflow:auto;';
+    
+    // 상단 안내 바
+    const header = document.createElement('div');
+    header.style.cssText = 'position:sticky;top:0;background:#001780;color:white;padding:16px;text-align:center;font-family:Pretendard,sans-serif;';
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isMobile = isIOS || /Android/.test(navigator.userAgent);
+    let guideText = '';
+    if(isIOS){
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>손가락으로 길게 누르고</b><br>"사진에 저장" 또는 "이미지 저장" 선택</div>';
+    } else if(isMobile){
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>손가락으로 길게 누르고</b><br>"이미지 다운로드" 선택</div>';
+    } else {
+        guideText = '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💾 이미지 저장 방법</div><div style="font-size:13px;opacity:0.9;">아래 이미지를 <b>마우스 우클릭</b> → "이미지를 다른 이름으로 저장"</div>';
+    }
+    header.innerHTML = guideText;
+    
+    // 닫기 버튼
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕ 닫기';
+    closeBtn.style.cssText = 'position:sticky;top:0;margin:12px auto;padding:10px 24px;background:white;color:#001780;border:none;border-radius:999px;font-family:Pretendard,sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:100;';
+    closeBtn.onclick = function(){ modal.remove(); };
+    
+    // 이미지
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = fileName;
+    img.style.cssText = 'display:block;width:100%;max-width:900px;margin:14px auto;background:white;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+    
+    // PC용 다운로드 버튼 (선택)
+    let dlBtn = null;
+    if(!isMobile){
+        dlBtn = document.createElement('a');
+        dlBtn.href = dataUrl;
+        dlBtn.download = fileName;
+        dlBtn.textContent = '⬇️ 파일로 다운로드';
+        dlBtn.style.cssText = 'display:inline-block;margin:8px auto 20px;padding:12px 28px;background:#001780;color:white;border-radius:8px;font-family:Pretendard,sans-serif;font-size:14px;font-weight:800;text-decoration:none;';
+    }
+    
+    modal.appendChild(header);
+    modal.appendChild(closeBtn);
+    modal.appendChild(img);
+    if(dlBtn){
+        const btnWrap = document.createElement('div');
+        btnWrap.style.textAlign = 'center';
+        btnWrap.appendChild(dlBtn);
+        modal.appendChild(btnWrap);
+    }
+    document.body.appendChild(modal);
+}
+
+
+function shareEstimate(resultId, caseType){
+    captureEstimate(resultId).then(function(canvas){
+        const fileName = getEstimateFileName(caseType) + '.png';
+        canvas.toBlob(function(blob){
+            if(!blob){ 
+                // Blob 실패 시 모달로 폴백
+                showImageModal(canvas.toDataURL('image/png'), fileName);
+                return;
+            }
+            // Web Share API 시도 (모바일 카톡·앨범 저장 가능)
+            const file = new File([blob], fileName, {type:'image/png'});
+            if(navigator.canShare && navigator.canShare({files:[file]})){
+                navigator.share({files:[file], title:'디바이엠 견적서'}).catch(function(err){
+                    if(err.name !== 'AbortError'){
+                        showImageModal(canvas.toDataURL('image/png'), fileName);
+                    }
+                });
+            } else {
+                // 공유 API 없으면 모달
+                showImageModal(canvas.toDataURL('image/png'), fileName);
+            }
+        }, 'image/png');
+    }).catch(function(err){
+        console.error(err);
+        alert('공유 준비 중 오류: ' + err.message);
+    });
+}
+
+function fallbackDownload(canvas, fileName){
+    const link = document.createElement('a');
+    link.download = fileName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    alert('견적서가 이미지로 저장되었습니다. 갤러리·앨범에서 확인 후 공유하세요.');
+}
+
+// 견적서 저장 - window.print 사용 (모든 기기에서 확실히 작동)
+// iOS: 공유 시트에서 "PDF로 저장" 또는 "사진에 저장" 가능
+// Android: 인쇄 → PDF로 저장 가능
+// PC: 인쇄 대화 → "PDF로 저장" 선택 가능
+function saveEstimate(resultId){
+    // 해당 result만 인쇄되도록 body에 클래스 추가
+    document.body.classList.add('printing');
+    document.body.setAttribute('data-print-target', resultId);
+    // 약간의 딜레이 후 인쇄 (CSS 반영 시간)
+    setTimeout(function(){
+        window.print();
+        // 인쇄 대화 닫힌 후 클래스 제거
+        setTimeout(function(){
+            document.body.classList.remove('printing');
+            document.body.removeAttribute('data-print-target');
+        }, 500);
+    }, 100);
+}
+
+// ================= 관리자: 견적 접수 목록 =================
+let ADMIN_PW = '';
+let ADMIN_DATA = [];
+
+function openAdmin(){
+    showScreen('admin-screen');
+    if(ADMIN_PW){ adminLoad(); }
+}
+
+function adminLogin(){
+    const pw = document.getElementById('admin-password').value.trim();
+    if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
+    ADMIN_PW = pw;
+    adminLoad(true);
+}
+
+async function adminLoad(fromLogin){
+    const errBox = document.getElementById('admin-error');
+    errBox.innerHTML = '';
+    try {
+        const res = await fetch('/api/submissions?password=' + encodeURIComponent(ADMIN_PW));
+        const data = await res.json();
+        if(!data.success){
+            if(res.status === 401){
+                ADMIN_PW = '';
+                alert('비밀번호가 올바르지 않습니다.');
+                return;
+            }
+            throw new Error(data.error || '조회 실패');
+        }
+        document.getElementById('admin-login-box').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        ADMIN_DATA = data.submissions || [];
+        adminRender();
+    } catch(err){
+        console.error(err);
+        if(fromLogin){ ADMIN_PW = ''; }
+        errBox.innerHTML = '<div class="admin-err"><b>목록을 불러오지 못했습니다.</b><br>' + err.message + '</div>';
+        document.getElementById('admin-login-box').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+    }
+}
+
+function adminRender(){
+    const tbody = document.getElementById('admin-tbody');
+    const empty = document.getElementById('admin-empty');
+    tbody.innerHTML = '';
+
+    // 통계
+    const now = Date.now();
+    const week = ADMIN_DATA.filter(function(r){ return now - new Date(r.createdAt).getTime() < 7*24*3600*1000; }).length;
+    const sum = ADMIN_DATA.reduce(function(s,r){ return s + (r.total||0); }, 0);
+    document.getElementById('adm-stat-total').textContent = ADMIN_DATA.length + '건';
+    document.getElementById('adm-stat-week').textContent = week + '건';
+    document.getElementById('adm-stat-sum').textContent = formatCurrency(sum);
+    const todo = ADMIN_DATA.filter(function(r){ return !r.status; }).length;
+    document.getElementById('adm-stat-todo').textContent = todo + '건';
+
+    if(ADMIN_DATA.length === 0){ empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    ADMIN_DATA.forEach(function(r, idx){
+        const tr = document.createElement('tr');
+        let tagCls = '';
+        if((r.caseType||'').indexOf('위반') >= 0) tagCls = 'violation';
+        else if((r.caseType||'').indexOf('대수선') >= 0 || (r.caseType||'').indexOf('증축') >= 0) tagCls = 'remodel';
+
+        tr.innerHTML =
+            '<td><span class="adm-sub" style="margin:0;">' + adminDate(r.createdAt) + '</span></td>' +
+            '<td><span class="adm-name">' + esc(r.name) + '</span>' +
+                '<span class="adm-sub">' + esc(r.phone) + '</span>' +
+                (r.email ? '<span class="adm-sub">' + esc(r.email) + '</span>' : '') + '</td>' +
+            '<td><span class="adm-tag ' + tagCls + '">' + esc(r.caseType || '-') + '</span>' +
+                (r.adminType ? '<span class="adm-sub">' + esc(r.adminType) + '</span>' : '') + '</td>' +
+            '<td class="adm-addr">' + (esc(r.address) || '<span style="color:#cbd5e1;">주소 미입력</span>') +
+                '<span class="adm-sub">' + (r.area ? Number(r.area).toLocaleString() + '㎡ (' + (r.area/3.3).toFixed(1) + '평)' : '면적 -') +
+                (r.drawing ? ' · ' + esc(r.drawing) : '') + '</span></td>' +
+            '<td class="adm-total">' + formatCurrency(r.total||0) + '</td>' +
+            '<td>' + statusBadge(r.status) +
+                '<select class="adm-status-select" onchange="adminSetStatus(\'' + esc(r.id) + '\', this.value, this)">' +
+                    statusOption('', r.status, '- 상태 -') +
+                    statusOption('연락완료', r.status, '연락완료') +
+                    statusOption('연락불가', r.status, '연락불가') +
+                    statusOption('부재중', r.status, '부재중') +
+                    statusOption('상담중', r.status, '상담중') +
+                    statusOption('계약', r.status, '계약') +
+                    statusOption('종료', r.status, '종료') +
+                '</select></td>' +
+            '<td class="adm-memo-cell">' +
+                '<textarea class="adm-memo" placeholder="상담 내용 메모..." onchange="adminSetMemo(\'' + esc(r.id) + '\', this.value, this)">' + esc(r.memo || '') + '</textarea>' +
+                '<span class="adm-memo-saved"></span>' +
+            '</td>' +
+            '<td style="white-space:nowrap;">' +
+                '<button class="adm-detail-btn" onclick="adminToggleDetail(' + idx + ', this)">내역</button> ' +
+                '<button class="adm-del-btn" onclick="adminDelete(\'' + esc(r.id) + '\', \'' + esc(r.name) + '\')">삭제</button>' +
+            '</td>';
+        tbody.appendChild(tr);
+
+        // 상세 행 (기본 숨김)
+        const detail = document.createElement('tr');
+        detail.id = 'adm-detail-' + idx;
+        detail.className = 'hidden';
+        let itemsHtml = '<div class="adm-items">';
+        (r.items||[]).forEach(function(it){
+            itemsHtml += '<div class="adm-item-row"><span>' + esc(it.name) + '</span><span>' + formatCurrency(it.amount) + '</span></div>';
+        });
+        if(!(r.items||[]).length) itemsHtml += '<div class="adm-item-row"><span>세부 내역 없음</span></div>';
+        itemsHtml += '</div>';
+        detail.innerHTML = '<td colspan="9" style="background:#fafbfd;">' + itemsHtml + '</td>';
+        tbody.appendChild(detail);
+    });
+}
+
+// 연락 상태 배지
+function statusBadge(status){
+    if(!status) return '<span class="adm-status-badge none">미처리</span>';
+    var cls = 'none';
+    if(status === '연락완료' || status === '계약') cls = 'done';
+    else if(status === '연락불가') cls = 'fail';
+    else if(status === '부재중') cls = 'miss';
+    else if(status === '상담중') cls = 'ing';
+    else if(status === '종료') cls = 'end';
+    return '<span class="adm-status-badge ' + cls + '">' + esc(status) + '</span>';
+}
+function statusOption(value, current, label){
+    var sel = (value === (current||'')) ? ' selected' : '';
+    return '<option value="' + value + '"' + sel + '>' + label + '</option>';
+}
+// 연락 상태 변경 → 서버 저장
+async function adminSetStatus(id, status, selEl){
+    try {
+        const res = await fetch('/api/submissions', {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password: ADMIN_PW, id: id, status: status })
+        });
+        const data = await res.json();
+        if(!data.success){
+            alert('상태 저장 실패: ' + (data.error || '오류'));
+            return;
+        }
+        // 로컬 데이터 갱신 후 그 행의 배지만 다시 그림
+        ADMIN_DATA.forEach(function(r){ if(r.id === id) r.status = status; });
+        const badge = selEl.parentNode.querySelector('.adm-status-badge');
+        if(badge) badge.outerHTML = statusBadge(status);
+    } catch(err){
+        console.error(err);
+        alert('상태 저장 중 오류: ' + err.message);
+    }
+}
+
+// 비고 메모 저장 → 서버
+async function adminSetMemo(id, memo, el){
+    try {
+        const res = await fetch('/api/submissions', {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password: ADMIN_PW, id: id, memo: memo })
+        });
+        const data = await res.json();
+        if(!data.success){
+            alert('메모 저장 실패: ' + (data.error || '오류'));
+            return;
+        }
+        ADMIN_DATA.forEach(function(r){ if(r.id === id) r.memo = memo; });
+        // 저장됨 표시 잠깐 노출
+        const tag = el.parentNode.querySelector('.adm-memo-saved');
+        if(tag){
+            tag.textContent = '✓ 저장됨';
+            tag.style.opacity = '1';
+            setTimeout(function(){ tag.style.opacity = '0'; }, 1500);
+        }
+    } catch(err){
+        console.error(err);
+        alert('메모 저장 중 오류: ' + err.message);
+    }
+}
+
+// 견적 접수 삭제
+async function adminDelete(id, name){
+    if(!id){ return; }
+    if(!confirm('"' + name + '" 님의 견적 접수를 삭제할까요?\n삭제하면 되돌릴 수 없습니다.')) return;
+    try {
+        const res = await fetch('/api/submissions', {
+            method: 'DELETE',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password: ADMIN_PW, id: id })
+        });
+        const data = await res.json();
+        if(!data.success){
+            alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
+            return;
+        }
+        // 로컬 목록에서도 제거 후 다시 렌더
+        ADMIN_DATA = ADMIN_DATA.filter(function(r){ return r.id !== id; });
+        adminRender();
+    } catch(err){
+        console.error(err);
+        alert('삭제 중 오류가 발생했습니다: ' + err.message);
+    }
+}
+
+function adminToggleDetail(idx, btn){
+    const el = document.getElementById('adm-detail-' + idx);
+    if(!el) return;
+    el.classList.toggle('hidden');
+    btn.textContent = el.classList.contains('hidden') ? '내역' : '닫기';
+}
+
+function adminDate(iso){
+    try {
+        const d = new Date(iso);
+        return d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') +
+               ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    } catch(e){ return '-'; }
+}
+
+function esc(s){
+    if(s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function adminExportCSV(){
+    if(!ADMIN_DATA.length){ alert('내려받을 데이터가 없습니다.'); return; }
+    const head = ['접수일시','이름','연락처','이메일','구분','행정유형','주소','면적(㎡)','도면','견적금액','연락상태','비고'];
+    const rows = ADMIN_DATA.map(function(r){
+        return [adminDate(r.createdAt), r.name, r.phone, r.email, r.caseType, r.adminType, r.address, r.area, r.drawing, r.total, r.status||'미처리', r.memo||'']
+            .map(function(v){ return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }).join(',');
+    });
+    const csv = '\uFEFF' + head.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = '견적접수목록_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// 견적 제출 기록 서버 저장
+async function saveSubmission(type, caseType){
+    const info = STATE.customerInfo || {};
+    let address = '', area = 0, drawing = '', resultId = '';
+    if(type === 'illegal'){
+        address = val('illegal-address'); area = num('illegal-area'); drawing = drawText('illegal-drawing'); resultId = 'illegal-result';
+    } else if(type === 'usage'){
+        address = val('usage-address'); area = STATE.usageTotalArea || 0; drawing = drawText('usage-drawing'); resultId = 'usage-result';
+    } else if(type === 'remodel'){
+        address = val('repair-address'); area = num('repair-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
+    }
+    const snap = STATE.lastEstimate || {};
+    try {
+        await fetch('/api/submissions', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                name: info.name, phone: info.phone, email: info.email,
+                caseType: caseType, adminType: snap.adminType || '',
+                address: address, area: area, drawing: drawing,
+                total: snap.total || 0, items: snap.items || []
+            })
+        });
+    } catch(err){ console.error('기록 저장 실패:', err); }
+}
+
+function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function num(id){ const el = document.getElementById(id); return el ? (parseFloat(el.value)||0) : 0; }
+function drawText(id){
+    const el = document.getElementById(id);
+    if(!el) return '';
+    const map = {cad:'CAD 보유', pdf:'PDF·종이', none:'도면 없음'};
+    return map[el.value] || '';
+}
+
+function openKakaoChannel(){
+    window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
+}
+
+// 검토 요청: 견적 정보 자동 복사 + 카카오톡 채널 열기
+function submitConsult(btn){
+    // 앞 견적 확인 단계에서 받은 고객 정보 사용
+    const info = STATE.customerInfo || {};
+    const name = (info.name || '').trim();
+    const phone = (info.phone || '').trim();
+    const source = '';
+    if(!name || !phone){
+        alert('견적을 먼저 확인해주세요. 이름·연락처 정보가 필요합니다.');
+        return;
+    }
+    
+    // 현재 활성 견적 페이지 찾기
+    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden)');
+    let resultId = null, caseType = '견적';
+    if(activeScreen){
+        const id = activeScreen.id;
+        if(id === 'illegal-step3'){ resultId = 'illegal-result'; caseType = '위반건축물 양성화'; }
+        else if(id === 'usage-step3'){ resultId = 'usage-result'; caseType = '용도변경'; }
+        else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
+    }
+    
+    // 견적 요약 텍스트 추출
+    let estimateText = '';
+    if(resultId){
+        const el = document.getElementById(resultId);
+        if(el){
+            estimateText = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').substring(0, 500);
+        }
+    }
+    
+    // 카카오톡에 붙여넣을 메시지 생성
+    const message = 
+        '[건축사 검토 요청]\n' +
+        '━━━━━━━━━━━━━━━━━\n' +
+        '이름: ' + name + '\n' +
+        '연락처: ' + phone + '\n' +
+        (info.email ? '이메일: ' + info.email + '\n' : '') +
+        '견적 케이스: ' + caseType + '\n' +
+        '접수일시: ' + new Date().toLocaleString('ko-KR') + '\n' +
+        '━━━━━━━━━━━━━━━━━\n' +
+        '[견적 요약]\n' +
+        estimateText;
+    
+    // 클립보드에 복사
+    copyToClipboard(message);
+    
+    // 안내 후 카카오톡 채널 열기
+    alert('검토 요청 내용이 복사되었습니다.\n\n카카오톡 채널이 열리면\n채팅창에 붙여넣기(길게 누르면 붙여넣기 메뉴)\n해서 전송해주세요.\n\n담당 건축사가 직접 답변드립니다.');
+    window.open('http://pf.kakao.com/_ZEPPX/chat', '_blank');
+}
+
+function copyToClipboard(text){
+    // 최신 브라우저: Clipboard API
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).catch(function(){
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text){
+    // 구형 브라우저 폴백
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
+}
+
+function selectIllegal(){ showScreen('illegal-step1'); }
+function pickViolation(v){ STATE.illegalViolation=v; const ch=document.getElementById('illegal-chosen'); if(ch) ch.textContent='위반 유형: '+v; showScreen('illegal-step2'); }
+
+function selectUsage(){
+    document.getElementById('usage-changes-container').innerHTML = '';
+    usageChangeCounter = 0;
+    showScreen('usage-step1');
+}
+function usageNext(){
+    // 체크된 층이 있으면 그 층들로 변경 카드 자동 생성
+    const checks = document.querySelectorAll('#usage-building-info .floor-check:checked');
+    if(checks.length > 0){
+        document.getElementById('usage-changes-container').innerHTML = '';
+        usageChangeCounter = 0;
+        checks.forEach(function(chk){
+            addUsageChange({
+                floorName: chk.dataset.floorName || '',
+                area: parseFloat(chk.dataset.area) || 0,
+                purpose: chk.dataset.purpose || ''
+            });
+        });
+    } else if(document.querySelectorAll('.change-card').length === 0){
+        // 체크 없고 카드도 없으면 빈 카드 1개 (fallback)
+        addUsageChange();
+    }
+    showScreen('usage-step2');
+}
+
+function selectRemodel(t){
+    STATE.remodelType=t;
+    const ch1 = document.getElementById('remodel-chosen');
+    if(ch1) ch1.textContent='공사 종류: '+t;
+    const ch3 = document.getElementById('remodel-chosen-3');
+    if(ch3) ch3.textContent='공사 종류: '+t;
+    // 페이지 제목 동적 분기
+    const titleText = t.indexOf('대수선') >= 0 ? '대수선 견적 계산기' : '증축 견적 계산기';
+    document.querySelectorAll('.remodel-title').forEach(function(el){
+        el.textContent = titleText;
+    });
+    // 인트로 박스 모드별 갱신
+    const introTitle = document.getElementById('remodel-intro-title');
+    const introBody = document.getElementById('remodel-intro-body');
+    if(introTitle && introBody){
+        if(t.indexOf('대수선') < 0){
+            introTitle.textContent = '증축이란?';
+            introBody.innerHTML = '<p>기존 건축물의 면적을 늘리거나 층을 추가하는 공사입니다. 건축허가 대상이며 구조 안전 검토가 필수입니다.</p>';
+        } else {
+            introTitle.textContent = '대수선이란?';
+            introBody.innerHTML = '<p>건물의 구조나 외관에 영향을 미치는 큰 규모의 수선·변경 공사입니다. 건축법상 신고 또는 허가 대상입니다.</p>';
+        }
+    }
+    showScreen('remodel-step2');
+}
+
+// 견적 확인하기 - 인라인 폼에서 정보 읽어 검증 → 계산 → 견적 표시
+function goToEstimate(type){
+    const name = val(type + '-name');
+    const phone = val(type + '-phone');
+    const email = val(type + '-email');
+    const source = val(type + '-source');
+    
+    if(!name){ alert('이름을 입력해주세요.'); focusEl(type + '-name'); return; }
+    if(!phone){ alert('연락처를 입력해주세요.'); focusEl(type + '-phone'); return; }
+    if(phone.replace(/[^0-9]/g,'').length < 9){
+        alert('올바른 연락처를 입력해주세요.'); focusEl(type + '-phone'); return;
+    }
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        alert('올바른 이메일 형식을 입력해주세요. (예: name@email.com)');
+        focusEl(type + '-email'); return;
+    }
+    
+    // 정보 저장
+    STATE.customerInfo = { name: name, phone: phone, email: email, source: source };
+    
+    // 실제 계산 진행
+    if(type==='illegal'){
+        const ic=document.getElementById('illegal-chosen-3'); const ic2=document.getElementById('illegal-chosen'); if(ic && ic2) ic.textContent=ic2.textContent;
+        if(calculateIllegal() === false) return;
+        showScreen('illegal-step3');
+    } else if(type==='usage'){
+        if(calculateUsage() === false) return;
+        showScreen('usage-step3');
+    } else if(type==='remodel'){
+        const rc=document.getElementById('remodel-chosen-3'); const rc2=document.getElementById('remodel-chosen'); if(rc && rc2) rc.textContent=rc2.textContent;
+        if(calculateRemodel() === false) return;
+        showScreen('remodel-step3');
+    }
+    
+    // 견적 표시 후 기록 저장 + SMS 발송 + 완료 알림 팝업
+    setTimeout(function(){
+        let caseLabel = '견적';
+        if(type==='illegal') caseLabel = '위반건축물 양성화';
+        else if(type==='usage') caseLabel = '용도변경';
+        else if(type==='remodel') caseLabel = STATE.remodelType || '대수선/증축';
+        saveSubmission(type, caseLabel);
+        sendCompletionSMS(name, phone, type);
+        showDoneToast();
+    }, 600);
+}
+
+function focusEl(id){ const el = document.getElementById(id); if(el) el.focus(); }
+
+// 네이버 클라우드 SENS를 통한 SMS 발송 (고객용 + 관리자용 분리)
+async function sendCompletionSMS(name, phone, type){
+    let caseType = '견적';
+    let resultId = null;
+    if(type==='illegal'){ caseType = '위반건축물 양성화'; resultId = 'illegal-result'; }
+    else if(type==='usage'){ caseType = '용도변경'; resultId = 'usage-result'; }
+    else if(type==='remodel'){ caseType = STATE.remodelType || '대수선/증축'; resultId = 'repair-result'; }
+    
+    // 견적 요약 텍스트 추출
+    const estimateText = extractEstimateForSMS(resultId);
+    
+    // ① 고객용 SMS (간단한 접수 안내)
+    const customerMessage = 
+        '[디바이엠건축사사무소]\n' +
+        '건축 인허가 계산기\n' +
+        '견적서가 담당건축사에게\n' +
+        '검토 요청이 완료되었습니다.\n\n' +
+        '● 신청자: ' + name + '\n' +
+        '● 케이스: ' + caseType + '\n\n' +
+        '담당 건축사가 확인 후 회신드립니다.\n' +
+        '문의: 070-4647-3376';
+    
+    // ② 관리자용 SMS (신청자 정보 + 견적 상세)
+    const info = STATE.customerInfo || {};
+    const adminMessage = 
+        '[신규 견적 요청]\n' +
+        '━━━━━━━━━━━━━━━\n' +
+        '● 신청자 정보\n' +
+        '이름: ' + (info.name || name) + '\n' +
+        '연락처: ' + (info.phone || phone) + '\n' +
+        '이메일: ' + (info.email || '-') + '\n\n' +
+        '● 견적 정보\n' +
+        '케이스: ' + caseType + '\n' +
+        '접수: ' + new Date().toLocaleString('ko-KR') + '\n\n' +
+        '● 견적 내역\n' +
+        estimateText + '\n\n' +
+        '━━━━━━━━━━━━━━━\n' +
+        '고객에게 연락 회신 부탁드립니다.';
+    
+    // 고객·관리자에게 각각 발송
+    try {
+        // 고객 SMS 발송
         await fetch('/api/send-sms', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ phone: '01099645711', message: adminMessage })
+            body: JSON.stringify({ phone: phone, message: customerMessage })
         });
+        // 관리자 SMS 발송 — 여기에 번호를 추가하면 모두에게 발송됩니다
+        const ADMIN_PHONES = [
+            '01099645711',
+            '01074665626',
+            '01065777746'
+        ];
+        for(const adminPhone of ADMIN_PHONES){
+            await fetch('/api/send-sms', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ phone: adminPhone, message: adminMessage })
+            });
+        }
     } catch(err){
         console.error('SMS 발송 오류:', err);
     }
