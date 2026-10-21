@@ -527,8 +527,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     body.printing #illegal-result, body.printing #illegal-result *,
     body.printing #usage-result, body.printing #usage-result *,
     body.printing #repair-result, body.printing #repair-result *,
-    body.printing #record-result, body.printing #record-result * { visibility: visible !important; }
-    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result, body.printing #record-result {
+    body.printing #record-result, body.printing #record-result *,
+    body.printing #simple-result, body.printing #simple-result * { visibility: visible !important; }
+    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result, body.printing #record-result, body.printing #simple-result {
         position: absolute !important; top: 0 !important; left: 0 !important; 
         width: 100% !important; margin: 0 !important; padding: 20px !important;
     }
@@ -624,9 +625,13 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     <ul>
         <li onclick="selectIllegal(); toggleSideMenu();">위반건축물 양성화 계산기</li>
         <li onclick="selectUsage(); toggleSideMenu();">용도변경 계산기</li>
-        <li onclick="selectRemodel('대수선 (엘리베이터 설치)'); toggleSideMenu();">대수선 계산기</li>
+        <li onclick="selectRemodel('대수선'); toggleSideMenu();">대수선 계산기</li>
+        <li onclick="selectRemodel('엘리베이터 설치'); toggleSideMenu();">엘리베이터 설치 계산기</li>
         <li onclick="selectRemodel('증축'); toggleSideMenu();">증축 계산기</li>
         <li onclick="selectRecord(); toggleSideMenu();">기재사항 변경 계산기</li>
+        <li onclick="selectSimple('demolish'); toggleSideMenu();">해체·멸실 신고 계산기</li>
+        <li onclick="selectSimple('temporary'); toggleSideMenu();">가설건축물 축조신고 계산기</li>
+        <li onclick="selectSimple('startup'); toggleSideMenu();">창업 입점 가능 여부 검토</li>
     </ul>
     <div class="menu-section-title">고객지원</div>
     <ul>
@@ -674,18 +679,34 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <span class="qb-emoji">🏗️</span>
             <span class="qb-title">증축</span>
         </button>
-        <button class="quick-calc-btn qb-remodel" onclick="selectRemodel('대수선 (엘리베이터 설치)')">
-            <span class="qb-emoji">🛗</span>
+        <button class="quick-calc-btn qb-remodel" onclick="selectRemodel('대수선')">
+            <span class="qb-emoji">🔨</span>
             <span class="qb-title">대수선</span>
+        </button>
+        <button class="quick-calc-btn qb-remodel" onclick="selectRemodel('엘리베이터 설치')">
+            <span class="qb-emoji">🛗</span>
+            <span class="qb-title">엘리베이터 설치</span>
         </button>
         <button class="quick-calc-btn qb-illegal" onclick="selectIllegal()">
             <span class="qb-emoji">⚠️</span>
             <span class="qb-title">위반건축물 양성화</span>
         </button>
-        <button class="quick-calc-btn qb-record qb-wide" onclick="selectRecord()">
+        <button class="quick-calc-btn qb-record" onclick="selectRecord()">
             <span class="qb-emoji">📝</span>
-            <span class="qb-title">건축물대장 기재사항 변경</span>
-            <span class="qb-sub">용도 기재변경 · 면적·층별개요 정정</span>
+            <span class="qb-title">기재사항 변경</span>
+        </button>
+        <button class="quick-calc-btn qb-illegal" onclick="selectSimple('demolish')">
+            <span class="qb-emoji">🧱</span>
+            <span class="qb-title">해체·멸실 신고</span>
+        </button>
+        <button class="quick-calc-btn qb-extension" onclick="selectSimple('temporary')">
+            <span class="qb-emoji">📦</span>
+            <span class="qb-title">가설건축물 축조신고</span>
+        </button>
+        <button class="quick-calc-btn qb-record qb-wide" onclick="selectSimple('startup')">
+            <span class="qb-emoji">🏪</span>
+            <span class="qb-title">이 자리에 창업 가능할까?</span>
+            <span class="qb-sub">카페·음식점·학원·헬스장 입점 가능 여부 검토</span>
         </button>
     </div>
     
@@ -1198,6 +1219,75 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         </button>
     </div>
 </div>
+
+<!-- ===== 공통 계산기 (해체·멸실 / 가설건축물 / 창업 입점) STEP1 ===== -->
+<div id="simple-step1" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <h1 class="calculator-title" id="simple-title">견적 계산기</h1>
+    <div class="calc-intro" id="simple-intro"></div>
+    <div class="form-wrap">
+        <input type="hidden" id="simple-area" value="0">
+        <div class="form-section">
+            <h3>건물 주소</h3>
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="simple-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('simple')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('simple')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회</button>
+            <div id="simple-building-info" class="building-info-panel"></div>
+        </div>
+        <div id="simple-fields"></div>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="simple-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="simple-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="simple-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="simple-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('simple')">견적 바로 확인하기</button>
+    </div>
+</div>
+
+<!-- ===== 공통 계산기 STEP2: 견적 ===== -->
+<div id="simple-step2" class="hidden">
+    <button class="back-btn" onclick="showScreen('simple-step1')">← 입력 수정</button>
+    <h1 class="calculator-title" id="simple-title-2">견적 계산기</h1>
+    <div class="estimate-wrap"><div id="simple-result"></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('simple-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
+    </div>
+    <div class="consult-form-section">
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
+    </div>
+</div>
 </div>
 
 <footer class="site-footer">
@@ -1321,7 +1411,18 @@ const PRICING = {
     인허가대행비_대수선: 3000000,      // 대수선 300만원
     인허가대행비_증축: 3000000,        // 증축 300만원
     인허가대행비_양성화: 3000000,      // 양성화 300만원
-    기재변경_추가항목: 500000,         // 기재사항 변경 - 항목 1개 추가될 때마다 +50만원 (대표님 확인 필요)
+    기재변경_추가항목: 500000,
+    // ==== 신규 계산기 (임시 단가 - 대표님 확인 필요) ====
+    해체_신고_대행비: 1500000,          // 해체신고 대행 150만
+    해체_허가_대행비: 3000000,          // 해체허가 대행 300만
+    해체계획서_신고: 1000000,           // 해체계획서 작성 (신고 대상) 100만
+    해체계획서_허가_기본: 2000000,      // 해체계획서 작성 (허가 대상) 기본 200만
+    해체계획서_허가_m2: 1000,           // 허가 대상 면적 가산 1,000원/㎡
+    멸실신고_대행비: 300000,            // 멸실신고 대행 30만
+    가설_신규_대행비: 800000,           // 가설건축물 축조신고 대행 80만
+    가설_연장_대행비: 400000,           // 존치기간 연장신고 40만
+    가설_도면_m2: 1000,                 // 배치도·평면도 작성 1,000원/㎡
+    창업검토_리포트: 300000,            // 입점 가능 여부 검토 리포트 30만 (계약 시 차감)         // 기재사항 변경 - 항목 1개 추가될 때마다 +50만원 (대표님 확인 필요)
     
     // ==== 도면 비용 (원/m²) ====
     도면단가_pdf: 1000,               // PDF·종이 → 1,000원/m²
@@ -1576,6 +1677,7 @@ function applyBuildingInfo(info, type){
             if(bs) bs.value = info.ugrndFlrCnt;
         }
     }
+    if(type==='simple' && typeof simpleOnBuilding === 'function'){ simpleOnBuilding(info); }
     if(type==='repair' && info.parking){
         const pk = document.getElementById('repair-parking');
         if(pk) pk.value = info.parking.total || 0;
@@ -1655,7 +1757,7 @@ function applyBuildingInfo(info, type){
 }
 
 // 화면 전환
-const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','record-step1','record-step2','admin-screen'];
+const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','record-step1','record-step2','simple-step1','simple-step2','admin-screen'];
 function showScreen(id){
     SCREENS.forEach(s=>document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -2080,6 +2182,8 @@ async function saveSubmission(type, caseType){
         address = val('usage-address'); area = STATE.usageTotalArea || 0; drawing = drawText('usage-drawing'); resultId = 'usage-result';
     } else if(type === 'remodel'){
         address = val('repair-address'); area = num('repair-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
+    } else if(type === 'simple'){
+        address = val('simple-address'); area = num('sf-area') || num('simple-area'); drawing = ''; resultId = 'simple-result';
     } else if(type === 'record'){
         address = val('record-address'); area = num('record-correct-area') || num('record-area'); drawing = drawText('record-drawing'); resultId = 'record-result';
     }
@@ -2124,7 +2228,7 @@ function submitConsult(btn){
     }
     
     // 현재 활성 견적 페이지 찾기
-    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden), #record-step2:not(.hidden)');
+    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden), #record-step2:not(.hidden), #simple-step2:not(.hidden)');
     let resultId = null, caseType = '견적';
     if(activeScreen){
         const id = activeScreen.id;
@@ -2132,6 +2236,7 @@ function submitConsult(btn){
         else if(id === 'usage-step3'){ resultId = 'usage-result'; caseType = '용도변경'; }
         else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
         else if(id === 'record-step2'){ resultId = 'record-result'; caseType = '기재사항 변경'; }
+        else if(id === 'simple-step2'){ resultId = 'simple-result'; caseType = simpleLabel(); }
     }
     
     // 견적 요약 텍스트 추출
@@ -2223,7 +2328,8 @@ function selectRemodel(t){
     const ch3 = document.getElementById('remodel-chosen-3');
     if(ch3) ch3.textContent='공사 종류: '+t;
     // 페이지 제목 동적 분기
-    const titleText = t.indexOf('대수선') >= 0 ? '대수선 견적 계산기' : '증축 견적 계산기';
+    const isEV = t.indexOf('엘리베이터') >= 0;
+    const titleText = isEV ? '엘리베이터 설치 견적 계산기' : (t.indexOf('대수선') >= 0 ? '대수선 견적 계산기' : '증축 견적 계산기');
     document.querySelectorAll('.remodel-title').forEach(function(el){
         el.textContent = titleText;
     });
@@ -2231,7 +2337,10 @@ function selectRemodel(t){
     const introTitle = document.getElementById('remodel-intro-title');
     const introBody = document.getElementById('remodel-intro-body');
     if(introTitle && introBody){
-        if(t.indexOf('대수선') < 0){
+        if(isEV){
+            introTitle.textContent = '엘리베이터 설치란?';
+            introBody.innerHTML = '<p>기존 건물에 승강기를 새로 넣는 공사입니다. 승강로 신설로 바닥·벽을 뚫거나 면적이 늘어나면 대수선 또는 증축 허가·신고 대상이 되며, 구조 보강 검토가 필수입니다.</p>';
+        } else if(t.indexOf('대수선') < 0){
             introTitle.textContent = '증축이란?';
             introBody.innerHTML = '<p>기존 건축물의 면적을 늘리거나 층을 추가하는 공사입니다. 건축허가 대상이며 구조 안전 검토가 필수입니다.</p>';
         } else {
@@ -2277,6 +2386,9 @@ function goToEstimate(type){
     } else if(type==='record'){
         if(calculateRecord() === false) return;
         showScreen('record-step2');
+    } else if(type==='simple'){
+        if(calculateSimple() === false) return;
+        showScreen('simple-step2');
     }
     
     // 견적 표시 후 기록 저장 + SMS 발송 + 완료 알림 팝업
@@ -2286,6 +2398,7 @@ function goToEstimate(type){
         else if(type==='usage') caseLabel = '용도변경';
         else if(type==='remodel') caseLabel = STATE.remodelType || '대수선/증축';
         else if(type==='record') caseLabel = '기재사항 변경';
+        else if(type==='simple') caseLabel = simpleLabel();
         saveSubmission(type, caseLabel);
         sendCompletionSMS(name, phone, type);
         showDoneToast();
@@ -2302,6 +2415,7 @@ async function sendCompletionSMS(name, phone, type){
     else if(type==='usage'){ caseType = '용도변경'; resultId = 'usage-result'; }
     else if(type==='remodel'){ caseType = STATE.remodelType || '대수선/증축'; resultId = 'repair-result'; }
     else if(type==='record'){ caseType = '기재사항 변경'; resultId = 'record-result'; }
+    else if(type==='simple'){ caseType = simpleLabel(); resultId = 'simple-result'; }
     
     // 견적 요약 텍스트 추출
     const estimateText = extractEstimateForSMS(resultId);
@@ -2507,8 +2621,8 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     meta = meta || {};
     // 관리자 기록용 스냅샷
     STATE.lastEstimate = { total: total, adminType: meta.adminType || '', items: items.filter(function(i){return i.amount>0;}) };
-    const min = Math.round(total * 0.85);
-    const max = Math.round(total * 1.2);
+    const min = meta.fixed ? total : Math.round(total * 0.85);
+    const max = meta.fixed ? total : Math.round(total * 1.2);
     let html = '';
     if(meta.badge){
         html += '<div style="text-align:center;"><span class="hero-result-badge ' + (meta.badgeClass||'permit') + '">' + meta.badge + '</span></div>';
@@ -2519,7 +2633,8 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     }
     html += '<div class="hero-result-card">';
     html += '<div class="hero-result-label">예상 총 비용</div>';
-    html += '<div class="hero-result-amount">' + formatCurrency(min).replace('원','') + '<span class="hero-result-range">~ ' + formatCurrency(max) + '</span></div>';
+    html += meta.fixed ? '<div class="hero-result-amount">' + formatCurrency(total) + '</div>'
+        : '<div class="hero-result-amount">' + formatCurrency(min).replace('원','') + '<span class="hero-result-range">~ ' + formatCurrency(max) + '</span></div>';
     html += '<div class="hero-result-note">건물 현황에 따라 변동될 수 있습니다</div>';
     if(meta.duration || meta.adminType){
         html += '<div class="hero-result-meta">';
@@ -2755,9 +2870,21 @@ function calculateRemodel(){
             {name:'건축사 설계비 (구조검토 + 기획설계 + 인허가 도서)',amount:area*PRICING.설계비_대수선},
             {name:'인허가 대행비 (대수선 허가·신고 + 도서 + 보완)',amount:PRICING.인허가대행비_대수선}
         ];
-        reviewList=[
+        
+        const isEV = (STATE.remodelType||'').indexOf('엘리베이터') >= 0;
+        reviewList = isEV ? [
+            '승강로 위치 검토 (기존 구조체 관통 여부)',
+            '구조 안전성 (슬래브 개구부·보 절단 시 보강)',
+            '승강로 신설에 따른 면적 증가 여부 (증축 해당 여부)',
+            '건폐율·용적률 여유분 확인 (면적 증가 시)',
+            '승강기 설치 기준 (건축법·승강기안전관리법)',
+            '피난·방화 규정 (승강로 방화구획)',
+            '소방시설 (방화구획·비상용 승강기 대상 여부)',
+            '장애인 편의시설 (BF 대상 여부)',
+            '건축물대장 변경 신청'
+        ] : [
             '구조 안전성 (보·기둥·내력벽 변경 시 보강)',
-            '승강기 설치 기준 (건축법·승강기법)',
+            '주요구조부 변경 범위 확인 (허가·신고 구분)',
             '피난·방화 규정 (피난계단·직통계단)',
             '소방시설 (스프링클러·방화구획 등)',
             '장애인 편의시설 (BF 대상 여부)',
@@ -2774,7 +2901,7 @@ function calculateRemodel(){
     extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 구조 안전진단 및 구조검토 별도 발생</strong><br>구조사무실 영역으로 별도 견적 진행됩니다.<br>예상 비용: <b>'+structAmount+'</b> ('+structTitle+', 별도 산정)</div>';
     const isExtension = STATE.remodelType === '증축';
     const meta = {
-        badge: isExtension ? '증축' : '대수선',
+        badge: isExtension ? '증축' : ((STATE.remodelType||'').indexOf('엘리베이터') >= 0 ? '엘리베이터 설치' : '대수선'),
         badgeClass: isExtension ? 'extension' : 'remodel',
         subtitle: (area>0?area.toFixed(0)+'㎡ ('+(area/3.3).toFixed(1)+'평)':'면적 미입력') + ' · ' + STATE.remodelType,
         duration: '8~16주',
@@ -2844,6 +2971,266 @@ function calculateRecord(){
         noConstruction: true
     };
     renderResult(items, sub, sub*rf, rf, 'record-result', extra, meta);
+}
+
+// ===== 공통 계산기: 해체·멸실 / 가설건축물 / 창업 입점 =====
+const STARTUP_BIZ = [
+    {label:'카페·디저트 (휴게음식점)', fac:function(a){ return '휴게음식점·제과점(1종)'; }, notes:['300㎡ 이상이면 2종 근린생활시설로 분류 (면적 기준 확인)','정화조 용량 (오수 발생량 증가)']},
+    {label:'일반음식점 (식당·주점)', fac:function(a){ return '일반음식점'; }, notes:['정화조 용량 (오수 발생량 크게 증가)','주방 배기덕트·가스 설비','지하·다중이용업소 소방 완비증명 대상 여부']},
+    {label:'학원·교습소', fac:function(a){ return a>=500 ? '학원(500㎡이상)' : '학원·교습소(500㎡미만)'; }, notes:['교육환경보호구역 내 금지시설 인접 여부','교육청 학원 등록 기준 (강의실 면적·비상구)','다중이용업소 소방 완비증명']},
+    {label:'헬스장·필라테스·요가', fac:function(a){ return a>=500 ? '체력단련장(500㎡이상)' : '체력단련장·당구장(500㎡미만)'; }, notes:['바닥 진동·소음 (하부 층 영향)','샤워실 설치 시 오수·급배수','체육시설업 신고 기준']},
+    {label:'노래연습장', fac:function(a){ return '노래연습장'; }, notes:['다중이용업소 소방 완비증명 필수','교육환경보호구역 제한 여부']},
+    {label:'PC방·스터디카페', fac:function(a){ return a>=500 ? '일반업무시설(사무소)' : '독서실·기원'; }, notes:['다중이용업소 해당 여부 (PC방)','실제 분류는 영업 형태에 따라 달라짐 — 건축사 확인 필요']},
+    {label:'미용실·네일·피부관리', fac:function(a){ return '이용원·미용원'; }, notes:['급배수 설비']},
+    {label:'병원·의원·치과', fac:function(a){ return a>=1000 ? '병원·종합병원' : '의원·한의원·치과'; }, notes:['의료기관 개설 기준 (복도 폭·장애인 편의시설)','의료폐기물 보관 공간']},
+    {label:'소매점·편의점', fac:function(a){ return '소매점(1종)'; }, notes:['1,000㎡ 이상이면 판매시설로 분류될 수 있음']},
+    {label:'사무실', fac:function(a){ return a>=500 ? '일반업무시설(사무소)' : '사무소(500㎡미만)'; }, notes:[]},
+    {label:'어린이집·키즈카페', fac:function(a){ return '어린이집'; }, notes:['영유아 시설 층수 제한 (통상 저층 배치)','키즈카페는 실제 분류 별도 확인 필요']},
+    {label:'숙박 (게스트하우스·호텔)', fac:function(a){ return '일반숙박시설(호텔·여관)'; }, notes:['용도지역상 숙박시설 허용 여부 (주거지역 제한)','학교 주변 교육환경보호구역 제한']}
+];
+
+const SIMPLE = {
+    demolish: {
+        label:'해체·멸실 신고',
+        title:'해체·멸실 신고 견적 계산기',
+        intro:'<h4>해체·멸실 신고란?</h4><p>건물을 철거(해체)하려면 착공 전 해체 허가 또는 신고가 필요하고, 해체 후에는 건축물대장 말소를 위한 멸실신고를 해야 합니다.</p><ul><li><b>해체 신고</b> — 연면적 500㎡ 미만 · 높이 12m 미만 · 3개 층 이하 등 소규모</li><li><b>해체 허가</b> — 위 기준 초과 시. 해체계획서와 해체공사감리가 필요합니다</li></ul>',
+        fields:[
+            {id:'sf-scope', label:'해체 범위', type:'select', options:[['all','전체 해체 (건물 전체 철거)'],['part-minor','부분 해체 (주요구조부는 그대로)'],['part-major','부분 해체 (기둥·보·내력벽 등 포함)']]},
+            {id:'sf-area', label:'연면적 (㎡)', type:'number', helper:'건축물대장 조회 시 자동 입력'},
+            {id:'sf-floors', label:'층수 (지상+지하 합계)', type:'number', helper:'건축물대장 조회 시 자동 입력'},
+            {id:'sf-height', label:'건물 높이 (m)', type:'number', helper:'모르면 층당 3m로 계산합니다'},
+            {id:'sf-strct', label:'구조', type:'select', options:[['rc','철근콘크리트조'],['steel','철골조'],['masonry','조적조 (벽돌·블록)'],['wood','목조'],['etc','기타·모름']]},
+            {id:'sf-melsil', label:'해체 후 멸실신고까지 대행', type:'select', options:[['yes','예 (멸실신고 포함)'],['no','아니오']]}
+        ]
+    },
+    temporary: {
+        label:'가설건축물 축조신고',
+        title:'가설건축물 축조신고 견적 계산기',
+        intro:'<h4>가설건축물 축조신고란?</h4><p>컨테이너, 조립식 창고, 천막, 비닐하우스처럼 임시로 짓는 건축물은 축조신고 후 정해진 기간(통상 3년) 동안 쓸 수 있고, 기간이 끝나면 연장신고를 합니다.</p><p class="note">도시계획시설 부지 등에 짓는 경우는 신고가 아닌 가설건축물 허가 대상입니다.</p>',
+        fields:[
+            {id:'sf-kind', label:'가설건축물 종류', type:'select', options:[['container','컨테이너·조립식 창고·사무실'],['tent','천막·비닐하우스·차양'],['model','견본주택 (모델하우스)'],['site','공사용 가설건축물 (현장사무소)'],['etc','기타']]},
+            {id:'sf-mode', label:'신청 구분', type:'select', options:[['new','신규 축조신고'],['extend','존치기간 연장신고']]},
+            {id:'sf-area', label:'설치 면적 (㎡)', type:'number'},
+            {id:'sf-count', label:'동 수', type:'number', value:1}
+        ]
+    },
+    startup: {
+        label:'창업 입점 가능 여부 검토',
+        title:'창업 입점 가능 여부 검토',
+        intro:'<h4>이 자리에 창업할 수 있을까?</h4><p>계약 전에 확인하세요. 건축물대장상 용도와 하려는 업종이 맞지 않으면 영업신고가 반려되고, 용도변경 비용·기간이 추가로 듭니다.</p><p class="note">주소로 건축물대장을 조회하면 층별 현재 용도가 자동으로 불러와집니다.</p>',
+        fields:[
+            {id:'sf-biz', label:'하려는 업종', type:'select', options: STARTUP_BIZ.map(function(b,i){ return [String(i), b.label]; })},
+            {id:'sf-floor', label:'입점 층 (현재 용도)', type:'select', options:[['','건축물대장 조회 후 선택 · 또는 아래에서 직접 선택']]},
+            {id:'sf-cur', label:'현재 용도 직접 선택 (대장 조회가 안 될 때)', type:'usage'},
+            {id:'sf-area', label:'사용 면적 (㎡)', type:'number'}
+        ]
+    }
+};
+
+function simpleLabel(){ const c = SIMPLE[STATE.simpleType]; return c ? c.label : '견적'; }
+
+function selectSimple(t){
+    STATE.simpleType = t;
+    STATE.simpleFloors = [];
+    const c = SIMPLE[t];
+    document.getElementById('simple-title').textContent = c.title;
+    document.getElementById('simple-title-2').textContent = c.title;
+    document.getElementById('simple-intro').innerHTML = c.intro;
+    let html = '<div class="form-section"><h3>상세 정보</h3>';
+    c.fields.forEach(function(f){
+        html += '<div class="form-field"><label>' + f.label + '</label>';
+        if(f.type === 'select'){
+            html += '<select id="' + f.id + '">' + f.options.map(function(o){ return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select>';
+        } else if(f.type === 'usage'){
+            html += '<select id="' + f.id + '"><option value="">선택 안 함</option>' + usageOptionsHtml() + '</select>';
+        } else {
+            html += '<input type="number" id="' + f.id + '" value="' + (f.value != null ? f.value : 0) + '" min="0">';
+        }
+        if(f.helper) html += '<p class="helper-text">' + f.helper + '</p>';
+        html += '</div>';
+    });
+    html += '</div>';
+    document.getElementById('simple-fields').innerHTML = html;
+    const fl = document.getElementById('sf-floor');
+    if(fl) fl.onchange = function(){
+        const f = STATE.simpleFloors[parseInt(this.value)];
+        if(f && f.area){ const a = document.getElementById('sf-area'); if(a) a.value = f.area; }
+    };
+    showScreen('simple-step1');
+}
+
+function simpleOnBuilding(info){
+    const setv = function(id, v){ const el = document.getElementById(id); if(el && v) el.value = v; };
+    if(STATE.simpleType === 'demolish'){
+        setv('sf-area', info.totArea);
+        const floors = (parseInt(info.grndFlrCnt)||0) + (parseInt(info.ugrndFlrCnt)||0);
+        setv('sf-floors', floors);
+        setv('sf-height', parseFloat(info.heit) || '');
+        const st = info.strct || '';
+        const strctSel = document.getElementById('sf-strct');
+        if(strctSel){
+            if(/철근|콘크리트/.test(st)) strctSel.value = 'rc';
+            else if(/철골/.test(st)) strctSel.value = 'steel';
+            else if(/조적|벽돌|블록/.test(st)) strctSel.value = 'masonry';
+            else if(/목/.test(st)) strctSel.value = 'wood';
+        }
+    }
+    if(STATE.simpleType === 'startup'){
+        STATE.simpleFloors = info.floors || [];
+        const sel = document.getElementById('sf-floor');
+        if(sel && STATE.simpleFloors.length){
+            sel.innerHTML = '<option value="">층을 선택해주세요</option>' + STATE.simpleFloors.map(function(f, i){
+                return '<option value="' + i + '">' + (f.flrGbCd === '지하' ? 'B' : '') + (f.flrNoNm || f.flrNo) + ' · ' + (f.mainPurps || '용도 미상') + ' · ' + (f.area || '-') + '㎡</option>';
+            }).join('');
+        }
+    }
+}
+
+// 대장 용도명(자유 텍스트)을 시설군 표의 항목으로 대략 매칭
+function matchFacility(text){
+    if(!text) return '';
+    if(FACILITY_GROUP[text]) return text;
+    const rules = [
+        [/일반음식점/, '일반음식점'], [/휴게음식점|제과점/, '휴게음식점·제과점(1종)'], [/소매점/, '소매점(1종)'],
+        [/미용|이용원/, '이용원·미용원'], [/의원|치과|한의원/, '의원·한의원·치과'], [/학원|교습소/, '학원·교습소(500㎡미만)'],
+        [/노래연습/, '노래연습장'], [/체력단련|당구|체육도장/, '체력단련장·당구장(500㎡미만)'], [/독서실|기원/, '독서실·기원'],
+        [/사무소|업무시설|사무실/, '사무소(500㎡미만)'], [/제2종근린|제1종근린|근린생활/, '소매점(1종)'],
+        [/단독주택/, '단독주택'], [/다가구/, '다가구주택'], [/다세대/, '다세대주택'], [/아파트/, '아파트'], [/오피스텔/, '오피스텔'],
+        [/창고/, '창고'], [/공장/, '공장'], [/숙박/, '일반숙박시설(호텔·여관)'], [/판매시설/, '상점·매장'], [/주차장/, '주차장']
+    ];
+    for(let i=0;i<rules.length;i++){ if(rules[i][0].test(text)) return rules[i][1]; }
+    return '';
+}
+
+function calculateSimple(){
+    const t = STATE.simpleType;
+    if(t === 'demolish') return calcDemolish();
+    if(t === 'temporary') return calcTemporary();
+    if(t === 'startup') return calcStartup();
+    return false;
+}
+
+function calcDemolish(){
+    const scope = val('sf-scope');
+    const area = num('sf-area');
+    const floors = num('sf-floors');
+    let height = num('sf-height');
+    if(area <= 0){ alert('연면적을 입력해주세요.'); focusEl('sf-area'); return false; }
+    if(floors <= 0){ alert('층수를 입력해주세요.'); focusEl('sf-floors'); return false; }
+    const heightGuess = height <= 0;
+    if(heightGuess) height = floors * 3;
+    const small = area < 500 && height < 12 && floors <= 3;
+    const isSingo = (scope === 'part-minor') || small;
+    const items = [];
+    if(isSingo){
+        items.push({name:'인허가 대행비 (해체 신고 · 서류 작성 · 접수 · 보완 포함)', amount:PRICING.해체_신고_대행비});
+        items.push({name:'해체계획서 작성 (신고 대상)', amount:PRICING.해체계획서_신고});
+    } else {
+        items.push({name:'인허가 대행비 (해체 허가 · 서류 작성 · 접수 · 보완 포함)', amount:PRICING.해체_허가_대행비});
+        items.push({name:'해체계획서 작성 (허가 대상 · 구조 안전 검토 포함)', amount:PRICING.해체계획서_허가_기본 + area*PRICING.해체계획서_허가_m2});
+    }
+    if(val('sf-melsil') === 'yes') items.push({name:'멸실신고 대행 (해체 완료 후 건축물대장 말소)', amount:PRICING.멸실신고_대행비});
+    const sub = items.reduce(function(s,i){ return s+i.amount; }, 0);
+    const judge = isSingo ? '해체 <b>"신고"</b> 대상입니다' : '해체 <b>"허가"</b> 대상입니다';
+    const why = scope === 'part-minor' ? '주요구조부를 해체하지 않는 부분 해체' :
+        ('연면적 ' + area.toFixed(0) + '㎡ · 높이 ' + height.toFixed(1) + 'm' + (heightGuess ? '(추정)' : '') + ' · ' + floors + '개 층 → ' + (small ? '500㎡·12m·3개 층 이하' : '소규모 기준 초과'));
+    let extra = '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#000d4d;">자동 판별 결과</strong>' + judge + '<br><span style="font-size:12px;opacity:0.85;">' + why + '</span></div>';
+    const review = isSingo ? [
+        '해체 신고서 작성 및 관할 행정청 제출',
+        '해체계획서 작성 (해체 순서·방법·안전조치)',
+        '주변 건물·도로 안전조치 계획',
+        '석면 조사 대상 여부 확인',
+        '신고 수리 모니터링'
+    ] : [
+        '해체 허가 신청서 작성 및 관할 행정청 제출',
+        '해체계획서 작성 (구조 안전성·해체 순서·장비 계획)',
+        '해체공사감리자 지정 절차 안내 (허가권자 지정)',
+        '주변 건물·도로·보행자 안전 대책',
+        '석면 조사 대상 여부 확인',
+        '허가 처리 모니터링'
+    ];
+    if(val('sf-melsil') === 'yes') review.push('해체 완료 후 30일 이내 멸실신고 및 대장 말소 확인');
+    extra += '<div class="check-result"><strong>견적에 포함된 해체·멸실 행정업무</strong>' + review.map(function(r){ return '· '+r; }).join('<br>') + '</div>';
+    if(!isSingo) extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 해체공사감리비 별도 발생</strong><br>허가 대상은 허가권자가 지정하는 감리자가 해체공사를 감리하며, 감리비는 별도로 발생합니다.</div>';
+    extra += '<div class="info-box"><strong>※ 석면 조사·철거 공사비 별도</strong><br>일정 규모 이상 건물은 해체 전 석면 조사가 필요하며, 실제 철거 공사비와 폐기물 처리비는 철거업체 별도 견적입니다.</div>';
+    const meta = { badge: isSingo ? '해체 신고 대상' : '해체 허가 대상', badgeClass: isSingo ? 'report' : 'permit', subtitle: area.toFixed(0)+'㎡ ('+(area/3.3).toFixed(1)+'평) · '+floors+'개 층', duration: isSingo ? '2~3주' : '4~8주', adminType: isSingo ? '해체신고' : '해체허가', noConstruction:true };
+    renderResult(items, sub, sub, 1.0, 'simple-result', extra, meta);
+}
+
+function calcTemporary(){
+    const mode = val('sf-mode');
+    const area = num('sf-area');
+    const count = Math.max(1, num('sf-count'));
+    if(area <= 0){ alert('설치 면적을 입력해주세요.'); focusEl('sf-area'); return false; }
+    const items = [];
+    if(mode === 'extend'){
+        items.push({name:'인허가 대행비 (존치기간 연장신고 · 서류 작성 · 접수)', amount:PRICING.가설_연장_대행비});
+    } else {
+        items.push({name:'인허가 대행비 (가설건축물 축조신고 · 서류 작성 · 접수 · 보완 포함)', amount:PRICING.가설_신규_대행비});
+        items.push({name:'배치도·평면도 작성 ('+area.toFixed(0)+'㎡)', amount:area*PRICING.가설_도면_m2});
+        if(count > 1) items.push({name:'추가 동 신고 ('+(count-1)+'동 × '+formatCurrency(PRICING.가설_연장_대행비/2)+')', amount:(count-1)*PRICING.가설_연장_대행비/2});
+    }
+    const sub = items.reduce(function(s,i){ return s+i.amount; }, 0);
+    const kindSel = document.getElementById('sf-kind');
+    const kindText = kindSel.options[kindSel.selectedIndex].text;
+    const review = mode === 'extend' ? [
+        '기존 축조신고 내역·존치기간 확인',
+        '연장신고서 작성 및 제출 (만료 전 신청)',
+        '처리 결과 확인'
+    ] : [
+        '용도지역·대지 조건상 설치 가능 여부 확인',
+        '신고 대상 / 허가 대상 구분 (도시계획시설 부지 여부)',
+        '배치도·평면도 작성',
+        '가설건축물 축조신고서 작성 및 제출',
+        '신고필증 수령 및 가설건축물 관리대장 등재 확인'
+    ];
+    let extra = '<div class="check-result"><strong>견적에 포함된 행정업무</strong>' + review.map(function(r){ return '· '+r; }).join('<br>') + '</div>';
+    extra += '<div class="info-box"><strong>※ 참고</strong><br>존치기간은 통상 3년 이내이며 만료 전 연장신고가 필요합니다. 전기·급배수 인입이나 구조 보강이 필요한 경우 별도 비용이 발생할 수 있습니다.</div>';
+    const meta = { badge:'가설건축물 '+(mode==='extend'?'연장신고':'축조신고'), badgeClass:'report', subtitle: kindText+' · '+area.toFixed(0)+'㎡ · '+count+'동', duration: mode==='extend' ? '1주' : '1~2주', adminType:'가설건축물', noConstruction:true };
+    renderResult(items, sub, sub, 1.0, 'simple-result', extra, meta);
+}
+
+function calcStartup(){
+    const biz = STARTUP_BIZ[parseInt(val('sf-biz'))||0];
+    const area = num('sf-area');
+    if(area <= 0){ alert('사용 면적을 입력해주세요.'); focusEl('sf-area'); return false; }
+    const floorIdx = val('sf-floor');
+    const floor = floorIdx !== '' ? STATE.simpleFloors[parseInt(floorIdx)] : null;
+    const curRaw = val('sf-cur') || (floor ? floor.mainPurps : '');
+    if(!curRaw){ alert('입점 층을 선택하거나 현재 용도를 직접 선택해주세요.'); focusEl('sf-floor'); return false; }
+    const cur = val('sf-cur') || matchFacility(curRaw);
+    const target = biz.fac(area);
+    const j = cur ? judgeUsageRaw(cur, target) : {cls:'nochange'};
+    let verdict, badge, badgeCls, next = '';
+    if(cur && cur === target){
+        verdict = '현재 용도 그대로 <b>입점 가능성이 높습니다</b>'; badge='입점 가능성 높음'; badgeCls='daejang';
+    } else if(j.cls === 'daejang'){
+        verdict = '같은 시설군 — <b>기재사항 변경</b> 후 입점 가능성이 높습니다'; badge='기재변경 필요'; badgeCls='daejang';
+        next = '<button type="button" class="lookup-btn" style="margin-top:8px;" onclick="selectRecord()">기재사항 변경 견적 보기 →</button>';
+    } else if(j.cls === 'singo'){
+        verdict = '<b>용도변경 신고</b>가 필요합니다'; badge='용도변경 신고 필요'; badgeCls='report';
+        next = '<button type="button" class="lookup-btn" style="margin-top:8px;" onclick="selectUsage()">용도변경 견적 보기 →</button>';
+    } else if(j.cls === 'heoga'){
+        verdict = '<b>용도변경 허가</b>가 필요합니다 (비용·기간 큼)'; badge='용도변경 허가 필요'; badgeCls='permit';
+        next = '<button type="button" class="lookup-btn" style="margin-top:8px;" onclick="selectUsage()">용도변경 견적 보기 →</button>';
+    } else {
+        verdict = '자동 판별이 어려워 <b>건축사 확인</b>이 필요합니다'; badge='건축사 확인 필요'; badgeCls='permit';
+    }
+    const items = [{name:'입점 가능 여부 검토 리포트 (용도·법규 검토 · 계약 시 설계비에서 차감)', amount:PRICING.창업검토_리포트}];
+    let extra = '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#000d4d;">1차 자동 판별</strong>' + verdict
+        + '<br><span style="font-size:12px;opacity:0.85;">현재: ' + esc(curRaw) + (cur && cur !== curRaw ? ' (≈ ' + cur + ')' : '') + ' → 업종: ' + biz.label + ' (' + target + ')</span>' + next + '</div>';
+    const review = [
+        '건축물대장 용도와 업종 일치 여부',
+        '용도지역상 해당 업종 허용 여부',
+        '정화조 용량 (업종 변경 시 오수 발생량)',
+        '부설주차장 (업종별 법정 주차대수)',
+        '소방시설·다중이용업소 해당 여부',
+        '위반건축물 등재 여부 (영업신고 반려 원인)'
+    ].concat(biz.notes);
+    extra += '<div class="check-result"><strong>검토 리포트에 포함되는 항목</strong>' + review.map(function(r){ return '· '+r; }).join('<br>') + '</div>';
+    extra += '<div class="info-box"><strong>※ 계약 전 확인을 권장합니다</strong><br>위 자동 판별은 참고용이며, 같은 업종이라도 면적·층·용도지역에 따라 결과가 달라질 수 있습니다. 임대차 계약 전에 건축사 검토를 받으세요.</div>';
+    const meta = { badge: badge, badgeClass: badgeCls, subtitle: biz.label + ' · ' + area.toFixed(0) + '㎡ ('+(area/3.3).toFixed(1)+'평)', duration:'2~3일', adminType:'입점검토', noConstruction:true, fixed:true };
+    renderResult(items, PRICING.창업검토_리포트, PRICING.창업검토_리포트, 1.0, 'simple-result', extra, meta);
 }
 </script>
 </body>

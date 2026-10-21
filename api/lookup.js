@@ -111,6 +111,7 @@ module.exports = async function handler(req, res) {
             archArea: titleItem.archArea,
             totArea: titleItem.totArea,
             grndFlrCnt: titleItem.grndFlrCnt,
+            heit: titleItem.heit,
             ugrndFlrCnt: titleItem.ugrndFlrCnt,
             bcRat: titleItem.bcRat,
             vlRat: titleItem.vlRat,
