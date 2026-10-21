@@ -421,6 +421,16 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
 .qb-extension:hover { border-color:#c2410c; }
 .qb-remodel:hover { border-color:#4338ca; }
 .qb-illegal:hover { border-color:#b91c1c; }
+.qb-record:hover { border-color:#047857; }
+.qb-wide { grid-column:1 / -1; }
+.record-check-list { display:flex; flex-direction:column; gap:10px; }
+.record-check { display:flex; align-items:flex-start; gap:10px; padding:14px; border:1.5px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; }
+.record-check input { margin-top:3px; width:18px; height:18px; flex-shrink:0; accent-color:#001780; }
+.record-check b { display:block; font-size:15px; color:#0f172a; }
+.record-check small { display:block; font-size:12.5px; color:#64748b; margin-top:2px; line-height:1.5; }
+.record-check:has(input:checked) { border-color:#001780; background:#eff6ff; }
+.record-check-area { margin-top:10px; }
+.record-etc-text { width:100%; min-height:80px; padding:12px; border:1px solid #d0d5dd; border-radius:8px; font-family:inherit; font-size:14px; box-sizing:border-box; margin-top:10px; }
 .daejang-cta { display:flex; align-items:center; justify-content:center; padding:24px 22px; max-width:720px; margin:0 auto 28px; background:linear-gradient(135deg, #1a1a1a 0%, #000000 100%); border:none; border-radius:14px; cursor:pointer; transition:all 0.18s; width:100%; box-shadow:0 4px 14px rgba(0,0,0,0.25); font-family:inherit; }
 .daejang-cta:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
 .daejang-cta-icon { font-size:26px; flex-shrink:0; }
@@ -516,8 +526,9 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
     body.printing * { visibility: hidden !important; }
     body.printing #illegal-result, body.printing #illegal-result *,
     body.printing #usage-result, body.printing #usage-result *,
-    body.printing #repair-result, body.printing #repair-result * { visibility: visible !important; }
-    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result {
+    body.printing #repair-result, body.printing #repair-result *,
+    body.printing #record-result, body.printing #record-result * { visibility: visible !important; }
+    body.printing #illegal-result, body.printing #usage-result, body.printing #repair-result, body.printing #record-result {
         position: absolute !important; top: 0 !important; left: 0 !important; 
         width: 100% !important; margin: 0 !important; padding: 20px !important;
     }
@@ -615,6 +626,7 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <li onclick="selectUsage(); toggleSideMenu();">용도변경 계산기</li>
         <li onclick="selectRemodel('대수선 (엘리베이터 설치)'); toggleSideMenu();">대수선 계산기</li>
         <li onclick="selectRemodel('증축'); toggleSideMenu();">증축 계산기</li>
+        <li onclick="selectRecord(); toggleSideMenu();">기재사항 변경 계산기</li>
     </ul>
     <div class="menu-section-title">고객지원</div>
     <ul>
@@ -669,6 +681,11 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         <button class="quick-calc-btn qb-illegal" onclick="selectIllegal()">
             <span class="qb-emoji">⚠️</span>
             <span class="qb-title">위반건축물 양성화</span>
+        </button>
+        <button class="quick-calc-btn qb-record qb-wide" onclick="selectRecord()">
+            <span class="qb-emoji">📝</span>
+            <span class="qb-title">건축물대장 기재사항 변경</span>
+            <span class="qb-sub">용도 기재변경 · 면적·층별개요 정정</span>
         </button>
     </div>
     
@@ -1085,6 +1102,102 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
         </button>
         </div>
     </div>
+
+<!-- ===== 기재사항 변경 STEP1: 입력 ===== -->
+<div id="record-step1" class="hidden">
+    <button class="back-btn" onclick="goMain()">← 홈으로</button>
+    <h1 class="calculator-title">기재사항 변경 견적 계산기</h1>
+    <div class="calc-intro">
+        <h4>기재사항 변경이란?</h4>
+        <p>공사 없이 건축물대장에 적힌 내용을 실제에 맞게 바꾸거나 바로잡는 행정 절차입니다.</p>
+        <ul>
+            <li><b>용도 기재변경</b> — 같은 시설군 안에서 용도만 바꾸는 경우 (예: 소매점 → 일반음식점)</li>
+            <li><b>면적·층별개요 정정</b> — 대장 내용과 실제 현황이 다른 경우</li>
+        </ul>
+        <p class="note">실제 면적이 대장보다 큰 경우(무단 증축)는 기재사항 변경이 아니라 위반건축물 양성화 대상입니다.</p>
+    </div>
+    <div class="form-wrap">
+        <input type="hidden" id="record-area" value="0">
+        <div class="form-section">
+            <h3>건물 주소</h3>
+            <div class="form-field">
+                <label>도로명주소</label>
+                <div class="address-row">
+                    <input type="text" id="record-address" placeholder="주소 검색으로 자동 입력" readonly>
+                    <button type="button" class="lookup-btn" onclick="lookupBuilding('record')">🔍 주소 검색</button>
+                </div>
+            </div>
+            <button type="button" class="lookup-btn" onclick="fetchBuilding('record')" style="width:100%; padding:12px; margin-top:4px;">📋 건축물대장 조회</button>
+            <div id="record-building-info" class="building-info-panel"></div>
+        </div>
+        <div class="form-section">
+            <h3>변경할 항목 <span style="font-weight:400; color:#888; font-size:13px;">(여러 개 선택 가능)</span></h3>
+            <div class="record-check-list">
+                <label class="record-check"><input type="checkbox" class="record-item" value="usage"><span><b>용도 기재변경</b><small>같은 시설군 안에서 용도 변경 (예: 사무소 → 학원, 소매점 → 음식점)</small></span></label>
+                <label class="record-check"><input type="checkbox" class="record-item" value="area" onchange="toggleRecordArea()"><span><b>면적 정정</b><small>대장 면적과 실제 면적이 다름 (측량·도면 확인 필요)</small></span></label>
+                <label class="record-check"><input type="checkbox" class="record-item" value="floor"><span><b>층별개요 정정</b><small>층별 용도·면적 표시가 실제와 다름</small></span></label>
+                <label class="record-check"><input type="checkbox" class="record-item" value="spec"><span><b>구조·지붕·주차 등 표시사항 정정</b><small>구조, 지붕 재료, 주차대수, 세대수 등 기재 오류</small></span></label>
+                <label class="record-check"><input type="checkbox" class="record-item" value="etc" onchange="toggleRecordEtc()"><span><b>기타 / 잘 모르겠어요</b><small>상황을 적어주시면 건축사가 확인합니다</small></span></label>
+            </div>
+            <div id="record-area-box" class="record-check-area hidden">
+                <div class="form-field"><label>정정 대상 면적 (㎡)</label><input type="number" id="record-correct-area" value="0" min="0" oninput="document.getElementById('record-correct-pyeong').textContent=(this.value/3.3).toFixed(1)+'평'"><p class="helper-text" id="record-correct-pyeong">0평</p></div>
+                <div class="form-field"><label>실제 면적이 대장보다</label><select id="record-area-dir"><option value="small">작다 (대장 면적 축소 정정)</option><option value="big">크다 (무단 증축 가능성)</option><option value="unknown">모르겠다</option></select></div>
+                <div class="form-field"><label>현황도면 여부</label><select id="record-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
+            </div>
+            <textarea id="record-etc" class="record-etc-text hidden" placeholder="예: 대장에는 2층이 사무소로 되어 있는데 실제로는 10년째 학원으로 쓰고 있어요"></textarea>
+        </div>
+        <div class="form-section">
+            <h3>소유 여부</h3>
+            <div class="form-field"><select id="record-ownership"><option>소유</option><option>매수 검토중</option><option>임차인</option></select></div>
+        </div>
+        <div class="est-info-form">
+            <h3>견적 확인 정보</h3>
+            <p class="est-sub">아래 정보를 입력하신 후 견적 바로 확인하기 버튼을 누르시면 견적 확인이 가능합니다.</p>
+            <div class="est-info-field">
+                <label>이름 *</label>
+                <input type="text" id="record-name" placeholder="홍길동" autocomplete="name">
+            </div>
+            <div class="est-info-field">
+                <label>연락처 *</label>
+                <input type="tel" id="record-phone" placeholder="010-0000-0000" autocomplete="tel">
+            </div>
+            <div class="est-info-field">
+                <label>이메일 <span class="opt">(선택)</span></label>
+                <input type="email" id="record-email" placeholder="example@email.com" autocomplete="email">
+            </div>
+            <div class="est-info-field">
+                <label>알게된 경로 <span class="opt">(선택)</span></label>
+                <select id="record-source">
+                    <option value="">선택해주세요</option>
+                    <option>검색 (네이버·구글)</option>
+                    <option>지인 소개</option>
+                    <option>인스타그램</option>
+                    <option>유튜브</option>
+                    <option>블로그</option>
+                    <option>기타</option>
+                </select>
+            </div>
+        </div>
+        <button class="next-btn" onclick="goToEstimate('record')">견적 바로 확인하기</button>
+    </div>
+</div>
+
+<!-- ===== 기재사항 변경 STEP2: 견적 ===== -->
+<div id="record-step2" class="hidden">
+    <button class="back-btn" onclick="showScreen('record-step1')">← 입력 수정</button>
+    <h1 class="calculator-title">기재사항 변경 견적 계산기</h1>
+    <div class="estimate-wrap"><div id="record-result"></div></div>
+    <div class="estimate-actions">
+        <button type="button" class="estimate-action-btn pdf" onclick="saveEstimate('record-result')"><span class="action-icon">💾</span>견적서 저장 (PDF/이미지)</button>
+    </div>
+    <div class="consult-form-section">
+        <p class="consult-lead">담당 건축사가 직접 검토 후 회신드립니다.</p>
+        <button type="button" class="consult-submit-btn" onclick="submitConsult(this)">건축사 상담 요청</button>
+        <button type="button" class="kakao-channel-btn-estimate" onclick="openKakaoChannel()">
+            <span class="kakao-icon">💬</span>카카오톡 채널 상담
+        </button>
+    </div>
+</div>
 </div>
 
 <footer class="site-footer">
@@ -1208,6 +1321,7 @@ const PRICING = {
     인허가대행비_대수선: 3000000,      // 대수선 300만원
     인허가대행비_증축: 3000000,        // 증축 300만원
     인허가대행비_양성화: 3000000,      // 양성화 300만원
+    기재변경_추가항목: 500000,         // 기재사항 변경 - 항목 1개 추가될 때마다 +50만원 (대표님 확인 필요)
     
     // ==== 도면 비용 (원/m²) ====
     도면단가_pdf: 1000,               // PDF·종이 → 1,000원/m²
@@ -1541,7 +1655,7 @@ function applyBuildingInfo(info, type){
 }
 
 // 화면 전환
-const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','admin-screen'];
+const SCREENS=['selector-screen','illegal-step1','illegal-step2','illegal-step3','usage-step1','usage-step2','usage-step3','remodel-step2','remodel-step3','record-step1','record-step2','admin-screen'];
 function showScreen(id){
     SCREENS.forEach(s=>document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -1966,6 +2080,8 @@ async function saveSubmission(type, caseType){
         address = val('usage-address'); area = STATE.usageTotalArea || 0; drawing = drawText('usage-drawing'); resultId = 'usage-result';
     } else if(type === 'remodel'){
         address = val('repair-address'); area = num('repair-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
+    } else if(type === 'record'){
+        address = val('record-address'); area = num('record-correct-area') || num('record-area'); drawing = drawText('record-drawing'); resultId = 'record-result';
     }
     const snap = STATE.lastEstimate || {};
     try {
@@ -2008,13 +2124,14 @@ function submitConsult(btn){
     }
     
     // 현재 활성 견적 페이지 찾기
-    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden)');
+    const activeScreen = document.querySelector('#illegal-step3:not(.hidden), #usage-step3:not(.hidden), #remodel-step3:not(.hidden), #record-step2:not(.hidden)');
     let resultId = null, caseType = '견적';
     if(activeScreen){
         const id = activeScreen.id;
         if(id === 'illegal-step3'){ resultId = 'illegal-result'; caseType = '위반건축물 양성화'; }
         else if(id === 'usage-step3'){ resultId = 'usage-result'; caseType = '용도변경'; }
         else if(id === 'remodel-step3'){ resultId = 'repair-result'; caseType = STATE.remodelType || '대수선/증축'; }
+        else if(id === 'record-step2'){ resultId = 'record-result'; caseType = '기재사항 변경'; }
     }
     
     // 견적 요약 텍스트 추출
@@ -2157,6 +2274,9 @@ function goToEstimate(type){
         const rc=document.getElementById('remodel-chosen-3'); const rc2=document.getElementById('remodel-chosen'); if(rc && rc2) rc.textContent=rc2.textContent;
         if(calculateRemodel() === false) return;
         showScreen('remodel-step3');
+    } else if(type==='record'){
+        if(calculateRecord() === false) return;
+        showScreen('record-step2');
     }
     
     // 견적 표시 후 기록 저장 + SMS 발송 + 완료 알림 팝업
@@ -2165,6 +2285,7 @@ function goToEstimate(type){
         if(type==='illegal') caseLabel = '위반건축물 양성화';
         else if(type==='usage') caseLabel = '용도변경';
         else if(type==='remodel') caseLabel = STATE.remodelType || '대수선/증축';
+        else if(type==='record') caseLabel = '기재사항 변경';
         saveSubmission(type, caseLabel);
         sendCompletionSMS(name, phone, type);
         showDoneToast();
@@ -2180,6 +2301,7 @@ async function sendCompletionSMS(name, phone, type){
     if(type==='illegal'){ caseType = '위반건축물 양성화'; resultId = 'illegal-result'; }
     else if(type==='usage'){ caseType = '용도변경'; resultId = 'usage-result'; }
     else if(type==='remodel'){ caseType = STATE.remodelType || '대수선/증축'; resultId = 'repair-result'; }
+    else if(type==='record'){ caseType = '기재사항 변경'; resultId = 'record-result'; }
     
     // 견적 요약 텍스트 추출
     const estimateText = extractEstimateForSMS(resultId);
@@ -2422,7 +2544,7 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     html+='<div class="total-box"><span class="label">총 견적금액</span><span class="amount">'+formatCurrency(total)+'</span></div>';
     if(extraHtml) html+=extraHtml;
     html+='<div class="warning-box">⚠️ 본 견적은 개략적인 예상 금액이며, 실제 비용은 현장 여건에 따라 달라질 수 있습니다.</div>';
-    html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
+    if(!meta.noConstruction) html+='<div class="info-box" style="background:#fef7e6; border-left:3px solid #f59e0b;"><strong style="color:#92400e;">※ 별도 공사비 발생 가능 (현장 여건별)</strong><br>· 정화조 증설·교체 (오수 발생량 증가 시)<br>· 부설주차장 추가 설치<br>· 소방시설 보강 (스프링클러·방화구획·피난설비)<br>· 장애인·노약자 편의시설(BF) 설치<br>· 단열·내·외장 마감 변경<br><span style="font-size:12px;opacity:0.85;">상기 항목은 본 견적에 미포함이며, 현장 여건에 따라 별도 시공 견적이 필요합니다.</span></div>';
     html+='<button class="print-btn" onclick="window.print()">🖨️ 견적서 출력</button></div>';
     document.getElementById(resultId).innerHTML=html;
 }
@@ -2659,6 +2781,69 @@ function calculateRemodel(){
         adminType: '허가'
     };
     renderResult(items,sub,sub*rf,rf,'repair-result',extra,meta);
+}
+
+// ===== 기재사항 변경 =====
+const RECORD_ITEMS = {
+    usage: {label:'용도 기재변경', review:['시설군 분류 확인 (동일 시설군 내 변경 여부)','변경 용도 적합성 간이 검토 (용도지역·면적 기준)']},
+    area:  {label:'면적 정정', review:['건축물대장 면적과 현황 면적 대조','현황 도면·측량 자료 기준 면적 산정','정정 사유서 작성']},
+    floor: {label:'층별개요 정정', review:['층별 용도·면적 현황 대조','층별개요 정정 내역 작성']},
+    spec:  {label:'구조·지붕·주차 등 표시사항 정정', review:['구조·지붕·주차대수 등 표시사항 근거자료 확인','정정 대상 항목 증빙 정리']},
+    etc:   {label:'기타 (건축사 확인 필요)', review:['요청 내용 검토 후 처리 절차 판단']}
+};
+function selectRecord(){ showScreen('record-step1'); }
+function toggleRecordArea(){
+    const on = document.querySelector('.record-item[value="area"]').checked;
+    document.getElementById('record-area-box').classList.toggle('hidden', !on);
+}
+function toggleRecordEtc(){
+    const on = document.querySelector('.record-item[value="etc"]').checked;
+    document.getElementById('record-etc').classList.toggle('hidden', !on);
+}
+function calculateRecord(){
+    const picked = Array.from(document.querySelectorAll('.record-item:checked')).map(function(c){ return c.value; });
+    if(picked.length === 0){ alert('변경할 항목을 1개 이상 선택해주세요.'); return false; }
+    const hasArea = picked.indexOf('area') >= 0;
+    const correctArea = num('record-correct-area');
+    if(hasArea && correctArea <= 0){ alert('정정 대상 면적을 입력해주세요.'); focusEl('record-correct-area'); return false; }
+    const areaDir = val('record-area-dir');
+    const rf = 1.0;
+
+    const items = [];
+    items.push({name:'인허가 대행비 (기재사항 변경 신청 · 서류 작성 · 접수 · 보완 포함)', amount: PRICING.인허가대행비_기재변경});
+    if(picked.length > 1){
+        items.push({name:'추가 변경 항목 ('+(picked.length-1)+'건 × '+formatCurrency(PRICING.기재변경_추가항목)+')', amount:(picked.length-1)*PRICING.기재변경_추가항목});
+    }
+    if(hasArea){
+        const sdf = surveyDocFee('record-drawing', correctArea);
+        sdf.items.forEach(function(it){ items.push(it); });
+    }
+    const sub = items.reduce(function(s,i){ return s+i.amount; }, 0);
+
+    let extra = '<div class="check-result"><strong>변경 항목 ('+picked.length+'건)</strong>' + picked.map(function(k){ return '· '+RECORD_ITEMS[k].label; }).join('<br>') + '</div>';
+    const etcText = val('record-etc');
+    if(picked.indexOf('etc') >= 0 && etcText){
+        extra += '<div class="check-result" style="background:#f5f8fc;color:#333;"><strong style="color:#000d4d;">고객 요청 내용</strong>' + esc(etcText) + '</div>';
+    }
+    let review = ['건축물대장 기재사항 변경 신청서 작성'];
+    picked.forEach(function(k){ review = review.concat(RECORD_ITEMS[k].review); });
+    review.push('관할 행정청 신청 및 처리 모니터링','변경 후 건축물대장 발급 확인');
+    extra += '<div class="check-result"><strong>견적에 포함된 기재사항 변경 행정업무</strong>' + review.map(function(r){ return '· '+r; }).join('<br>') + '</div>';
+    if(hasArea && areaDir !== 'small'){
+        extra += '<div class="info-box" style="background:#fff7ed; border-left:3px solid #c2410c;"><strong style="color:#c2410c;">※ 위반건축물 양성화 해당 여부 확인 필요</strong><br>실제 면적이 대장보다 크다면 무단 증축으로 보아 기재사항 변경이 아닌 <b>양성화 절차</b>가 필요할 수 있습니다.<br><button type="button" class="lookup-btn" style="margin-top:8px;" onclick="selectIllegal()">양성화 견적도 확인하기 →</button></div>';
+    }
+    if(hasArea){
+        extra += '<div class="info-box"><strong>※ 지적측량비 별도 발생 가능</strong><br>면적 정정에 측량 성과가 필요한 경우 한국국토정보공사(LX) 별도 견적으로 진행됩니다 (약 100만원 내외).</div>';
+    }
+    const meta = {
+        badge: '기재사항 변경',
+        badgeClass: 'daejang',
+        subtitle: picked.map(function(k){ return RECORD_ITEMS[k].label; }).join(' · '),
+        duration: hasArea ? '2~4주' : '1~2주',
+        adminType: '기재변경',
+        noConstruction: true
+    };
+    renderResult(items, sub, sub*rf, rf, 'record-result', extra, meta);
 }
 </script>
 </body>
