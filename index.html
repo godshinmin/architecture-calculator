@@ -2417,6 +2417,9 @@ function goToEstimate(type){
     if(/[^0-9\-\s]/.test(phone) || !/^01[016789]\d{7,8}$/.test(phone.replace(/[^0-9]/g,''))){
         alert('올바른 연락처를 입력해주세요.'); focusEl(type + '-phone'); return;
     }
+    if(fakePhone(phone.replace(/[^0-9]/g,''))){
+        alert('실제 사용하는 휴대폰 번호를 입력해주세요.\n견적 결과와 상담 안내가 문자로 발송됩니다.'); focusEl(type + '-phone'); return;
+    }
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
         alert('올바른 이메일 형식을 입력해주세요. (예: name@email.com)');
         focusEl(type + '-email'); return;
@@ -2459,6 +2462,20 @@ function goToEstimate(type){
     }, 600);
 }
 
+// 가짜 번호 차단 (01012345678, 0000, 1111-2222 등)
+function fakePhone(d){
+  if(!/^01[016789]\d{7,8}$/.test(d)) return true;
+  const mid=d.slice(3,d.length-4), last=d.slice(-4), body=mid+last;
+  const rep1=x=>/^(\d)\1+$/.test(x);
+  const seq=x=>{ let up=1, dn=1; for(let i=1;i<x.length;i++){ if(+x[i]!==+x[i-1]+1) up=0; if(+x[i]!==+x[i-1]-1) dn=0; } return up||dn; };
+  const odd=x=>rep1(x)||seq(x);
+  if(odd(mid) && odd(last)) return true;      // 1234-5678, 0000-0000, 1111-2222
+  if(mid===last) return true;                 // 5678-5678
+  if(/^0+$/.test(mid)) return true;           // 010-0000-xxxx
+  if(/(\d)\1{6,}/.test(body)) return true;  // 같은 숫자 7개 이상
+  if(/^(\d)\1(\d)\2(\d)\3(\d)\4$/.test(body)) return true; // 1122-3344
+  return false;
+}
 function focusEl(id){ const el = document.getElementById(id); if(el) el.focus(); }
 
 // 네이버 클라우드 SENS를 통한 SMS 발송 (고객용 + 관리자용 분리)
