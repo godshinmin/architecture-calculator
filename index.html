@@ -38,7 +38,7 @@
   "email": "dbym@dbym.kr",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "중대로9길 51 부성빌딩 6층",
+    "streetAddress": "가락동 91-5 6층",
     "addressLocality": "송파구",
     "addressRegion": "서울특별시",
     "addressCountry": "KR"
@@ -1094,6 +1094,10 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <div id="repair-building-info" class="building-info-panel"></div>
         </div>
         <div class="form-section">
+            <h3>공사 면적</h3>
+            <div class="form-field"><label id="repair-work-label">공사할 면적 (㎡)</label><input type="number" id="repair-work-area" value="" min="0" placeholder="예: 60" oninput="document.getElementById('repair-work-pyeong').textContent=((this.value||0)/3.3).toFixed(1)+'평'"><p class="helper-text" id="repair-work-pyeong">0평</p><p class="helper-text" id="repair-work-help">건물 전체가 아니라 실제로 공사하는 부분의 면적을 입력해주세요.</p></div>
+        </div>
+        <div class="form-section">
             <h3>현황도면 여부</h3>
             <div class="form-field"><select id="repair-drawing"><option value="cad">CAD 도면 보유</option><option value="pdf">PDF·종이도면</option><option value="none">도면 없음</option></select></div>
         </div>
@@ -1330,11 +1334,14 @@ h1 { font-size:30px; font-weight:800; text-align:center; margin-bottom:8px; colo
             <span>사업자등록번호 225-04-69213</span>
         </div>
         <div class="footer-row">
-            <span>서울특별시 송파구 중대로9길 51 부성빌딩 6층</span>
+            <span>서울특별시 송파구 가락동 91-5 6층</span>
         </div>
         <div class="footer-row">
             <span>TEL <a href="tel:070-4647-3376">070-4647-3376</a></span>
             <span>E-MAIL <a href="mailto:dbym@dbym.kr">dbym@dbym.kr</a></span>
+        </div>
+        <div class="footer-row">
+            <span>카카오톡 <a href="http://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener">디바이엠건축사사무소 채널 상담</a></span>
         </div>
     </div>
 </footer>
@@ -1433,7 +1440,7 @@ const PRICING = {
     설계비_양성화: 15000,           // 위반건축물 양성화 15,000원/m²
     
     // ==== 인허가 대행비 - 고정 케이스 ====
-    인허가대행비_기재변경: 1500000,    // 기재변경 150만원 (고정)
+    인허가대행비_기재변경: 1500000,    // 기재변경 기본 150만원 (500㎡ 이하) — 면적별: 기재변경_대행비()
     인허가대행비_대수선: 3000000,      // 대수선 300만원
     인허가대행비_증축: 3000000,        // 증축 300만원
     인허가대행비_양성화: 3000000,      // 양성화 300만원
@@ -1459,6 +1466,13 @@ const PRICING = {
     LX측량비: 1000000                 // 100만원 (양성화 시 안내)
 };
 
+// 기재사항 변경 대행비 - 면적별 차등 (대형 건물 반영)
+function 기재변경_대행비(area){
+    if(area <= 500) return 1500000;
+    if(area <= 1000) return 2000000;
+    if(area <= 3000) return 3000000;
+    return 4500000;
+}
 // 용도변경 인허가 대행비 - 면적별 차등
 function 용도변경_허가_대행비(area){
     if(area <= 500) return 2500000;
@@ -2211,11 +2225,11 @@ async function saveSubmission(type, caseType){
     const info = STATE.customerInfo || {};
     let address = '', area = 0, drawing = '', resultId = '';
     if(type === 'illegal'){
-        address = val('illegal-address'); area = num('illegal-area'); drawing = drawText('illegal-drawing'); resultId = 'illegal-result';
+        address = val('illegal-address'); area = num('illegal-unlawful-area'); drawing = drawText('illegal-drawing'); resultId = 'illegal-result';
     } else if(type === 'usage'){
         address = val('usage-address'); area = STATE.usageTotalArea || 0; drawing = drawText('usage-drawing'); resultId = 'usage-result';
     } else if(type === 'remodel'){
-        address = val('repair-address'); area = num('repair-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
+        address = val('repair-address'); area = num('repair-work-area'); drawing = drawText('repair-drawing'); resultId = 'repair-result';
     } else if(type === 'simple'){
         address = val('simple-address'); area = num('sf-area') || num('simple-area'); drawing = ''; resultId = 'simple-result';
     } else if(type === 'record'){
@@ -2363,6 +2377,12 @@ function selectRemodel(t){
     if(ch3) ch3.textContent='공사 종류: '+t;
     // 페이지 제목 동적 분기
     const isEV = t.indexOf('엘리베이터') >= 0;
+    const wl = document.getElementById('repair-work-label'), wh = document.getElementById('repair-work-help');
+    if(wl && wh){
+        if(isEV){ wl.textContent = '승강로 면적 합계 (㎡)'; wh.textContent = '승강로 바닥면적 × 운행 층수 (예: 6㎡ × 4개 층 = 24㎡). 모르시면 24를 입력해주세요.'; }
+        else if(t.indexOf('대수선') >= 0){ wl.textContent = '대수선 공사 면적 (㎡)'; wh.textContent = '벽·기둥·계단 등을 변경하는 층(구역)의 면적을 입력해주세요. 건물 전체 면적이 아닙니다.'; }
+        else { wl.textContent = '증축할 면적 (㎡)'; wh.textContent = '새로 늘어나는 면적만 입력해주세요. 기존 면적은 건축물대장 조회로 자동 확인됩니다.'; }
+    }
     const titleText = isEV ? '엘리베이터 설치 견적 계산기' : (t.indexOf('대수선') >= 0 ? '대수선 견적 계산기' : '증축 견적 계산기');
     document.querySelectorAll('.remodel-title').forEach(function(el){
         el.textContent = titleText;
@@ -2394,7 +2414,7 @@ function goToEstimate(type){
     
     if(!name){ alert('이름을 입력해주세요.'); focusEl(type + '-name'); return; }
     if(!phone){ alert('연락처를 입력해주세요.'); focusEl(type + '-phone'); return; }
-    if(phone.replace(/[^0-9]/g,'').length < 9){
+    if(/[^0-9\-\s]/.test(phone) || !/^01[016789]\d{7,8}$/.test(phone.replace(/[^0-9]/g,''))){
         alert('올바른 연락처를 입력해주세요.'); focusEl(type + '-phone'); return;
     }
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
@@ -2699,7 +2719,9 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
 }
 
 function calculateIllegal(){
-    const area=parseFloat(document.getElementById('illegal-area').value)||0;
+    const area=parseFloat(document.getElementById('illegal-unlawful-area').value)||0;
+    if(area <= 0){ alert('위반(불법) 부분 면적을 입력해주세요.'); focusEl('illegal-unlawful-area'); return false; }
+    if(area > 20000){ alert('위반 면적이 너무 큽니다. 건물 전체가 아니라 위반 부분의 면적을 입력해주세요.'); focusEl('illegal-unlawful-area'); return false; }
     const rf = 1.0;
     
     const items=[
@@ -2786,7 +2808,7 @@ function calculateUsage(){
         permitFee = 용도변경_신고_대행비(totalChangeArea);
         permitLabel = '인허가 대행비 (신고 · 도서 · 보완 포함)';
     } else {
-        permitFee = PRICING.인허가대행비_기재변경;
+        permitFee = 기재변경_대행비(totalChangeArea);
         permitLabel = '인허가 대행비 (기재변경 · 서류 접수 · 보완 포함)';
     }
     
@@ -2885,7 +2907,9 @@ function calculateUsage(){
 }
 
 function calculateRemodel(){
-    const area=parseFloat(document.getElementById('repair-area').value)||0;
+    const area=parseFloat(document.getElementById('repair-work-area').value)||0;
+    if(area <= 0){ alert('공사 면적을 입력해주세요.'); focusEl('repair-work-area'); return false; }
+    if(area > 20000){ alert('공사 면적이 너무 큽니다. 건물 전체가 아니라 공사하는 부분의 면적을 입력해주세요.'); focusEl('repair-work-area'); return false; }
     const rf = 1.0;
     
     let items=[], reviewList=[];
@@ -2978,7 +3002,7 @@ function calculateRecord(){
     const rf = 1.0;
 
     const items = [];
-    items.push({name:'인허가 대행비 (기재사항 변경 신청 · 서류 작성 · 접수 · 보완 포함)', amount: PRICING.인허가대행비_기재변경});
+    items.push({name:'인허가 대행비 (기재사항 변경 신청 · 서류 작성 · 접수 · 보완 포함)', amount: 기재변경_대행비(num('record-area') || correctArea)});
     if(picked.length > 1){
         items.push({name:'추가 변경 항목 ('+(picked.length-1)+'건 × '+formatCurrency(PRICING.기재변경_추가항목)+')', amount:(picked.length-1)*PRICING.기재변경_추가항목});
     }
