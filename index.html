@@ -2746,29 +2746,28 @@ function renderResult(items, subtotal, total, rf, resultId, extraHtml, meta){
     document.getElementById(resultId).innerHTML=html;
 }
 
-// 양성화 유형별 기준 금액 (부가세 포함, 85㎡ 이하 1개동) [CAD 제공, 실측 필요]
-const TF_YANG = {'발코니 확장':[2200000,3300000],'세대분할':[3300000,5500000],'무단증축':[3300000,5500000],'용도변경':[4400000,6600000],'공부상 위반':[2200000,3300000]};
-const YANG_DISCOUNT = 0.85; // 기준 금액 대비 적용 비율
+// 디바이엠 양성화 단가 (부가세 포함, 85㎡ 이하 1개동) [CAD 도면 보유, 도면 없음(실측 포함)]
+const YANG_PRICE = {'발코니 확장':[1900000,2800000],'세대분할':[2800000,4700000],'무단증축':[2800000,4700000],'용도변경':[3700000,5600000],'공부상 위반':[1900000,2800000]};
 function calculateIllegal(){
     const area=parseFloat(document.getElementById('illegal-unlawful-area').value)||0;
     if(area <= 0){ alert('위반(불법) 부분 면적을 입력해주세요.'); focusEl('illegal-unlawful-area'); return false; }
     if(area > 20000){ alert('위반 면적이 너무 큽니다. 건물 전체가 아니라 위반 부분의 면적을 입력해주세요.'); focusEl('illegal-unlawful-area'); return false; }
-    const kind = TF_YANG[STATE.illegalViolation] ? STATE.illegalViolation : '무단증축';
+    const kind = YANG_PRICE[STATE.illegalViolation] ? STATE.illegalViolation : '무단증축';
     const drawEl = document.getElementById('illegal-drawing'), draw = drawEl ? drawEl.value : 'cad';
     const ck = id => { const e=document.getElementById(id); return !!(e && e.checked); };
     const hos = Math.max(1, parseInt((document.getElementById('illegal-hos')||{}).value)||1);
     const useEl = document.getElementById('illegal-use'), use = useEl ? useEl.value : '';
-    let base = draw==='none' ? TF_YANG[kind][1] : (draw==='pdf' ? Math.round(TF_YANG[kind][0]*1.25) : TF_YANG[kind][0]);
+    let base = draw==='none' ? YANG_PRICE[kind][1] : (draw==='pdf' ? Math.round(YANG_PRICE[kind][0]*1.25) : YANG_PRICE[kind][0]);
     const adds = [];
     if(ck('illegal-multi')) adds.push({name:'복합위반 가산 (최고 유형 기준 +25%)', amount:base*0.25});
     if(ck('illegal-sun')) adds.push({name:'일조권 위반 가산 (+20%)', amount:base*0.2});
-    if(hos>1) adds.push({name:'호별 도면 추가 ('+(hos-1)+'호)', amount:(hos-1)*450000});
+    if(hos>1) adds.push({name:'호별 도면 추가 ('+(hos-1)+'호)', amount:(hos-1)*400000});
     if(area>85) adds.push({name:'85㎡ 초과 면적 가산 ('+Math.round(area-85)+'㎡ 초과분)', amount:(area-85)*11000});
     const ref = base + adds.reduce((x,i)=>x+i.amount,0);
     const W=[['현장조사 및 실측',1.5],['위반사항 도면작성 CAD',1.5],['법규검토 및 서류 구비',1],['인허가 접수 및 심의대응',1],['건축물대장 작성',1]];
-    const items = W.map(w=>({name:w[0]+(draw==='none'&&w[0].indexOf('실측')>=0?' (도면이 없어 실측 포함)':''), amount:Math.round(base*w[1]/6*YANG_DISCOUNT)}))
-        .concat(adds.map(i=>({name:i.name, amount:Math.round(i.amount*YANG_DISCOUNT)})));
-    items[4].amount += Math.round(base*YANG_DISCOUNT) - items.slice(0,5).reduce((x,i)=>x+i.amount,0); // 단수 보정
+    const items = W.map(w=>({name:w[0]+(draw==='none'&&w[0].indexOf('실측')>=0?' (도면이 없어 실측 포함)':''), amount:Math.round(base*w[1]/6/10000)*10000}))
+        .concat(adds.map(i=>({name:i.name, amount:Math.round(i.amount)})));
+    items[4].amount += base - items.slice(0,5).reduce((x,i)=>x+i.amount,0); // 단수 보정
     const sub=items.reduce((s,i)=>s+i.amount,0);
     let extra='<div class="info-box" style="background:#f0f7ff;border-left:3px solid #001780;"><strong style="color:#001780;">이 금액은 이렇게 봐주세요</strong><br>· 입력하신 조건으로 계산한 <b>예상 견적(참고용)</b>입니다. 비슷한 사례의 일반적인 범위를 보여드립니다.<br>· 실제 비용은 <b>현장 상태, 도면 유무, 법규 검토 결과</b>에 따라 달라질 수 있습니다.<br>· 정확한 견적은 <b>건축사가 현장과 서류를 확인한 뒤</b> 안내드리며, 상담은 무료입니다.</div>';
     const lim={'단독주택':[165,'연면적 165㎡'],'다가구주택':[660,'연면적 660㎡'],'다세대(빌라)':[85,'세대당 전용 85㎡']}[use];
