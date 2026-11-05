@@ -8,6 +8,10 @@ html[data-theme=dark] .pfc{background:var(--dk1);border-color:var(--dk3)}html[da
 .pick:not(.main) .pk-ic{background:var(--bg2,rgba(127,127,127,.12));color:var(--ink2)}
 .pick .pk-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.pick b{font-size:16.5px}.pick b em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:2px}
 .pick small{font-size:13px;color:var(--muted)}.pk-pts{display:flex;flex-direction:column;gap:3px;margin-top:4px}.pk-pts i{font-style:normal;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;gap:5px}.pk-pts i svg{color:var(--acc)}
+.acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:28px}.acc>summary::-webkit-details-marker{display:none}
+.acc>summary h3{flex:1;margin:0!important;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.acc .acc-ch{flex:none;color:var(--muted);display:flex;transform:rotate(90deg);transition:transform .2s}.acc[open] .acc-ch{transform:rotate(-90deg)}
+.acc[open]>summary{margin-bottom:12px}.acc-n{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}.acc-n.w{color:#fff;background:#d97706;border-radius:99px;padding:1px 7px}
+.acc-hint{font-size:12.5px;color:var(--muted);text-align:center;margin:2px 0 -4px}
 </style></head><body>
 <title>건축ON 앱 시안 (테스트)</title><meta name="robots" content="noindex,nofollow">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2127,20 +2131,21 @@ function vResult(){
   let h = header({title:t.name+(r.noPrice?' 검토 요청':' AI 예상 비용')}) + `<main class="wrap view">
     ${S.reqDone?`<div class="note"><span>${ic('check',16,2.5)} <b>건축사 제안 요청을 보냈어요.</b> 아래는 참고용 AI 예상 비용이에요. 실제 견적은 건축사 제안으로 받아요.</span></div>`:''}
     ${t.cat!=='permit'?`<div class="beta-note sm"><span><b><i class="beta">BETA</i> ${CATS[t.cat].name}은 준비 중인 서비스예요</b><small>예상 비용은 참고용이며 상담은 건축사가 직접 도와드려요.</small></span></div>`:''}
-    <section class="sec"><h3>${hic('list')}선택한 서비스 · 입력 조건</h3><p style="margin:0 0 8px;font-weight:800">${CATS[t.cat].name} · ${t.name}</p>
+    <details class="sec acc"><summary><h3>${hic('list')}입력 조건 <small class="acc-n">${esc(t.name)} · ${conds.length}개</small></h3><span class="acc-ch">${ic('chev',18)}</span></summary><p style="margin:0 0 8px;font-weight:800">${CATS[t.cat].name} · ${t.name}</p>
       <dl class="cond">${conds.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>
       ${(S.photos||[]).length?`<p class="help" style="margin-top:6px">현장 사진 ${S.photos.length}장 첨부</p>`:''}
-      <button class="btn line sm" data-act="back" style="margin-top:10px">${ic('back',16)} 조건 수정하기</button></section>
+      <button class="btn line sm" data-act="back" style="margin-top:10px">${ic('back',16)} 조건 수정하기</button></details>
     ${miss.length?`<section class="sec"><h3>${hic('alert')}예상 비용을 계산하려면 추가 정보가 필요해요</h3><p class="help" style="font-size:13px">${miss.map(esc).join(', ')} 값이 없어 금액을 표시하지 않았어요. 조건을 보완하거나 건축사 검토를 요청해 주세요.</p></section>`:''}
     ${miss.length?'':`<div class="dark"><span class="pill" style="background:${toneBg};color:${toneFg};font-size:13px;padding:7px 14px">${esc(r.badge)}</span>
       <div class="k" style="margin-top:14px">${r.noPrice?'비용 산정 전':'AI 예상 비용 · 참고용'}</div>
       ${r.noPrice?'<div class="amt" style="font-size:19px">이 요청은 자동 계산하지 않아요<br>건축사가 상황을 보고 절차와 비용을 안내해요</div>':`<div class="amt">${r.fixed?won(r.total):`${man(r.lo)}<span> ~ ${man(r.hi)}원</span>`}</div>`}
       <div style="font-size:12.5px;color:rgba(255,255,255,.7);margin-top:6px">${esc(r.sub||'')}</div>
       <div class="meta"><div><small>${ic('clock',12)} 소요기간</small><b>${r.period}</b></div><div><small>${t.cat==='int'?'평당':'행정유형'}</small><b>${t.cat==='int'&&r.perPy?man(r.total/r.perPy)+'원':r.adm}</b></div></div></div>`}
+    ${miss.length||r.noPrice?'':'<p class="acc-hint">아래 항목을 누르면 자세한 내용이 펼쳐져요</p>'}
     ${r.noPrice&&(S.vals.memo||'').trim()?`<section class="sec"><h3>${hic('doc')}상황 요약</h3><p style="margin:0;white-space:pre-wrap;font-size:14px;line-height:1.65">${esc(S.vals.memo)}</p></section>`:''}
-    ${S.reqSelf?`<section class="sec"><h3>${hic('list')}함께 전달할 사전 점검 요약</h3><p style="margin:0;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(S.reqSelf.text)}</p></section>`:''}`;
+    ${S.reqSelf?`<details class="sec acc"><summary><h3>${hic('list')}함께 전달할 사전 점검 요약</h3><span class="acc-ch">${ic('chev',18)}</span></summary><p style="margin:0;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(S.reqSelf.text)}</p></details>`:''}`;
   if(r.scale){ const s=r.scale, side=Math.sqrt(s.z[0]/100)*100;
-    h+=`<section class="sec"><h3>${hic('ruler')}규모 검토 결과</h3>
+    h+=`<details class="sec acc" open><summary><h3>${hic('ruler')}규모 검토 결과</h3><span class="acc-ch">${ic('chev',18)}</span></summary>
       <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center">
         <div class="site" style="width:150px" role="img" aria-label="대지 대비 건축면적 ${s.z[0]}%"><span>대지 ${Math.round(s.s)}㎡</span><div class="bld" style="width:${side}%;height:${side}%"></div></div>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -2149,22 +2154,22 @@ function vResult(){
           <div><small class="help">예상 층수</small><div style="font-size:19px;font-weight:900;color:var(--acc)">약 ${s.fl}개 층</div></div>
           ${s.units?`<div><small class="help">전용 59㎡ 기준</small><div style="font-size:19px;font-weight:900;color:var(--acc)">약 ${s.units}세대</div></div>`:''}
         </div></div>
-      <p class="help" style="margin-top:12px">일조권·주차·도로 사선을 반영하면 실제 규모는 보통 이보다 줄어듭니다 (참고용).</p></section>`; }
-  if(r.bars){ h+=`<section class="sec"><h3>${hic('bld')}용적률 여유</h3><div class="bars">${r.bars.map(b=>`<div class="barrow"><span style="color:var(--ink2)">${b.l}</span><div class="tr"><div class="fl" style="width:${Math.min(100,b.v/b.max*100)}%;${b.l==='증축 후'&&b.v>r.bars[0].v?'background:#d92d20':''}"></div></div><b>${Math.round(b.v)}${r.barUnit}</b></div>`).join('')}</div></section>`; }
-  if(r.items.length && !miss.length){ h+=`<section class="sec"><h3>${hic('coin')}${t.cat==='int'?'항목별 공사비':'AI 예상 비용 내역'}</h3><div class="items">${r.items.map(i=>`<div class="it"><span class="ii">${ic(itemIcon(i[0]),18)}</span><div class="n">${esc(i[0])}${i[2]?`<small>${esc(i[2])}</small>`:''}</div><div class="a">약 ${man(i[1])}원</div></div>`).join('')}</div>
-    <div class="total"><span>${r.fixed?'검토비':(r.vat?'합계 (부가세 포함)':'합계 (기준가)')}</span><b>${r.fixed?won(r.total):man(r.lo)+' ~ '+man(r.hi)+'원'}</b></div><p class="help" style="margin-top:8px">항목 금액은 대략적인 값이에요. 실제 견적은 건축사가 현장 확인 후 안내드려요.</p></section>`;
+      <p class="help" style="margin-top:12px">일조권·주차·도로 사선을 반영하면 실제 규모는 보통 이보다 줄어듭니다 (참고용).</p></details>`; }
+  if(r.bars){ h+=`<details class="sec acc"><summary><h3>${hic('bld')}용적률 여유</h3><span class="acc-ch">${ic('chev',18)}</span></summary><div class="bars">${r.bars.map(b=>`<div class="barrow"><span style="color:var(--ink2)">${b.l}</span><div class="tr"><div class="fl" style="width:${Math.min(100,b.v/b.max*100)}%;${b.l==='증축 후'&&b.v>r.bars[0].v?'background:#d92d20':''}"></div></div><b>${Math.round(b.v)}${r.barUnit}</b></div>`).join('')}</div></details>`; }
+  if(r.items.length && !miss.length){ h+=`<details class="sec acc"><summary><h3>${hic('coin')}${t.cat==='int'?'항목별 공사비':'AI 예상 비용 내역'} <small class="acc-n">${r.items.length}개 항목</small></h3><span class="acc-ch">${ic('chev',18)}</span></summary><div class="items">${r.items.map(i=>`<div class="it"><span class="ii">${ic(itemIcon(i[0]),18)}</span><div class="n">${esc(i[0])}${i[2]?`<small>${esc(i[2])}</small>`:''}</div><div class="a">약 ${man(i[1])}원</div></div>`).join('')}</div>
+    <div class="total"><span>${r.fixed?'검토비':(r.vat?'합계 (부가세 포함)':'합계 (기준가)')}</span><b>${r.fixed?won(r.total):man(r.lo)+' ~ '+man(r.hi)+'원'}</b></div><p class="help" style="margin-top:8px">항목 금액은 대략적인 값이에요. 실제 견적은 건축사가 현장 확인 후 안내드려요.</p></details>`;
     if(t.cat==='int'){ const mx=Math.max(...r.items.map(i=>i[1])); const top=r.items.slice().sort((a,b)=>b[1]-a[1]).slice(0,5);
-      h+=`<section class="sec"><h3>${hic('chart')}어디에 많이 드나</h3><div class="bars">${top.map(i=>`<div class="barrow"><span style="color:var(--ink2)">${esc(i[0]).slice(0,6)}</span><div class="tr"><div class="fl" style="width:${i[1]/mx*100}%"></div></div><b>${man(i[1])}</b></div>`).join('')}</div></section>`; } }
-  if(!r.noPrice && !miss.length) h+=`<section class="sec"><h3>${hic('bulb')}이 금액은 이렇게 봐주세요</h3><ul class="chk">
+      h+=`<details class="sec acc"><summary><h3>${hic('chart')}어디에 많이 드나</h3><span class="acc-ch">${ic('chev',18)}</span></summary><div class="bars">${top.map(i=>`<div class="barrow"><span style="color:var(--ink2)">${esc(i[0]).slice(0,6)}</span><div class="tr"><div class="fl" style="width:${i[1]/mx*100}%"></div></div><b>${man(i[1])}</b></div>`).join('')}</div></details>`; } }
+  if(!r.noPrice && !miss.length) h+=`<details class="sec acc"><summary><h3>${hic('bulb')}이 금액은 이렇게 봐주세요</h3><span class="acc-ch">${ic('chev',18)}</span></summary><ul class="chk">
     <li>${ic('check',18,2.5)}<span>입력하신 조건으로 자동 계산한 <b>AI 예상 비용(참고용)</b>이에요. 건축사가 보낸 실제 제안이 아니에요. 비슷한 사례의 일반적인 범위를 보여드려요.</span></li>
     <li>${ic('check',18,2.5)}<span>실제 비용은 <b>현장 상태, 도면 유무, 법규 검토 결과</b>에 따라 달라질 수 있어요. 더 낮아질 수도, 높아질 수도 있어요.</span></li>
-    <li>${ic('check',18,2.5)}<span>정확한 견적은 <b>건축사가 현장과 서류를 확인한 뒤</b> 직접 제안드려요. 제안을 받아도 계약 의무는 없어요.</span></li></ul></section>`;
+    <li>${ic('check',18,2.5)}<span>정확한 견적은 <b>건축사가 현장과 서류를 확인한 뒤</b> 직접 제안드려요. 제안을 받아도 계약 의무는 없어요.</span></li></ul></details>`;
   if(r.unk && r.unk.length) h+=`<div class="note warn"><span>${ic('alert',16)} <b>건축사 상담으로 정할 항목 ${r.unk.length}개</b> (${esc(r.unk.join(', '))})가 있어 견적 범위를 넓게 잡았어요. 이 견적은 참고용이며 정확한 금액은 알 수 없어요. <b>실제 견적은 건축사 상담 후 확정</b>됩니다.</span></div>`;
-  if((S.note||'').trim()) h+=`<section class="sec"><h3>${hic('doc')}내가 남긴 특이사항</h3><p style="margin:0;font-size:14px;line-height:1.65;white-space:pre-wrap">${esc(S.note)}</p><p class="help" style="margin-top:6px">상담할 건축사에게 함께 전달돼요</p></section>`;
-  if(r.warns && r.warns.length) h+=`<section class="sec"><h3>${hic('alert')}꼭 확인할 점</h3><ul class="chk">${r.warns.map(w=>`<li class="w">${ic('alert',18)}<span>${esc(w)}</span></li>`).join('')}</ul></section>`;
-  h+=`<section class="sec"><h3>${hic('check')}${t.cat==='int'?'공사 전 체크':(r.noPrice?'제안에 포함될 내용':'견적에 포함된 검토')}</h3><ul class="chk">${r.checks.map(w=>`<li>${ic('check',18,2.5)}<span>${esc(w)}</span></li>`).join('')}</ul>
-    ${r.extra?`<div class="note" style="margin-top:14px"><span><b>별도 비용</b><br>${r.extra.map(esc).join('<br>')}</span></div>`:''}</section>`;
-  if(r.rel && r.rel.length) h+=`<section class="sec"><h3>${hic('link')}함께 확인하면 좋은 견적</h3><div class="links">${[...new Set(r.rel)].filter(k=>TYPES[k]&&k!==S.type).map(k=>`<button class="rel" data-act="type" data-k="${k}">${ic(TYPES[k].icon,20)}<span>${TYPES[k].name} 견적 보기</span>${ic('chev',18)}</button>`).join('')}</div></section>`;
+  if((S.note||'').trim()) h+=`<details class="sec acc"><summary><h3>${hic('doc')}내가 남긴 특이사항</h3><span class="acc-ch">${ic('chev',18)}</span></summary><p style="margin:0;font-size:14px;line-height:1.65;white-space:pre-wrap">${esc(S.note)}</p><p class="help" style="margin-top:6px">상담할 건축사에게 함께 전달돼요</p></details>`;
+  if(r.warns && r.warns.length) h+=`<details class="sec acc"><summary><h3>${hic('alert')}꼭 확인할 점 <small class="acc-n w">${r.warns.length}</small></h3><span class="acc-ch">${ic('chev',18)}</span></summary><ul class="chk">${r.warns.map(w=>`<li class="w">${ic('alert',18)}<span>${esc(w)}</span></li>`).join('')}</ul></details>`;
+  h+=`<details class="sec acc"${r.noPrice?' open':''}><summary><h3>${hic('check')}${t.cat==='int'?'공사 전 체크':(r.noPrice?'제안에 포함될 내용':'견적에 포함된 검토')}</h3><span class="acc-ch">${ic('chev',18)}</span></summary><ul class="chk">${r.checks.map(w=>`<li>${ic('check',18,2.5)}<span>${esc(w)}</span></li>`).join('')}</ul>
+    ${r.extra?`<div class="note" style="margin-top:14px"><span><b>별도 비용</b><br>${r.extra.map(esc).join('<br>')}</span></div>`:''}</details>`;
+  if(r.rel && r.rel.length) h+=`<details class="sec acc"><summary><h3>${hic('link')}함께 확인하면 좋은 견적</h3><span class="acc-ch">${ic('chev',18)}</span></summary><div class="links">${[...new Set(r.rel)].filter(k=>TYPES[k]&&k!==S.type).map(k=>`<button class="rel" data-act="type" data-k="${k}">${ic(TYPES[k].icon,20)}<span>${TYPES[k].name} 견적 보기</span>${ic('chev',18)}</button>`).join('')}</div></details>`;
   h+=`<div class="note"><span>${ic('alert',16)} 규모 검토·현장 조사·도면 검토 등 <b>본격적인 진행 단계에서는 별도 검토 비용</b>이 발생할 수 있어요. 제안 받기와 첫 상담은 무료입니다.</span></div>
   <button class="btn" data-act="submit">${ic('users',18)} ${S.reqDone?'요청 내용 다시 보기':'이 조건으로 건축사 제안도 받기 (무료)'}</button>
   ${S.reqDone?'':'<p class="help" style="text-align:center;margin-top:-6px">지금까지는 아무 정보도 전달되지 않았어요. 제안을 원하실 때만 연락처를 받아요.</p>'}
