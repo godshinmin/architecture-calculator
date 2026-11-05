@@ -2342,8 +2342,9 @@ function vPitches(){
       <div style="font-size:17px;font-weight:800;margin-top:4px">${t.name} · ${esc(l.sub||'')}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px">${dots(nReal)}<span style="font-size:13px;font-weight:700;white-space:nowrap">${nReal}/5 도착</span></div></div>
     ${aiCard(l)}
-    ${nReal?real.map(realCard).join(''):`<section class="sec" style="text-align:center"><p class="help">아직 도착한 제안이 없어요.<br>(시연: 파트너 화면에서 이 요청에 제안하면 여기에 나타나요)</p></section>`}
+    ${nReal?real.map(realCard).join(''):`<section class="sec" style="text-align:center"><p class="help">아직 도착한 제안이 없어요.</p>${l&&!l.ended&&!l.closed?`<button class="btn acc sm" data-act="demoPitches" style="margin-top:12px">${ic('users',18)} 시연: 사무소 제안 받아보기</button><p class="help" style="margin-top:6px">이 지역을 받는 시연 사무소들이 실제 규칙(코인 차감·최대 5곳)대로 제안을 보내요</p>`:''}</section>`}
     ${S.cust?`<p class="help" style="text-align:center">${S.cust.via==='kakao'?'카카오':'전화번호'}로 로그인됨 · ${esc(S.cust.name)} <button class="lnk" data-act="custLogout">로그아웃 (시연)</button></p>`:''}
+    ${l&&nReal&&nReal<5&&!l.ended&&!l.closed&&DB.partners.some(pa=>pa.on&&!l.props.some(x=>x.partnerId===pa.id)&&reqMatchesPartner(l.region,pa))?'<button class="btn line sm" data-act="demoPitches">시연: 다른 사무소 제안 더 받기</button>':''}
     <p class="help" style="text-align:center">'상담하기'를 누른 사무소에만 이름·연락처가 전달돼요. 열어보기만 해서는 전달되지 않아요. 여러 곳을 골라도 괜찮아요.</p>
     ${l.closed||l.ended?'':`<button class="btn line sm" data-act="closeReq">새 제안 받기 마감</button><p class="help" style="text-align:center;margin-top:-4px">새 사무소의 제안만 막아요. 이미 받은 제안·선택한 사무소와의 상담은 계속돼요.</p>`}`:''}
     ${l&&nReal?'':`<div class="note warn" style="margin-top:8px"><span><b>예시 화면이에요</b> · 아래 제안은 실제로 도착한 것이 아니라, 정식 오픈 후 화면을 보여주는 예시예요.</span></div>
@@ -3089,6 +3090,9 @@ function demoBar(){ const cur=demoRole(), R=[['cust','고객','요청서 작성 
 const DEMO_KEY='kon_demo_v1';
 function demoData(noPhotos){ return {v:1, seq:DB.seq, pseq:DB.pseq, grants:[...DB.grants], leads:noPhotos?DB.leads.map(l=>Object.assign({},l,{photos:[]})):DB.leads, partners:DB.partners.map(p=>{ const o=Object.assign({},p); delete o.logo; return o; }), buys:DB.buys||[], apps:DB.apps, adminReq:DB.adminReq, samples:archSamples().map(x=>({id:x.id, props:x.props})), sess:{myReqs:S.myReqs||[], cust:S.cust||null}}; }
 let saveDemo; saveDemo=function(){ clearTimeout(saveDemo._t); saveDemo._t=setTimeout(()=>{ try{ localStorage.setItem(DEMO_KEY, JSON.stringify(demoData(false))); }catch(e){ try{ localStorage.setItem(DEMO_KEY, JSON.stringify(demoData(true))); }catch(e2){} } }, 250); };
+function ensureDemoPartners(){ if(!DEMO) return; const base=DB.partners.find(p=>p.id==='p2'); if(!base) return;
+  [['p6','C건축사사무소','박OO','서울 전역','서울 마포구',['서울'],'민원·용도변경 위주로 서울 전역 진행합니다.'],['p7','D건축사사무소','정OO','전국','경기 성남시',['전국'],'전국 인허가 대응 · 비대면 상담 가능합니다.']].forEach(([id,name,ceo,region,office,areas,intro])=>{ if(DB.partners.some(p=>p.id===id)) return;
+    const o=JSON.parse(JSON.stringify(base)); delete o.logo; Object.assign(o,{id,name,ceo,region,office,areas,intro,credit:20,sent:0,on:true,coinLog:[],portfolio:[],demoExtra:true}); DB.partners.push(o); }); }
 function loadDemo(){ try{ const d=JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); if(!d||typeof d!=='object'||d.v!==1) return;
   ['leads','partners','buys','apps','adminReq'].forEach(k=>{ if(Array.isArray(d[k])) DB[k]=d[k].filter(x=>x&&typeof x==='object'); });
   if(Number.isFinite(+d.seq)) DB.seq=+d.seq; if(Number.isFinite(+d.pseq)) DB.pseq=+d.pseq; if(Array.isArray(d.grants)) DB.grants=new Set(d.grants.map(String));
@@ -3149,6 +3153,11 @@ document.addEventListener('click', e=>{
   else if(a==='addrClear'){ S.addr=false; S.addrText=''; S.addrTyping=''; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
   else if(a==='result'){ const ty=(S.addrTyping||'').trim(); if(ty.length>=4 && (!S.addr || ty!==S.addrText)){ S.addr=true; S.addrText=ty; } S.addrEdit=false; const rr=compute(); if(rr.noPrice||S.reqDone) go('result'); else go('choose'); }
   else if(a==='aiOnly'){ go('result'); }
+  else if(a==='demoPitches'){ const id=S.viewReq||S.reqId, l=(S.myReqs||[]).includes(id)?leadOf(id):null; if(!l){ toast('요청을 찾을 수 없어요'); return; }
+    const base=l.brief&&!l.brief.noPrice&&l.brief.lo?(l.brief.lo+l.brief.hi)/2:1500000; const F=[[.95,1.05,'4주','요청서 기준으로 진행 가능합니다. 도면 확인 후 바로 착수할게요.'],[1.08,1.2,'3주','보완 요청이 나올 부분까지 미리 반영해 여유 있게 잡았습니다.'],[.85,.85,'2주','기존 도면이 있으면 이 금액으로 빠르게 처리 가능합니다.'],[1,1.12,'5주','현장 확인 후 정확한 범위를 다시 안내드리겠습니다.'],[.9,1,'4주','비슷한 사례를 여러 번 진행했습니다.']];
+    const cand=DB.partners.filter(pa=>pa.on&&!l.props.some(x=>x.partnerId===pa.id)&&reqMatchesPartner(l.region,pa)); let n=0, last='';
+    for(const pa of cand){ if(l.props.length>=5||n>=3) break; const f=F[l.props.length%F.length], lo=Math.max(10,Math.round(base*f[0]/1e4)), hi=Math.max(lo,Math.round(base*f[1]/1e4)); const res=createProposal(l.id, pa.id, {p1:String(lo), p2:hi>lo?String(hi):'', period:f[2], comment:f[3], reason:GAP_REASONS[0]}); if(res.ok) n++; else last=res.err; }
+    render(); toast(n?('시연 사무소 '+n+'곳이 제안을 보냈어요 · 열어보면 코인 사용 확정'):(last||'이 지역을 받는 시연 사무소가 더 없어요')); }
   else if(a==='demoReset'){ if(!b.dataset.ok){ b.dataset.ok='1'; b.textContent='한 번 더 누르면 모든 시연 요청·제안·코인이 처음으로 돌아가요'; return; } try{ localStorage.removeItem(DEMO_KEY); }catch(e){} clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); }
   else if(a==='cmode'){ S.cmode=b.dataset.m; if(S.cmode==='kakao'&&!S.cust){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; toast('카카오 계정 정보로 채웠어요 (시연)'); } if(S.cmode==='direct'&&S.cust&&S.cust.via==='kakao'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } } const y=window.scrollY; render(); window.scrollTo(0,y); if(S.cmode==='direct'){ const el=document.getElementById('gn'); if(el) el.focus(); } }
   else if(a==='addrEdit'){ S.addrEdit=true; S.addrTyping=S.addrText; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
@@ -3301,7 +3310,7 @@ document.addEventListener('change', e=>{ const d=e.target.dataset||{}; if(d.rq &
   if(e.target.dataset && e.target.dataset.js){ S.js[e.target.dataset.js]=e.target.value; return; } if(e.target.id==='ph' && e.target.files.length){ addPhotos(e.target.files); e.target.value=''; return; }
   if(e.target.id==='plogo' && e.target.files[0]){ const pid=e.target.dataset.id; loadImageFile(e.target.files[0],300,'image/png',1,(err,url)=>{ if(err){ toast(err); return; } const p=DB.partners.find(x=>x.id===pid); if(!p) return; p.logo=url; toast(savePLogos()?'로고를 올렸어요':'저장 공간이 부족해요'); render(); }); e.target.value=''; return; }
   if(e.target.id==='adimg' && e.target.files[0]){ loadImageFile(e.target.files[0],700,'image/webp',.85,(err,url)=>{ if(err){ toast(err); return; } S.cfg.ad.img=url; toast(saveCfg()?'모델 이미지를 넣었어요':'이미지가 너무 커서 저장은 안 됐어요'); render(); }); e.target.value=''; return; } if(e.target.id==='lg' && e.target.files.length){ addLogoFiles([...e.target.files]); return; } if(e.target.id==='ph'){ const n=e.target.files.length; document.getElementById('phn').textContent = n? `사진 ${n}장 선택됨`:'사진이 있으면 제안이 더 정확해져요'; } });
-S.cfg = loadCfg(); loadDemo(); loadPLogos(); try{ S.unitPy=localStorage.getItem('kon_unit')==='p'; }catch(_){}
+S.cfg = loadCfg(); loadDemo(); ensureDemoPartners(); loadPLogos(); try{ S.unitPy=localStorage.getItem('kon_unit')==='p'; }catch(_){}
 (function(){ let up=[], cleared=false; try{ up=JSON.parse(localStorage.getItem('kon_logos')||'[]')||[]; cleared=localStorage.getItem('kon_logos_cleared')==='1'; }catch(e){} S.logos=(cleared?[]:SAMPLE_LOGOS.slice()).concat(up); })();
 (function splash(){
   const el=document.getElementById('splash'); if(!el) return;
