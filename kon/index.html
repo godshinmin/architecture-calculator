@@ -1830,7 +1830,7 @@ function effVals(){
     if(isU){ unk.push(f.label.replace(/ \(알면\)/,'')); o[f.id] = Array.isArray(f.def) ? f.def.filter(x=>x!==UNK) : f.def; } });
   return {o, unk};
 }
-function needInfo(){ const t=TYPES[S.type]; return t.fields.filter(f=>f.type==='num'&&f.unit==='㎡'&&!(f.help||'').includes('0이면')).filter(f=>(S.unk&&S.unk[f.id])||!(+S.vals[f.id]>0)).map(f=>f.label); }
+function needInfo(){ const t=TYPES[S.type]; return t.fields.filter(f=>f.type==='num'&&f.unit==='㎡'&&!(f.help||'').includes('0이면')&&!(typeof f.show==='function'&&!f.show(S.vals))).filter(f=>(S.unk&&S.unk[f.id])||!(+S.vals[f.id]>0)).map(f=>f.label); }
 function compute(){ const t=TYPES[S.type], e=effVals(); const r=t.calc(e.o); r.unk=e.unk; const mul=1+((S.cfg&&S.cfg.mult[S.type])||0)/100; if(mul!==1) r.items.forEach(i=>i[1]*=mul); const w=e.unk.length?1:0; r.total=r.items.reduce((s,i)=>s+i[1],0); r.lo=r.fixed?r.total:r.total*(w?0.8:0.9); r.hi=r.fixed?r.total:r.total*(w?1.2:1.1); return r; }
 function fakePhone(d){
   if(!/^01[016789]\d{7,8}$/.test(d)) return true;
