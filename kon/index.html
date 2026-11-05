@@ -12,6 +12,10 @@ html[data-theme=dark] .pfc{background:var(--dk1);border-color:var(--dk3)}html[da
 .acc>summary h3{flex:1;margin:0!important;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.acc .acc-ch{flex:none;color:var(--muted);display:flex;transform:rotate(90deg);transition:transform .2s}.acc[open] .acc-ch{transform:rotate(-90deg)}
 .acc[open]>summary{margin-bottom:12px}.acc-n{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}.acc-n.w{color:#fff;background:#d97706;border-radius:99px;padding:1px 7px}
 .acc-hint{font-size:12.5px;color:var(--muted);text-align:center;margin:2px 0 -4px}
+.ro{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--p-ll);border:1px solid var(--p-l2)}.ro>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.ro b{font-size:14.5px;word-break:keep-all}.ro small{font-size:12px;color:var(--muted)}.ro .opt{flex:none;min-height:34px;padding:0 12px;font-size:13px}
+html[data-theme=dark] .ro{background:var(--dk2);border-color:var(--dk3)}
+.or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;font-size:12px;color:var(--muted)}.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.lnk{background:none;border:0;padding:0 2px;color:var(--acc);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 </style></head><body>
 <title>건축ON 앱 시안 (테스트)</title><meta name="robots" content="noindex,nofollow">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1802,7 +1806,7 @@ const S = {cat:'permit', view:'home', type:null, vals:{}, est:null, addr:false, 
   ],
   selfType:null, selfAns:{}, adm:{ok:false, tab:'dash'}, sel:{}, cfg:null};
 function defaults(t){ const o={}; TYPES[t].fields.forEach(f=>{ o[f.id] = Array.isArray(f.def)? f.def.slice() : f.def; }); return o; }
-function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
+function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrEdit=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
 /* ---- 화면 이동: 브라우저 history를 단일 기준으로 (인증·개인정보는 history.state에 넣지 않음) ---- */
 let NAVI=0;
 const FLOW_VIEWS=['form','choose','result','gate','done','verify','chat'];
@@ -2220,16 +2224,21 @@ function vBrowse(){
   </div>`;
 }
 function vGate(){
-  const t=TYPES[S.type], r=S.est||compute(), q=S.req||(S.req={name:'',phone:'',consent:false,mkt:false});
+  const t=TYPES[S.type], r=S.est||compute(), q=S.req||(S.req={name:'',phone:'',consent:false,mkt:false}); if(S.cust){ q.name=S.cust.name; q.phone=S.cust.phone; }
   const items=['이름, 연락처', `${t.name} 요청 조건 ${t.fields.length}개 항목`].concat((S.photos||[]).length?[`현장 사진 ${S.photos.length}장`]:[]).concat((S.note||S.vals.memo||'').trim()?['특이사항·상황 설명']:[]).concat(S.reqSelf?['사전 점검 요약']:[]).concat(r.noPrice||needInfo().length?[]:['AI 예상 비용 범위']);
   return header({title:'건축사 제안 요청'}) + `<main class="wrap view">
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">${t.name} 제안을 요청할게요</h1>
       <p class="help" style="font-size:13.5px;margin-top:6px">등록 건축사사무소에 요청서를 보내 <b>최대 5곳</b>까지 제안을 받을 수 있어요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p></section>
     <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 화면 안에서만 저장돼요.</span></div>
-    <section class="sec"><h3>${hic('pin')}건물 위치 *</h3>${addrBox(TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 지번':'건물 주소')}${S.addr?'':'<p class="help" style="margin-top:6px;color:#b54708;font-weight:700">건축사 제안을 받으려면 주소를 적고 확인을 눌러주세요</p>'}</section>
+    <section class="sec"><h3>${hic('pin')}${TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 위치':'건물 위치'} *</h3>${S.addr&&!S.addrEdit?`<div class="ro"><span><b>${esc(S.addrText)}</b><small>앞에서 입력한 주소로 보내요 · 사무소에는 ${esc(addrRegion(S.addrText))}까지만 보여요</small></span><button class="opt" data-act="addrEdit">변경</button></div>`:addrBox(TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 지번':'건물 주소')+(S.addr?'':'<p class="help" style="margin-top:6px;color:#b54708;font-weight:700">건축사 제안을 받으려면 주소를 적고 확인을 눌러주세요</p>')}</section>
     <section class="sec"><h3>${hic('users')}연락받을 정보</h3>
+      ${S.cust?`<div class="ro"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>${S.cust.via==='kakao'?'카카오 계정으로 로그인됨':'전화번호로 확인됨'} · 받은 제안은 이 계정으로 다시 볼 수 있어요</small></span><button class="opt" data-act="custOut">변경</button></div>`
+      :`<button class="btn kakao" data-act="kakaoLogin">${KAKAO_SVG} 카카오로 간편 입력</button>
+      <p class="help" style="text-align:center;margin-top:6px">카카오 계정의 이름·전화번호로 바로 채워요 · 나중에 카카오 로그인만 하면 받은 제안을 다시 볼 수 있어요</p>
+      <div class="or"><span>또는 직접 입력</span></div>
       <div class="f"><label class="lbl" for="gn">이름 *</label><input id="gn" class="inp" placeholder="홍길동" autocomplete="name" value="${esc(q.name)}" data-rq="name"></div>
-      <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div></section>
+      <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div>
+      <p class="help">제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 확인 링크를 보내드려요</p>`}</section>
     <section class="sec"><h3>${hic('doc')}제출 전 확인: 누구에게 무엇을 보내나요</h3>
       <dl class="cond"><dt>받는 곳</dt><dd>요청 지역·분야에 맞는 건축ON 등록 건축사사무소 (최대 5곳)</dd>
         <dt>보내는 정보</dt><dd>${items.map(esc).join(', ')}</dd>
@@ -2246,6 +2255,19 @@ function vGate(){
   <div class="sbar"><div class="in wrap"><button class="btn acc" data-act="gateGo" style="width:100%" ${q.consent&&!q.busy?'':'disabled'} id="reqSubmit">${q.busy?'저장 중…':q.consent?'건축사 제안 요청 보내기 (시연)':'필수 동의에 체크하면 보낼 수 있어요'}</button></div></div>`;
 }
 function aiCard(l){ if(!l||!l.brief) return ''; const b=l.brief; return `<div class="dark" style="text-align:left;padding:16px"><div style="font-size:12px;color:rgba(255,255,255,.7)">AI 예상 비용 · 참고용</div><b style="display:block;font-size:24px;margin:4px 0">${b.noPrice?'건축사 확인 후 제안':man(b.lo)+' ~ '+man(b.hi)}</b><span style="font-size:12.5px;color:rgba(255,255,255,.75)">${b.noPrice?(b.miss&&b.miss.length?esc(b.miss.join(', '))+' 정보가 없어 금액을 계산하지 않았어요':'상황 설명으로 받은 요청이라 건축사가 직접 금액을 제안해요'):esc(b.badge||'')+(b.period&&b.period!=='-'?' · 예상 기간 '+esc(b.period):'')}</span></div>`; }
+function vFind(){
+  const f=S.find||(S.find={phone:'',sent:false,code:''});
+  return header({title:'내 요청 찾기'}) + `<main class="wrap view">
+    <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">받은 제안을 확인할게요</h1>
+      <p class="help" style="font-size:13.5px;margin-top:6px">요청할 때 쓴 카카오 계정이나 전화번호로 찾을 수 있어요. 카톡·문자로 받은 링크가 있으면 그 링크를 눌러도 바로 열려요.</p></section>
+    <button class="btn kakao" data-act="findKakao">${KAKAO_SVG} 카카오로 로그인</button>
+    <div class="or"><span>또는 전화번호 인증</span></div>
+    <section class="sec">
+      <div class="f"><label class="lbl" for="fp">요청할 때 쓴 전화번호</label><div class="addr"><input id="fp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" value="${esc(f.phone)}"><button data-act="findSend">${f.sent?'다시 받기':'인증번호 받기'}</button></div></div>
+      ${f.sent?`<div class="f"><label class="lbl" for="fc">인증번호 6자리</label><div class="addr"><input id="fc" class="inp" inputmode="numeric" maxlength="6" placeholder="123456"><button data-act="findVerify">확인</button></div><p class="help" style="margin-top:6px">시연: 인증번호는 <b>123456</b> · 실제 문자 발송은 서버 연결 후</p></div>`:''}
+    </section>
+  </main>`;
+}
 function vDone(){
   const t=TYPES[S.type], l=leadOf(S.reqId);
   return header({title:'제안 요청 (시연)'}) + `<main class="wrap view">
@@ -2259,7 +2281,14 @@ function vDone(){
         <dt>사전 점검</dt><dd>${S.reqSelf?esc(S.reqSelf.name):'없음'}</dd>
         <dt>동의</dt><dd>필수 ${S.req&&S.req.consent?'동의':'-'} · 마케팅 ${S.req&&S.req.mkt?'동의':'미동의'}</dd></dl></section>
     ${l&&l.brief&&!l.brief.noPrice?'<button class="btn line sm" data-act="aiOnly">AI 예상 비용 자세히 보기</button>':''}
-    <button class="btn line sm" data-act="toPitches">정식 오픈 후 받은 제안 화면 미리보기 (예시)</button>
+    <div class="atk"><div class="h">${ic('chat',16)} 고객님께 가는 카카오톡 알림 예시</div>[건축ON] ${esc(t.name)} 견적 요청이 접수됐어요.
+건축사 제안이 도착하면 바로 알려드릴게요.
+받은 제안 보기 ▶ kon.kr/r/${esc(l&&l.tok||'xxxxxx')}
+(로그인 없이 바로 열려요 · 본인 전용 링크)
+<button class="atk-btn" data-act="toPitches">▶ 받은 제안 보기</button></div>
+    <section class="sec"><h3>${hic('list')}나중에 다시 보려면</h3><ul class="chk">
+      <li>${ic('check',18,2.5)}<span><b>카톡·문자로 온 링크</b>를 누르면 로그인 없이 바로 열려요</span></li>
+      <li>${ic('check',18,2.5)}<span>건축ON 하단 <b>'받은 견적'</b> → <b>카카오 로그인</b> 또는 <b>전화번호 인증</b>으로 언제든 찾을 수 있어요</span></li></ul></section>
   </main>`;
 }
 function vPitches(){
@@ -2297,6 +2326,7 @@ function vPitches(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px">${dots(nReal)}<span style="font-size:13px;font-weight:700;white-space:nowrap">${nReal}/5 도착</span></div></div>
     ${aiCard(l)}
     ${nReal?real.map(realCard).join(''):`<section class="sec" style="text-align:center"><p class="help">아직 도착한 제안이 없어요.<br>(시연: 파트너 화면에서 이 요청에 제안하면 여기에 나타나요)</p></section>`}
+    ${S.cust?`<p class="help" style="text-align:center">${S.cust.via==='kakao'?'카카오':'전화번호'}로 로그인됨 · ${esc(S.cust.name)} <button class="lnk" data-act="custLogout">로그아웃 (시연)</button></p>`:''}
     <p class="help" style="text-align:center">'상담하기'를 누른 사무소에만 이름·연락처가 전달돼요. 열어보기만 해서는 전달되지 않아요. 여러 곳을 골라도 괜찮아요.</p>
     ${l.closed||l.ended?'':`<button class="btn line sm" data-act="closeReq">새 제안 받기 마감</button><p class="help" style="text-align:center;margin-top:-4px">새 사무소의 제안만 막아요. 이미 받은 제안·선택한 사무소와의 상담은 계속돼요.</p>`}`:''}
     ${l&&nReal?'':`<div class="note warn" style="margin-top:8px"><span><b>예시 화면이에요</b> · 아래 제안은 실제로 도착한 것이 아니라, 정식 오픈 후 화면을 보여주는 예시예요.</span></div>
@@ -2475,16 +2505,16 @@ function submitRequest(){ const q=S.req; if(!q||q.busy||S._submitting) return; c
   if(!q.consent){ toast('필수 동의에 체크해주세요'); return; }
   /* 제출 시점의 요청 데이터를 복사 (이후 다른 업무로 이동해도 섞이지 않게) */
   const t=TYPES[S.type], est=compute(), snap={epoch:S.draftEpoch, idem:'rq'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), type:S.type, sub:est.sub||t.name, std:[est.lo||0,est.hi||0], unk:(est.unk||[]).length, brief:briefCoin(briefNow()),
-    contact:{name:n, phone:ph}, consent:{consult:!!q.consent, marketing:!!q.mkt}, selfSum:S.reqSelf?S.reqSelf.text:'', photos:(S.photos||[]).slice(), note:(S.note||S.vals.memo||'').trim(), region:S.addr?addrRegion(S.addrText):'주소 미입력', addrFull:S.addr?S.addrText:'', src:ATTR.src, kw:ATTR.kw};
+    contact:{name:n, phone:ph}, via:S.cust?S.cust.via:'phone', tok:Math.random().toString(36).slice(2,8), consent:{consult:!!q.consent, marketing:!!q.mkt}, selfSum:S.reqSelf?S.reqSelf.text:'', photos:(S.photos||[]).slice(), note:(S.note||S.vals.memo||'').trim(), region:S.addr?addrRegion(S.addrText):'주소 미입력', addrFull:S.addr?S.addrText:'', src:ATTR.src, kw:ATTR.kw};
   q.busy=true; S._submitting=true; render();
   setTimeout(()=>{ let id; try{ id=addLeadFrom(snap); }catch(err){ S._submitting=false; q.busy=false; render(); toast('저장하지 못했어요 · 입력 내용은 그대로예요. 다시 눌러주세요'); return; }
     S._submitting=false; q.busy=false;
-    S.myReqs=(S.myReqs||[]).concat(id);
+    S.myReqs=(S.myReqs||[]).concat(id); if(!S.cust) S.cust={via:'phone', name:snap.contact.name, phone:snap.contact.phone};
     if(S.draftEpoch===snap.epoch){ S.reqId=id; S.viewReq=id; S.reqDone=true; S.contact=snap.contact; if(S.view==='gate') go('done',{},true); else { render(); toast('요청을 저장했어요 (시연)'); } }
     else toast('이전 요청을 저장했어요 (시연)');
   }, 400); }
 function addLeadFrom(snap){ const ex=DB.leads.find(l=>l.idem===snap.idem); if(ex) return ex.id; const id=DB.seq++;
-  DB.leads.unshift({id, idem:snap.idem, at:nowStr(), name:snap.contact.name, phone:snap.contact.phone, type:snap.type, region:snap.region, src:snap.src, kw:snap.kw, sub:snap.sub, std:snap.std, unk:snap.unk, want:true, cap:5, consent:Object.assign({at:nowStr(), ver:'시안 v1'}, snap.consent), selfSum:snap.selfSum, demo:true, photos:snap.photos, addrFull:snap.addrFull||'', note:snap.note, brief:snap.brief, stage:'미처리', closed:false, contract:0, props:[],
+  DB.leads.unshift({id, idem:snap.idem, via:snap.via, tok:snap.tok, at:nowStr(), name:snap.contact.name, phone:snap.contact.phone, type:snap.type, region:snap.region, src:snap.src, kw:snap.kw, sub:snap.sub, std:snap.std, unk:snap.unk, want:true, cap:5, consent:Object.assign({at:nowStr(), ver:'시안 v1'}, snap.consent), selfSum:snap.selfSum, demo:true, photos:snap.photos, addrFull:snap.addrFull||'', note:snap.note, brief:snap.brief, stage:'미처리', closed:false, contract:0, props:[],
     log:[[nowStr(), '시연 요청 저장 (실제 접수·알림 없음)'],[nowStr(), '수신 지역 맞는 파트너 '+DB.partners.filter(p=>p.on&&reqMatchesPartner(snap.region,p)).length+'곳에 새 요청 카톡 알림 (시연 · 목록과 같은 기준)']], memo:''});
   return id; }
 function selOf(k){ return S.sel[k]||(S.sel[k]=[]); }
@@ -3043,7 +3073,7 @@ function render(){
   if(PARTNER_VIEWS.includes(S.view) && !activePartner()){ if(S.view==='archPitch'&&S.akId) S.pendingReq=S.akId; S.view='archLogin'; }
   const cat = S.type && ['form','gate','result','done','pitches','chat'].includes(S.view) ? TYPES[S.type].cat : S.cat;
   setAcc(['arch','archList','archPitch','archDash','archBuy','refund','admin'].includes(S.view) ? 'permit' : cat);
-  const V = {archLogin:vArchLogin, archSet:vArchSet, office:vOffice, archBuy:vArchBuy, refund:vRefund, browse:vBrowse, join:vJoin, joinMember:()=>vJoinStep('member'), joinAdmin:()=>vJoinStep('admin'), joinOwner:vJoinOwner, gate:vGate, done:vDone, self:vSelf, news:vNews, verify:vVerify, home:vHome, form:vForm, choose:vChoose, result:vResult, pitches:vPitches, chat:vChat, arch:vArch, archList:vArchList, archPitch:vArchPitch, archDash:vArchDash, admin:vAdmin}[S.view] || vHome;
+  const V = {archLogin:vArchLogin, archSet:vArchSet, office:vOffice, archBuy:vArchBuy, refund:vRefund, browse:vBrowse, join:vJoin, joinMember:()=>vJoinStep('member'), joinAdmin:()=>vJoinStep('admin'), joinOwner:vJoinOwner, gate:vGate, done:vDone, self:vSelf, news:vNews, verify:vVerify, home:vHome, form:vForm, choose:vChoose, find:vFind, result:vResult, pitches:vPitches, chat:vChat, arch:vArch, archList:vArchList, archPitch:vArchPitch, archDash:vArchDash, admin:vAdmin}[S.view] || vHome;
   if(S.view==='news') S.view='home';
   const navOn = !PARTNER_VIEWS.includes(S.view) && !['admin','archLogin'].includes(S.view);
   document.getElementById('app').innerHTML = V() + (navOn? bnav():'') + (S.palOpen? palSheet():'') + (DEMO? demoBar():'');
@@ -3076,7 +3106,7 @@ document.addEventListener('click', e=>{
   else if(a==='back'){ back(); }
   else if(a==='type'){ const k=b.dataset.k; startNew(k); go('form',{type:k, cat:TYPES[k].cat}); }
   else if(a==='unkNum'){ S.unk=S.unk||{}; S.unk[b.dataset.f]=!S.unk[b.dataset.f]; const y=window.scrollY; render(); window.scrollTo(0,y); }
-  else if(a==='rcv'){ const mine=(S.myReqs||[]).filter(id=>leadOf(id)); if(mine.length){ go('pitches',{viewReq:mine[mine.length-1]}); } else toast('아직 건축사가 보낸 견적이 없어요 · AI 예상 비용은 받은 견적에 포함되지 않아요'); }
+  else if(a==='rcv'){ const mine=(S.myReqs||[]).filter(id=>leadOf(id)); if(mine.length){ go('pitches',{viewReq:mine[mine.length-1]}); } else go('find'); }
   else if(a==='kchat'){ window.open('https://pf.kakao.com/_ZEPPX/chat','_blank','noopener'); }
   else if(a==='adGo'){ const q=document.querySelector('.qt'); if(q) q.scrollIntoView({behavior:'smooth',block:'center'}); }
   else if(a==='adSave'){ const g=id=>document.getElementById(id).value.trim(); S.cfg.ad.kicker=g('adk'); S.cfg.ad.title=g('adt').split('/').map(x=>x.trim()).filter(Boolean).join('<br>'); S.cfg.ad.sub=g('ads'); toast(saveCfg()?'배너를 저장했어요':'저장 공간이 부족해요 · 이미지를 줄여주세요'); render(); }
@@ -3086,10 +3116,17 @@ document.addEventListener('click', e=>{
   else if(a==='yhGo'){ const k='illegal'; startNew(k); go('form',{type:k, cat:'permit'}); }
   else if(a==='seg'){ S.vals[b.dataset.f]=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='multi'){ const arr=S.vals[b.dataset.f]=S.vals[b.dataset.f]||[]; const o=b.dataset.o; const i=arr.indexOf(o); i>=0?arr.splice(i,1):arr.push(o); const y=window.scrollY; render(); window.scrollTo(0,y); }
-  else if(a==='lookup'){ const v=((document.getElementById('addr')||{}).value||'').trim(); if(v.length<4){ toast('주소를 입력해주세요 (예: 서울 송파구 가락동 91-5)'); const el=document.getElementById('addr'); if(el) el.focus(); return; } S.addrText=v; S.addrTyping=v; S.addr=true; const y=window.scrollY; render(); window.scrollTo(0,y); toast('주소를 입력했어요'); }
+  else if(a==='lookup'){ const v=((document.getElementById('addr')||{}).value||'').trim(); if(v.length<4){ toast('주소를 입력해주세요 (예: 서울 송파구 가락동 91-5)'); const el=document.getElementById('addr'); if(el) el.focus(); return; } S.addrText=v; S.addrTyping=v; S.addr=true; S.addrEdit=false; const y=window.scrollY; render(); window.scrollTo(0,y); toast('주소를 입력했어요'); }
   else if(a==='addrClear'){ S.addr=false; S.addrText=''; S.addrTyping=''; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
-  else if(a==='result'){ const rr=compute(); if(rr.noPrice||S.reqDone) go('result'); else go('choose'); }
+  else if(a==='result'){ const ty=(S.addrTyping||'').trim(); if(ty.length>=4 && (!S.addr || ty!==S.addrText)){ S.addr=true; S.addrText=ty; } S.addrEdit=false; const rr=compute(); if(rr.noPrice||S.reqDone) go('result'); else go('choose'); }
   else if(a==='aiOnly'){ go('result'); }
+  else if(a==='addrEdit'){ S.addrEdit=true; S.addrTyping=S.addrText; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
+  else if(a==='kakaoLogin'){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; const y=window.scrollY; render(); window.scrollTo(0,y); toast('카카오 계정 정보로 채웠어요 (시연)'); }
+  else if(a==='custOut'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } const y=window.scrollY; render(); window.scrollTo(0,y); }
+  else if(a==='custLogout'){ S.cust=null; S.myReqs=[]; S.viewReq=null; S.find=null; go('home'); toast('로그아웃했어요 (시연)'); }
+  else if(a==='findKakao'){ const ph='010-4821-7365'; const ids=DB.leads.filter(l=>l.via==='kakao'||String(l.phone).replace(/\D/g,'')===ph.replace(/\D/g,'')).map(l=>l.id); S.cust={via:'kakao', name:'김건축', phone:ph}; if(!ids.length){ toast('이 카카오 계정으로 접수된 요청이 없어요'); render(); return; } S.myReqs=[...new Set((S.myReqs||[]).concat(ids))]; go('pitches',{viewReq:ids[0]},true); toast('카카오 로그인 완료 (시연)'); }
+  else if(a==='findSend'){ const v=((document.getElementById('fp')||{}).value||'').trim(), d=v.replace(/\D/g,''); if(!/^01[016789]\d{7,8}$/.test(d)){ toast('전화번호를 정확히 입력해주세요'); return; } S.find={phone:v, sent:true}; render(); toast('인증번호를 보냈어요 (시연: 123456)'); const el=document.getElementById('fc'); if(el) el.focus(); }
+  else if(a==='findVerify'){ const c=((document.getElementById('fc')||{}).value||'').trim(); if(c!=='123456'){ toast('인증번호가 맞지 않아요'); return; } const d=String(S.find&&S.find.phone||'').replace(/\D/g,''); const L=DB.leads.filter(l=>String(l.phone).replace(/\D/g,'')===d); if(!L.length){ toast('이 번호로 접수된 요청이 없어요'); return; } S.cust={via:'phone', name:L[0].name, phone:S.find.phone}; S.myReqs=[...new Set((S.myReqs||[]).concat(L.map(l=>l.id)))]; go('pitches',{viewReq:L[0].id},true); toast('확인됐어요 · 요청 '+L.length+'건'); }
   else if(a==='cap'){ const n=document.getElementById('gn'), ph=document.getElementById('gp'); S.gate=S.gate||{want:'예'}; if(n){ S.gate.name=n.value; S.gate.phone=ph.value; } S.gate.cap=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); if(b.dataset.more) toast(b.dataset.o==='무제한'?'무제한으로 열었어요 · 건축사에게 무제한 요청으로 표시돼요':'제안을 '+b.dataset.o+'곳까지 받아요'); }
   else if(a==='plogoDel'){ const p=DB.partners.find(x=>x.id===b.dataset.id); delete p.logo; savePLogos(); render(); toast('로고를 뺐어요'); }
   else if(a==='unitSet'){ S.unitPy=b.dataset.u==='p'; try{ localStorage.setItem('kon_unit',S.unitPy?'p':'m'); }catch(_){} const y=window.scrollY; render(); window.scrollTo(0,y); }
@@ -3138,7 +3175,7 @@ document.addEventListener('click', e=>{
   else if(a==='demoOpen'){ S.demoOpen=!S.demoOpen; render(); }
   else if(a==='demoRole'){ const r=b.dataset.r; S.demoOpen=false; S.adm=Object.assign(S.adm||{},{ok:false}); S.partner=null;
     if(r==='admin'){ S.adm=Object.assign(S.adm,{ok:true, role:'마스터', tab:'leads', lead:null, partner:null}); go('admin'); }
-    else if(r==='cust'){ const mine=(S.myReqs||[]).filter(id=>leadOf(id)); go(mine.length?'pitches':'home', mine.length?{viewReq:mine[mine.length-1]}:{}); }
+    else if(r==='cust'){ const mine=(S.myReqs||[]).filter(id=>leadOf(id)); go(mine.length?'pitches':'find', mine.length?{viewReq:mine[mine.length-1]}:{}); }
     else { S.partner={id:r, role:'대표'}; go('archList'); }
     toast('시연 역할: '+demoRole()); }
   else if(a==='viewReq'){ go('pitches',{viewReq:+b.dataset.id},true); }
