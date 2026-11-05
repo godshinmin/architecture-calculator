@@ -2,6 +2,12 @@
 .pfg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pfc{display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.pfc img,.pfc .pfi{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--band);display:flex;align-items:center;justify-content:center}.pfc b{font-size:13.5px}.pfc small{font-size:11.5px;color:var(--muted)}.pfc p{margin:0;font-size:12px;line-height:1.5;color:var(--ink2)}
 .pfe{display:flex;gap:8px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line)}.pfe-img{position:relative;flex:none;width:72px;height:72px;border-radius:10px;background:var(--band);display:flex;align-items:center;justify-content:center;overflow:hidden}.pfe-img img{width:100%;height:100%;object-fit:cover}.pfe-up{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:800;text-align:center;padding:2px 0;cursor:pointer}
 html[data-theme=dark] .pfc{background:var(--dk1);border-color:var(--dk3)}html[data-theme=dark] .ofl-t{color:#9cc4ff}
+.pick{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:18px 16px;border:1.5px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);margin:0;cursor:pointer;font:inherit}
+.pick.main{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 14%,transparent)}
+.pick .pk-ic{flex:none;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.pick:not(.main) .pk-ic{background:var(--bg2,rgba(127,127,127,.12));color:var(--ink2)}
+.pick .pk-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.pick b{font-size:16.5px}.pick b em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.pick small{font-size:13px;color:var(--muted)}.pk-pts{display:flex;flex-direction:column;gap:3px;margin-top:4px}.pk-pts i{font-style:normal;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;gap:5px}.pk-pts i svg{color:var(--acc)}
 </style></head><body>
 <title>건축ON 앱 시안 (테스트)</title><meta name="robots" content="noindex,nofollow">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1792,10 +1798,10 @@ const S = {cat:'permit', view:'home', type:null, vals:{}, est:null, addr:false, 
   ],
   selfType:null, selfAns:{}, adm:{ok:false, tab:'dash'}, sel:{}, cfg:null};
 function defaults(t){ const o={}; TYPES[t].fields.forEach(f=>{ o[f.id] = Array.isArray(f.def)? f.def.slice() : f.def; }); return o; }
-function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
+function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
 /* ---- 화면 이동: 브라우저 history를 단일 기준으로 (인증·개인정보는 history.state에 넣지 않음) ---- */
 let NAVI=0;
-const FLOW_VIEWS=['form','result','gate','done','verify','chat'];
+const FLOW_VIEWS=['form','choose','result','gate','done','verify','chat'];
 const PARTNER_VIEWS=['archList','archPitch','archDash','archBuy','archSet'];
 function routeOf(){ return {view:S.view, cat:S.cat, type:S.type||null, selfType:S.selfType||null, bCat:S.bCat||null, bGrp:S.bGrp||null, akId:S.akId==null?null:String(S.akId), viewReq:S.viewReq||null, officeId:S.officeId||null, ep:S.draftEpoch||0, adm:S.adm?{tab:S.adm.tab||'dash', lead:S.adm.lead==null?null:S.adm.lead, partner:S.adm.partner||null}:null}; }
 function pushRoute(replace){ const cur=history.state&&history.state.kon===2?history.state.i:0; const st={kon:2, i:replace?cur:++NAVI, r:routeOf()}; try{ history[replace?'replaceState':'pushState'](st,''); }catch(e){} }
@@ -2099,15 +2105,27 @@ function vForm(){
       ${(S.photos||[]).length<10?`<label class="btn line sm" for="ph" style="cursor:pointer;margin-top:8px">${ic('up',18)} 사진 올리기 <small style="font-weight:500;color:var(--muted)">${(S.photos||[]).length}/10</small></label>`:''}<input id="ph" type="file" accept="image/*" multiple hidden>
       <p class="help" style="margin-top:8px">외관·내부·문제 부분을 2~3장 올리면 건축사가 더 정확하게 제안할 수 있어요</p></section>
   </main>
-  <div class="sbar"><div class="in wrap"><div class="est">${false?`<small>예상 비용</small><b id="live">${r.noPrice?'건축사 제안':(r.fixed?man(r.total)+'원':man(r.lo)+' ~ '+man(r.hi)+'원')}</b>`:`<small>${r.noPrice?'건축사 검토 요청':'AI 예상 비용'}</small><b style="font-size:13.5px;color:var(--ink)">${r.noPrice?'다음 화면에서 내용을 확인해요':'입력 후 바로 확인할 수 있어요'}</b>`}</div><button class="btn acc" data-act="result">${r.noPrice?'다음':'예상 비용 보기'}</button></div></div>`;
+  <div class="sbar"><div class="in wrap"><div class="est">${false?`<small>예상 비용</small><b id="live">${r.noPrice?'건축사 제안':(r.fixed?man(r.total)+'원':man(r.lo)+' ~ '+man(r.hi)+'원')}</b>`:`<small>${r.noPrice?'건축사 검토 요청':'AI 예상 비용'}</small><b style="font-size:13.5px;color:var(--ink)">${r.noPrice?'다음 화면에서 내용을 확인해요':'다음 화면에서 받는 방법을 골라요'}</b>`}</div><button class="btn acc" data-act="result">다음</button></div></div>`;
 }
 
+function vChoose(){
+  const t=TYPES[S.type], c=CATS[t.cat];
+  const card=(act,icn,title,desc,pts,main)=>`<button class="pick${main?' main':''}" data-act="${act}"><span class="pk-ic">${ic(icn,26)}</span><span class="pk-tx"><b>${title}</b><small>${desc}</small><span class="pk-pts">${pts.map(x=>`<i>${ic('check',14,2.5)} ${x}</i>`).join('')}</span></span>${ic('chev',20)}</button>`;
+  return header({title:t.name+' 견적'}) + `<main class="wrap view">
+    <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">어떻게 받아볼까요?</h1>
+      <p class="help" style="font-size:13.5px;margin-top:6px">${esc(c.name)} · ${esc(t.name)} · 입력한 조건으로 진행해요</p></section>
+    ${card('submit','users','건축사 제안 받기 <em>무료</em>','등록 건축사사무소 최대 5곳이 실제 견적을 보내요',['AI 예상 비용도 함께 보여드려요','연락처는 고르신 사무소에만 전달','카카오톡으로 상담'],true)}
+    ${card('aiOnly','chart','AI 예상 비용만 보기','연락처 없이 바로 참고용 금액 범위를 봐요',['아무 정보도 전달되지 않아요','보고 나서 건축사 제안도 받을 수 있어요'],false)}
+    <button class="btn line sm" data-act="back">${ic('back',16)} 조건 수정하기</button>
+  </main>`;
+}
 function vResult(){
-  const t=TYPES[S.type], r=S.est=compute(), c=CATS[t.cat];
+  const t=TYPES[S.type], r=S.est=compute(), c=CATS[t.cat]; S.aiSeen=true;
   const toneBg = {ok:'#d1fae5',gold:'#fef3c7',bad:'#fee2e2'}[r.tone], toneFg={ok:'#065f46',gold:'#92400e',bad:'#991b1b'}[r.tone];
   const miss=r.noPrice?[]:needInfo();
   const conds=condsOf(t,S.vals,S.unk);
   let h = header({title:t.name+(r.noPrice?' 검토 요청':' AI 예상 비용')}) + `<main class="wrap view">
+    ${S.reqDone?`<div class="note"><span>${ic('check',16,2.5)} <b>건축사 제안 요청을 보냈어요.</b> 아래는 참고용 AI 예상 비용이에요. 실제 견적은 건축사 제안으로 받아요.</span></div>`:''}
     ${t.cat!=='permit'?`<div class="beta-note sm"><span><b><i class="beta">BETA</i> ${CATS[t.cat].name}은 준비 중인 서비스예요</b><small>예상 비용은 참고용이며 상담은 건축사가 직접 도와드려요.</small></span></div>`:''}
     <section class="sec"><h3>${hic('list')}선택한 서비스 · 입력 조건</h3><p style="margin:0 0 8px;font-weight:800">${CATS[t.cat].name} · ${t.name}</p>
       <dl class="cond">${conds.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>
@@ -2148,11 +2166,11 @@ function vResult(){
     ${r.extra?`<div class="note" style="margin-top:14px"><span><b>별도 비용</b><br>${r.extra.map(esc).join('<br>')}</span></div>`:''}</section>`;
   if(r.rel && r.rel.length) h+=`<section class="sec"><h3>${hic('link')}함께 확인하면 좋은 견적</h3><div class="links">${[...new Set(r.rel)].filter(k=>TYPES[k]&&k!==S.type).map(k=>`<button class="rel" data-act="type" data-k="${k}">${ic(TYPES[k].icon,20)}<span>${TYPES[k].name} 견적 보기</span>${ic('chev',18)}</button>`).join('')}</div></section>`;
   h+=`<div class="note"><span>${ic('alert',16)} 규모 검토·현장 조사·도면 검토 등 <b>본격적인 진행 단계에서는 별도 검토 비용</b>이 발생할 수 있어요. 제안 받기와 첫 상담은 무료입니다.</span></div>
-  <button class="btn" data-act="submit">${ic('users',18)} ${S.reqDone?'요청 내용 다시 보기':'건축사 제안 받기 (무료)'}</button>
-  <p class="help" style="text-align:center;margin-top:-6px">지금까지는 아무 정보도 전달되지 않았어요. 제안을 원하실 때만 연락처를 받아요.</p>
+  <button class="btn" data-act="submit">${ic('users',18)} ${S.reqDone?'요청 내용 다시 보기':'이 조건으로 건축사 제안도 받기 (무료)'}</button>
+  ${S.reqDone?'':'<p class="help" style="text-align:center;margin-top:-6px">지금까지는 아무 정보도 전달되지 않았어요. 제안을 원하실 때만 연락처를 받아요.</p>'}
   <button class="btn kakao sm" data-act="toast" data-m="카카오 로그인 후 견적서 PDF가 저장돼요 (예시)">${'<svg width="18" height="18" viewBox="0 0 24 24" fill="#191919" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7L5.6 21l4-2.6c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>'} 카카오 로그인하고 견적서 PDF 받기</button>
   <p class="sample">AI 예상 비용은 참고용이며, 최종 금액은 건축사와 상담하고 현장을 확인한 뒤 정해집니다.</p></main>
-  <div class="sbar"><div class="in wrap"><div class="est"><small>${S.reqDone?'제안 요청 저장됨 (시연)':'제안 받기 · 상담 무료'}</small><b style="font-size:14px;color:var(--ink)">${S.reqDone?'요청 내용을 확인할 수 있어요':'등록 건축사 최대 5곳까지'}</b></div><button class="btn acc" data-act="submit">${S.reqDone?'요청 내용':'건축사 제안 받기'}</button></div></div>`;
+  <div class="sbar"><div class="in wrap"><div class="est"><small>${S.reqDone?'제안 요청 저장됨 (시연)':'정확한 금액이 궁금하면'}</small><b style="font-size:14px;color:var(--ink)">${S.reqDone?'요청 내용을 확인할 수 있어요':'건축사 최대 5곳 무료 제안'}</b></div><button class="btn acc" data-act="submit">${S.reqDone?'요청 내용':'건축사 제안 받기'}</button></div></div>`;
   return h;
 }
 
@@ -2201,7 +2219,7 @@ function vGate(){
   const items=['이름, 연락처', `${t.name} 요청 조건 ${t.fields.length}개 항목`].concat((S.photos||[]).length?[`현장 사진 ${S.photos.length}장`]:[]).concat((S.note||S.vals.memo||'').trim()?['특이사항·상황 설명']:[]).concat(S.reqSelf?['사전 점검 요약']:[]).concat(r.noPrice||needInfo().length?[]:['AI 예상 비용 범위']);
   return header({title:'건축사 제안 요청'}) + `<main class="wrap view">
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">${t.name} 제안을 요청할게요</h1>
-      <p class="help" style="font-size:13.5px;margin-top:6px">등록 건축사사무소에 요청서를 보내 <b>최대 5곳</b>까지 제안을 받을 수 있어요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p><button class="btn line sm" data-act="back" style="margin-top:10px">연락처 없이 AI 결과만 보기</button></section>
+      <p class="help" style="font-size:13.5px;margin-top:6px">등록 건축사사무소에 요청서를 보내 <b>최대 5곳</b>까지 제안을 받을 수 있어요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p></section>
     <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 화면 안에서만 저장돼요.</span></div>
     <section class="sec"><h3>${hic('pin')}건물 위치 *</h3>${addrBox(TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 지번':'건물 주소')}${S.addr?'':'<p class="help" style="margin-top:6px;color:#b54708;font-weight:700">건축사 제안을 받으려면 주소를 적고 확인을 눌러주세요</p>'}</section>
     <section class="sec"><h3>${hic('users')}연락받을 정보</h3>
@@ -2218,7 +2236,7 @@ function vGate(){
       <label class="agree"><input type="checkbox" data-rq="consent" ${q.consent?'checked':''}><span><b>[필수]</b> 위 정보를 위 건축사사무소에 견적 제안·상담 목적으로 제공하는 데 동의합니다</span></label>
       <label class="agree"><input type="checkbox" data-rq="mkt" ${q.mkt?'checked':''}><span><b>[선택]</b> 건축ON 소식·이벤트 안내를 문자로 받겠습니다</span></label>
       <p class="help" style="margin-top:6px">선택 항목은 동의하지 않아도 제안을 받을 수 있어요. 동의 문구는 시안이며 법률 검토 전이에요.</p></section>
-    <button class="btn line sm" data-act="back">제안 요청 없이 AI 결과만 보기</button>
+    ${r.noPrice?'':`<button class="btn line sm" data-act="aiOnly">${S.view==='gate'&&S.aiSeen?'제안 요청 없이 AI 예상 비용으로 돌아가기':'제안 요청 없이 AI 예상 비용만 보기'}</button>`}
   </main>
   <div class="sbar"><div class="in wrap"><button class="btn acc" data-act="gateGo" style="width:100%" ${q.consent&&!q.busy?'':'disabled'} id="reqSubmit">${q.busy?'저장 중…':q.consent?'건축사 제안 요청 보내기 (시연)':'필수 동의에 체크하면 보낼 수 있어요'}</button></div></div>`;
 }
@@ -2235,7 +2253,7 @@ function vDone(){
         <dt>사진</dt><dd>${(S.photos||[]).length}장</dd><dt>특이사항</dt><dd>${esc((S.note||S.vals.memo||'').trim()||'없음')}</dd>
         <dt>사전 점검</dt><dd>${S.reqSelf?esc(S.reqSelf.name):'없음'}</dd>
         <dt>동의</dt><dd>필수 ${S.req&&S.req.consent?'동의':'-'} · 마케팅 ${S.req&&S.req.mkt?'동의':'미동의'}</dd></dl></section>
-    <button class="btn line sm" data-act="back">AI 예상 결과로 돌아가기</button>
+    ${l&&l.brief&&!l.brief.noPrice?'<button class="btn line sm" data-act="aiOnly">AI 예상 비용 자세히 보기</button>':''}
     <button class="btn line sm" data-act="toPitches">정식 오픈 후 받은 제안 화면 미리보기 (예시)</button>
   </main>`;
 }
@@ -3020,7 +3038,7 @@ function render(){
   if(PARTNER_VIEWS.includes(S.view) && !activePartner()){ if(S.view==='archPitch'&&S.akId) S.pendingReq=S.akId; S.view='archLogin'; }
   const cat = S.type && ['form','gate','result','done','pitches','chat'].includes(S.view) ? TYPES[S.type].cat : S.cat;
   setAcc(['arch','archList','archPitch','archDash','archBuy','refund','admin'].includes(S.view) ? 'permit' : cat);
-  const V = {archLogin:vArchLogin, archSet:vArchSet, office:vOffice, archBuy:vArchBuy, refund:vRefund, browse:vBrowse, join:vJoin, joinMember:()=>vJoinStep('member'), joinAdmin:()=>vJoinStep('admin'), joinOwner:vJoinOwner, gate:vGate, done:vDone, self:vSelf, news:vNews, verify:vVerify, home:vHome, form:vForm, result:vResult, pitches:vPitches, chat:vChat, arch:vArch, archList:vArchList, archPitch:vArchPitch, archDash:vArchDash, admin:vAdmin}[S.view] || vHome;
+  const V = {archLogin:vArchLogin, archSet:vArchSet, office:vOffice, archBuy:vArchBuy, refund:vRefund, browse:vBrowse, join:vJoin, joinMember:()=>vJoinStep('member'), joinAdmin:()=>vJoinStep('admin'), joinOwner:vJoinOwner, gate:vGate, done:vDone, self:vSelf, news:vNews, verify:vVerify, home:vHome, form:vForm, choose:vChoose, result:vResult, pitches:vPitches, chat:vChat, arch:vArch, archList:vArchList, archPitch:vArchPitch, archDash:vArchDash, admin:vAdmin}[S.view] || vHome;
   if(S.view==='news') S.view='home';
   const navOn = !PARTNER_VIEWS.includes(S.view) && !['admin','archLogin'].includes(S.view);
   document.getElementById('app').innerHTML = V() + (navOn? bnav():'') + (S.palOpen? palSheet():'') + (DEMO? demoBar():'');
@@ -3065,7 +3083,8 @@ document.addEventListener('click', e=>{
   else if(a==='multi'){ const arr=S.vals[b.dataset.f]=S.vals[b.dataset.f]||[]; const o=b.dataset.o; const i=arr.indexOf(o); i>=0?arr.splice(i,1):arr.push(o); const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='lookup'){ const v=((document.getElementById('addr')||{}).value||'').trim(); if(v.length<4){ toast('주소를 입력해주세요 (예: 서울 송파구 가락동 91-5)'); const el=document.getElementById('addr'); if(el) el.focus(); return; } S.addrText=v; S.addrTyping=v; S.addr=true; const y=window.scrollY; render(); window.scrollTo(0,y); toast('주소를 입력했어요'); }
   else if(a==='addrClear'){ S.addr=false; S.addrText=''; S.addrTyping=''; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
-  else if(a==='result'){ go('result'); }
+  else if(a==='result'){ const rr=compute(); if(rr.noPrice||S.reqDone) go('result'); else go('choose'); }
+  else if(a==='aiOnly'){ go('result'); }
   else if(a==='cap'){ const n=document.getElementById('gn'), ph=document.getElementById('gp'); S.gate=S.gate||{want:'예'}; if(n){ S.gate.name=n.value; S.gate.phone=ph.value; } S.gate.cap=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); if(b.dataset.more) toast(b.dataset.o==='무제한'?'무제한으로 열었어요 · 건축사에게 무제한 요청으로 표시돼요':'제안을 '+b.dataset.o+'곳까지 받아요'); }
   else if(a==='plogoDel'){ const p=DB.partners.find(x=>x.id===b.dataset.id); delete p.logo; savePLogos(); render(); toast('로고를 뺐어요'); }
   else if(a==='unitSet'){ S.unitPy=b.dataset.u==='p'; try{ localStorage.setItem('kon_unit',S.unitPy?'p':'m'); }catch(_){} const y=window.scrollY; render(); window.scrollTo(0,y); }
