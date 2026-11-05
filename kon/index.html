@@ -292,7 +292,7 @@ textarea.inp{min-height:92px;resize:vertical;line-height:1.6;font-size:14px}
 
 /* ===================== 리디자인 v2 : 절제된 건축 톤 ===================== */
 :root{
-  --bg:#fafaf8; --card:#ffffff; --band:#f3f3f0; --ink:#111318; --ink2:#3a3f4b; --muted:#6b7080; --line:#e7e6e1; --line2:#eeede8;
+  --bg:#fafaf8; --card:#ffffff; --band:#f3f3f0; --ink:#111318; --ink2:#3a3f4b; --muted:#5d6273; --line:#e7e6e1; --line2:#eeede8;
   --navy:#0f1d3d; --navy-d:#08122a; --dark:#0d1220; --tint:#f1f4fa; --tint-b:#dde4f1;
   --f:'Inter','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
   --r:14px; --sh:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06); --sh2:0 12px 32px -12px rgba(16,24,40,.18);
@@ -420,6 +420,7 @@ html[data-theme=dark]{
   --navy:#f5f5f5; --navy-d:#ffffff; --dark:var(--dk1); --tint:color-mix(in srgb,var(--p-hi) 10%,transparent); --tint-b:color-mix(in srgb,var(--p-hi) 26%,transparent);
   --ok:#4ade80; --ok-bg:rgba(74,222,128,.1); --warn:#fbbf24; --warn-bg:rgba(251,191,36,.08); --bad:#f87171; --bad-bg:rgba(248,113,113,.1);
   --sh:none; --sh2:0 0 0 1px var(--dk4);
+  --t-new:var(--dk2); --t-permit:var(--dk2); --t-int:var(--dk2); --b-new:var(--dk3); --b-permit:var(--dk3); --b-int:var(--dk3); --c-new:var(--p-hi); --c-permit:var(--p-hi); --c-int:var(--p-hi); --dl:#fbbf24;
 }
 html[data-theme=dark],html[data-theme=dark] body,html[data-theme=dark] .app{background:var(--dk0)}
 html[data-theme=dark] .app{box-shadow:none}
@@ -1363,7 +1364,7 @@ record:{cat:'permit', name:'기재사항 변경', icon:'doc', desc:'대장 용�
     if((v.what||[]).includes('면적')) drawingItems(v.draw, a).forEach(x=>items.push(x));
     if((v.what||[]).includes('면적') && v.dir!=='작다'){ warns.push('실제가 더 크면 무단 증축으로 보아 양성화 대상일 수 있어요'); rel.push('illegal'); }
     return {badge:'기재사항 변경', adm:'기재변경', period:(v.what||[]).includes('면적')?'2~4주':'1~2주', items, warns, rel, tone:'ok',
-      checks:['대장 기재내용과 현황 대조','변경 사유서 · 증빙 정리','관할 행정청 신청 및 처리 모니터링','변경 후 건축물대장 발급 확인'], sub:(v.what||[]).join(' · ')};
+      checks:['대장 기재내용과 현황 대조','변경 사유서 · 증빙 정리','관할 행정청 신청 및 처리 모니터링','변경 후 건축물대장 발급 확인'], sub:((v.what||[]).length?(v.what||[]).join('·')+' 정정':'기재사항 변경')};
   }},
 illegal:{cat:'permit', name:'양성화 (특별법)', icon:'shield', desc:'특정건축물 정리 특별조치법 · 2026.12.17~', tag:'2028.6.16까지',
   intro:'「특정건축물 정리에 관한 특별조치법」(2026.12.17~2028.6.16)에 따른 양성화 예상 견적이에요. 위반 유형·면적·도면 상태로 대략적인 비용을 알려드리고, 정확한 금액은 건축사가 현장을 확인한 뒤 제안드려요.',
@@ -2014,7 +2015,7 @@ function marquee(){
 }
 function bnav(){
   const I={home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>', self:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>', rcv:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 2v4M15 2v4M8 12l1.5 4 2.5-4 2.5 4L16 12"/>', chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>', news:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h4v4H8zM8 16h8M14 9h2M14 12h2"/>', admin:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'};
-  const t=[['home','홈'],['self','셀프 점검'],['rcv','받은 견적'],['chat','상담']].filter(x=>!['self','news'].includes(x[0])||S.cfg.show[x[0]]!==false).concat(S.adm&&S.adm.ok?[['admin','관리']]:[]);
+  const t=[['home','홈'],['self','셀프 점검'],['rcv','받은 제안'],['chat','상담']].filter(x=>!['self','news'].includes(x[0])||S.cfg.show[x[0]]!==false).concat(S.adm&&S.adm.ok?[['admin','관리']]:[]);
   return `<nav class="bnav sg-nav" aria-label="메뉴"><div class="in">${S.view!=='home'?`<button data-act="back" class="nb-back" aria-label="뒤로가기"><span class="ni"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></span><span>뒤로</span></button>`:''}${t.map(([v,l])=>`<button data-act="${v==='rcv'?'rcv':v==='chat'?'kchat':'nav'}" data-v="${v}" ${S.view===v?'aria-current="page"':''}><span class="ni">${({home:'nav-home',self:'nav-check',rcv:'nav-quotes',chat:'nav-chat',news:'nav-news',admin:'legalization'})[v]?icoImg(({home:'nav-home',self:'nav-check',rcv:'nav-quotes',chat:'nav-chat',news:'nav-news',admin:'legalization'})[v],30):`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[v]}</svg>`}${v==='rcv'&&S.contact?'<i class="dot"></i>':''}</span>${l}</button>`).join('')}</div></nav>`;
 }
 function vSelf(){
@@ -2272,7 +2273,7 @@ function vGate(){
   </main>
   <div class="sbar"><div class="in wrap"><button class="btn acc" data-act="gateGo" style="width:100%" ${q.consent&&!q.busy?'':'disabled'} id="reqSubmit">${q.busy?'저장 중…':q.consent?'건축사 제안 요청 보내기 (시연)':'필수 동의에 체크하면 보낼 수 있어요'}</button></div></div>`;
 }
-function aiCard(l){ if(!l||!l.brief) return ''; const b=l.brief; return `<div class="dark" style="text-align:left;padding:16px"><div style="font-size:12px;color:rgba(255,255,255,.7)">AI 예상 비용 · 참고용</div><b style="display:block;font-size:24px;margin:4px 0">${b.noPrice?'건축사 확인 후 제안':man(b.lo)+' ~ '+man(b.hi)}</b><span style="font-size:12.5px;color:rgba(255,255,255,.75)">${b.noPrice?(b.miss&&b.miss.length?esc(b.miss.join(', '))+' 정보가 없어 금액을 계산하지 않았어요':'상황 설명으로 받은 요청이라 건축사가 직접 금액을 제안해요'):esc(b.badge||'')+(b.period&&b.period!=='-'?' · 예상 기간 '+esc(b.period):'')}</span></div>`; }
+function aiCard(l){ if(!l||!l.brief) return ''; const b=l.brief; return `<div class="dark" style="text-align:left;padding:16px"><div style="font-size:12px;color:rgba(255,255,255,.7)">AI 예상 비용 · 참고용</div><b style="display:block;font-size:24px;margin:4px 0">${b.noPrice?'건축사 확인 후 제안':rangeTxt(b)}</b><span style="font-size:12.5px;color:rgba(255,255,255,.75)">${b.noPrice?(b.miss&&b.miss.length?esc(b.miss.join(', '))+' 정보가 없어 금액을 계산하지 않았어요':'상황 설명으로 받은 요청이라 건축사가 직접 금액을 제안해요'):esc(b.badge||'')+(b.period&&b.period!=='-'?' · 예상 기간 '+esc(b.period):'')}</span></div>`; }
 function vFind(){
   const f=S.find||(S.find={phone:'',sent:false,code:''});
   return header({title:'내 요청 찾기'}) + `<main class="wrap view">
@@ -2306,11 +2307,12 @@ function vDone(){
 <button class="atk-btn" data-act="toPitches">▶ 받은 제안 보기</button></div>
     <section class="sec"><h3>${hic('list')}나중에 다시 보려면</h3><ul class="chk">
       <li>${ic('check',18,2.5)}<span><b>카톡·문자로 온 링크</b>를 누르면 로그인 없이 바로 열려요</span></li>
-      <li>${ic('check',18,2.5)}<span>건축ON 하단 <b>'받은 견적'</b> → <b>카카오 로그인</b> 또는 <b>전화번호 인증</b>으로 언제든 찾을 수 있어요</span></li></ul></section>
+      <li>${ic('check',18,2.5)}<span>건축ON 하단 <b>'받은 제안'</b> → <b>카카오 로그인</b> 또는 <b>전화번호 인증</b>으로 언제든 찾을 수 있어요</span></li></ul></section>
   </main>`;
 }
 function vPitches(){
-  if(!leadOf(S.viewReq||S.reqId) && !TYPES[S.type]) return header({title:'받은 제안'})+`<main class="wrap view"><section class="sec" style="text-align:center"><p class="help">아직 받은 견적이 없어요. 업무를 골라 건축사 제안을 요청해 보세요.</p><button class="btn sm" data-act="home" style="margin-top:10px">홈으로</button></section></main>`;
+  if((S.viewReq||S.reqId)!=null && leadOf(S.viewReq||S.reqId) && !(S.myReqs||[]).includes(S.viewReq||S.reqId)){ return vFind(); }
+  if(!leadOf(S.viewReq||S.reqId) && !TYPES[S.type]) return header({title:'받은 제안'})+`<main class="wrap view"><section class="sec" style="text-align:center"><p class="help">아직 받은 제안이 없어요. 업무를 골라 건축사 제안을 요청해 보세요.</p><button class="btn sm" data-act="home" style="margin-top:10px">홈으로</button></section></main>`;
   const l=leadOf(S.viewReq||S.reqId), t=TYPES[l?l.type:S.type], r=l?Object.assign({}, l.brief, {total:(l.brief.lo+l.brief.hi)/2||0, sub:l.sub}):(S.est||compute()), c=CATS[t.cat], base=r.noPrice||!r.total?3000000:r.total, isInt=t.cat==='int';
   const mine=(S.myReqs||[]).map(leadOf).filter(Boolean);
   const lo=Math.min(base*0.55, base*0.85), span=base*1.6-lo, pos=x=>Math.max(0,Math.min(100,(x-lo)/span*100));
@@ -2356,7 +2358,7 @@ function vPitches(){
     ${P.map((p,i)=>!SO.opened[i]?`<article class="pc pc-lock"><div style="display:flex;gap:12px;align-items:center"><div class="av" style="background:${p.col}">${p.n[0]}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px">${officeBtn2({id:p.pid},`<b style="font-size:15px">${p.n}</b>`)}${badgeOk(16)}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">제안 도착 · 오늘 ${AT[i]}</div></div><span class="st wait">새 제안</span></div><div class="lockbox">${ic('lock',16)} 제안 금액과 의견은 열어보면 확인할 수 있어요</div><button class="btn acc sm" data-act="openSample" data-i="${i}">제안 열어보기</button></article>`:`<article class="pc">
       <div style="display:flex;gap:12px;align-items:center"><div class="av" style="background:${p.col}">${p.n[0]}</div>
         <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px">${officeBtn2({id:p.pid},`<b style="font-size:15px">${p.n}</b>`)}${badgeOk(16)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">${p.st?`<b style="color:#b45309">★ ${p.st}</b> 후기 ${p.rv} · `:'신규 파트너 · '}${p.km} · 응답 ${p.rs}</div></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${p.st?`<b style="color:var(--dl,#b45309)">★ ${p.st}</b> 후기 ${p.rv} · `:'신규 파트너 · '}${p.km} · 응답 ${p.rs}</div></div></div>
       <div style="display:flex;align-items:baseline;justify-content:space-between"><b style="font-size:22px;color:var(--acc);letter-spacing:-.5px">${man(p.a[0])}${p.a[1]?'~'+man(p.a[1]):''}<span style="font-size:14px">원${p.a[1]?'':'~'}</span></b><span style="font-size:13px;font-weight:700;color:var(--ink2)">${p.wk}</span></div>
       ${r.noPrice?'':`<div class="rt" role="img" aria-label="표준 견적 대비 위치"><div class="s" style="left:${pos(r.lo)}%;width:${pos(r.hi)-pos(r.lo)}%"></div><div class="m" style="left:${pos(p.a[0])}%;width:${Math.max(4,pos(p.a[1]||p.a[0]*1.05)-pos(p.a[0]))}%"></div></div>`}
       ${p.low?`<div class="note warn" style="font-size:12.5px">${ic('alert',16)}<span>표준 견적보다 낮아요. 포함 범위를 대화로 꼭 확인하세요.</span></div>`:''}
@@ -2934,7 +2936,7 @@ function partnerCard(r, pid){ const x=r.src, mine=pid?r.props.find(p=>p.partnerI
     mine:mine?Object.assign({},mine):null, contact:(mine&&r.kind==='lead'&&hasGrant(x.id,pid))?{name:x.name, phone:x.phone, addr:x.addrFull||''}:null}; }
 function allReqs(){ return DB.leads.map(l=>findReq(l.id)).concat(archSamples().map(s=>findReq(s.id))); }
 function archFeed(){ const pa=activePartner(), pid=pa&&pa.id; return allReqs().filter(r=>reqIsOpen(r) && r.props.length<5 && !(pid&&r.props.some(p=>p.partnerId===pid)) && (!pa||reqMatchesPartner(r.src.region, pa))).map(r=>partnerCard(r,pid)); }
-function rangeTxt(b){ return b.noPrice?'금액 없이 검토 요청':`${man(b.lo)} ~ ${man(b.hi)}`; }
+function rangeTxt(b){ return b.noPrice?'금액 없이 검토 요청':(Math.round(b.lo/1e4)===Math.round(b.hi/1e4)?man(b.lo):`${man(b.lo)} ~ ${man(b.hi)}`); }
 /* 제안 입력 검증 (금액 검증과 AI 대비 차이 검증을 분리) */
 const PERIODS=Array.from({length:20},(_,i)=>(i+1)+'주').concat(['20주 이상']);
 /* 항목별 견적 초안 → 합계 */
@@ -2998,12 +3000,12 @@ AI 예상 범위 ${esc(rangeTxt(f0.brief))}${f0.brief.unk.length?` · 확인 필
     ${F.length?'':'<section class="sec" style="text-align:center"><p class="help">지금 제안할 수 있는 요청이 없어요</p></section>'}
     ${(()=>{ if(!pa) return ''; const out=allReqs().filter(r=>reqIsOpen(r)&&r.props.length<5&&!r.props.some(p=>p.partnerId===pa.id)&&!reqMatchesPartner(r.src.region,pa)).length; return out?`<p class="help" style="text-align:center;margin:-4px 0 4px">${esc(areasTxt(pa).replace(' 수신',''))} 수신 지역 밖 요청 ${out}건은 표시되지 않아요 · 지역은 내 사무소 설정에서 바꿀 수 있어요</p>`:''; })()}
     ${F.map(x=>{ const T=TYPES[x.type], C=CATS[T.cat], b=x.brief; return `<div class="req"><div style="flex:none;width:46px;height:46px;border-radius:12px;background:${C.t};color:${C.acc};display:flex;align-items:center;justify-content:center">${ic(T.icon,24)}</div>
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:11.5px"><b style="color:${C.acc}">${C.name} · ${T.name}</b><span style="color:#b45309;font-weight:700">${x.dl} 남음</span></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:11.5px"><b style="color:${C.acc}">${C.name} · ${T.name}</b><span style="color:var(--dl,#b45309);font-weight:700">${x.dl} 남음</span></div>
       <b style="font-size:15px">${esc(b.sub)}</b><span style="font-size:12.5px;color:var(--muted)">${esc(x.region)} · 접수 ${esc(x.at)}</span>
       <div class="rq-ai"><small>고객이 본 AI 예상 범위</small><b>${esc(rangeTxt(b))}</b></div>
       <div class="rq-tags">${x.sample?'<span>예시 요청</span>':''}${b.unk.length?`<span class="w">모르겠어요 ${b.unk.length}항목</span>`:''}${x.note?'<span>특이사항 있음</span>':''}${x.photoN?`<span>사진 ${x.photoN}장</span>`:''}${b.self?'<span>셀프 점검 결과</span>':''}${x.demo?'<span class="w">시연 요청</span>':''}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:6px"><div class="dots" role="img" aria-label="제안 ${x.n}/5">${Array.from({length:5},(_,i)=>`<i class="${i<x.n?'f':''}"></i>`).join('')}</div><span style="font-size:11.5px;color:var(--muted)">이미 ${x.n}곳 제안 · 최대 5곳</span></div>
-      <span style="display:flex;align-items:center;gap:8px"><span class="coin">${cn(b)}코인</span><button class="btn sm" data-act="archPitch" data-id="${esc(x.id)}" style="width:auto;padding:0 16px;min-height:40px;font-size:13px">요청서 보기</button></span></div></div></div>`; }).join('')}
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div class="dots" role="img" aria-label="제안 ${x.n}/5">${Array.from({length:5},(_,i)=>`<i class="${i<x.n?'f':''}"></i>`).join('')}</div><span style="font-size:11.5px;color:var(--muted)">이미 ${x.n}곳 제안 · 최대 5곳</span></div>
+      <span style="display:flex;align-items:center;gap:8px;margin-left:auto"><span class="coin">${cn(b)}코인</span><button class="btn sm" data-act="archPitch" data-id="${esc(x.id)}" style="width:auto;padding:0 16px;min-height:40px;font-size:13px;white-space:nowrap;flex:none">요청서 보기</button></span></div></div></div>`; }).join('')}
     ${(()=>{ if(!pa) return ''; const M=allReqs().map(r=>({r,pr:r.props.find(p=>p.partnerId===pa.id)})).filter(o=>o.pr); if(!M.length) return ''; return `<section class="sec"><h3>${hic('send')}내가 제안한 요청 ${M.length}건</h3><p class="help" style="margin-bottom:6px">같은 요청에는 다시 제안할 수 없어요 · 눌러서 요청 내용과 보낸 견적 확인</p>${M.map(({r,pr})=>`<button class="row" data-act="archPitch" data-id="${esc(r.src.id)}" style="padding:10px 0"><span style="flex:1;min-width:0"><b style="font-size:14px">${esc(TYPES[r.src.type]?TYPES[r.src.type].name:'')} · ${esc(r.src.region||'')}</b><small>보낸 견적 ${esc(pr.amt)} · ${esc(pr.at||'')}</small></span><span class="st ${propStatus(pr)==='선택됨'?'ok':propStatus(pr)==='열람'?'ret':propStatus(pr)==='미열람'?'wait':'mute'}">${propStatus(pr)}</span><span class="ch">${ic('chev',16)}</span></button>`).join('')}</section>`; })()}
     <p class="help" style="text-align:center">고객 이름·연락처는 고객이 귀사 제안을 열어보고 '상담하기'를 눌렀을 때만 공개돼요. 제안을 보냈거나 고객이 열어봤다는 것만으로는 공개되지 않아요. 코인 규칙: 제안 시 차감 · 고객 열람 시 사용 확정 · ${RET_H}시간 미열람 시 반환. (시연 화면 · 실제 알림·발송은 서버 연결 후)</p></main>`+(S.partner?pnav():'');
 }
@@ -3023,7 +3025,7 @@ function vArchPitch(){
       ${b.noPrice?`<span style="font-size:12.5px;color:rgba(255,255,255,.75)">${b.miss&&b.miss.length?esc(b.miss.join(', '))+' 미입력으로 금액 미표시':'자유 요청 · 건축사 판단 필요'}</span>`:`<span style="font-size:12.5px;color:rgba(255,255,255,.75)">${esc(b.badge)}${b.adm&&b.adm!=='-'?' · '+esc(b.adm):''}${b.period&&b.period!=='-'?' · 예상 기간 '+esc(b.period):''}</span>`}
       ${!b.noPrice&&b.items.length?`<dl class="cond" style="margin-top:12px;color:#fff">${b.items.map(i=>`<dt style="color:rgba(255,255,255,.65)">${esc(i[0])}</dt><dd>약 ${Math.round(i[1]/10000).toLocaleString()}만원</dd>`).join('')}</dl>`:''}
       ${b.unk.length?`<p style="font-size:12px;color:rgba(255,255,255,.7);margin:10px 0 0">모르겠어요 항목이 있어 범위를 ±20%로 넓게 보여줬어요</p>`:''}</div>
-    <section class="sec"><h3>${hic('list')}고객이 입력한 조건</h3>${b.legacy?'<p class="help" style="margin:0 0 8px">이전 방식으로 접수된 요청이라 요약만 있어요</p>':''}<dl class="cond">${b.conds.map(([k,vv,u])=>`<dt>${esc(k)}</dt><dd${u?' style="color:#b45309"':''}>${esc(String(vv))}</dd>`).join('')}</dl></section>
+    <section class="sec"><h3>${hic('list')}고객이 입력한 조건</h3>${b.legacy?'<p class="help" style="margin:0 0 8px">이전 방식으로 접수된 요청이라 요약만 있어요</p>':''}<dl class="cond">${b.conds.map(([k,vv,u])=>`<dt>${esc(k)}</dt><dd${u?' style="color:var(--dl,#b45309)"':''}>${esc(String(vv))}</dd>`).join('')}</dl></section>
     ${b.unk.length?`<div class="note warn"><span>${ic('alert',16)} <b>고객이 모르겠다고 한 항목 ${b.unk.length}개</b><br>${esc(b.unk.join(', '))} — 상담 때 확인이 필요해요</span></div>`:''}
     <section class="sec"><h3>${hic('list')}특이사항</h3>${x.note?`<p style="margin:0;white-space:pre-wrap;line-height:1.6">${esc(x.note)}</p>`:'<p class="help">작성하지 않았어요</p>'}</section>
     <section class="sec"><h3>${hic('camera')}현장 사진 ${x.photoN}장</h3>${x.photos.length?`<div class="phg">${x.photos.map((u,i)=>{ const su=safeImg(u); return su?`<a class="pht" href="${esc(su)}" target="_blank" rel="noopener"><img src="${esc(su)}" alt="현장 사진 ${i+1}"></a>`:''; }).join('')}</div>`:x.photoN?`<p class="help">예시 요청서라 사진 자리만 표시해요</p>`:'<p class="help">올린 사진이 없어요</p>'}</section>
@@ -3070,7 +3072,7 @@ function vArchDash(){
     <div class="dark"><div class="k">이번 달 선택률</div><div class="amt" style="font-size:40px">33%</div><div style="font-size:12.5px;color:rgba(255,255,255,.7)">제안 12건 중 4건 대화 요청 (예시)</div></div>
     <section class="sec"><h3>이번 달 흐름</h3><div class="bars" style="--acc:var(--navy)">${[['보낸 제안',12],['대화 요청',4],['현장 방문',2],['계약',1]].map(([l,n])=>`<div class="barrow"><span style="color:var(--ink2)">${l}</span><div class="tr"><div class="fl" style="width:${n/12*100}%;${l==='계약'?'background:#047857':''}"></div></div><b>${n}건</b></div>`).join('')}</div></section>
     <section class="sec"><h3>분야별 제안</h3><div class="grid3">${[['인허가',8,'permit'],['신축',3,'new'],['인테리어',1,'int']].map(([l,n,c])=>`<div class="stat" style="background:${CATS[c].t};border-color:${CATS[c].b}"><small>${l}</small><b style="color:${CATS[c].acc}">${n}</b></div>`).join('')}</div></section>
-    <section class="sec"><h3>${hic('chat')}고객 상담</h3><p class="help" style="margin:0">고객 상담은 <b>카카오톡으로만</b> 해요. 고객이 상담하기를 누르면 알림톡으로 고객 정보가 오고, 사무소 카카오톡 채널(또는 전화)로 바로 연락하면 돼요. 앱 안 채팅은 없어요.</p></section>
+    <section class="sec"><h3>${hic('chat')}고객 상담</h3><p class="help" style="margin:0">고객 상담은 <b>카카오톡으로만</b> 해요. 고객이 상담하기를 누르면 알림톡으로 고객 정보가 오고, 사무소 카카오톡 채널로 바로 연락하면 돼요. 앱 안 채팅은 없어요.</p></section>
     ${(()=>{ const pa=activePartner()||DB.partners[1]; const real=allReqs().flatMap(r=>r.props.filter(x=>x.partnerId===pa.id).map(x=>({t:TYPES[r.src.type].name+' · '+r.src.region+(r.kind==='sample'?' (예시 요청)':''), at:x.at, st:propStatus(x), why:x.ret?(x.ret+' · '+(x.refunded||0)+'코인 반환'+(x.canceled?' · 제안 취소':'')):null, when:x.opened, who:(r.kind==='lead'&&hasGrant(r.src.id,pa.id))?(r.src.name+' · '+r.src.phone):'', id:r.src.id}))); const L=real.concat([{t:'용도변경 · 송파구 방이동 (예시)', at:'10.30 09:40', st:'선택됨', when:'10.30 10:12', who:'박OO · 010-31**-5521'},{t:'양성화 · 강서구 화곡동 (예시)', at:'10.30 07:50', st:'열람', when:'10.30 08:30'},{t:'양성화 · 강남구 논현동 (예시)', at:'10.30 08:55', st:'미열람', left:'31시간'},{t:'기재사항 변경 · 송파구 가락동 (예시)', at:'10.27 14:20', st:'반환', why:RET_H+'시간 미열람'},{t:'용도변경 · 광진구 자양동 (예시)', at:'10.26 11:05', st:'반환', why:'허위 연락처'}]); const c=k=>L.filter(x=>x.st===k).length;
       return `<section class="sec"><h3>${hic('chat')}카카오톡 알림 (예시)</h3><div class="kinbox">
         <div class="km"><b>[건축ON] 새 견적 요청 · 2코인</b>송파구 방이동 · 용도변경<br>사무소 → 학원 · AI 예상 135~165만<br><button class="atk-btn" data-act="archPitch" data-id="s1">▶ 요청서 보고 제안하기</button></div>
@@ -3295,7 +3297,7 @@ document.addEventListener('input', e=>{ if(e.target.id==='sgq'){ S.q=e.target.va
   if(e.target.dataset && e.target.dataset.rq && S.req){ S.req[e.target.dataset.rq]=e.target.value; return; }
   if(e.target.dataset && e.target.dataset.app){ S.app[e.target.dataset.app]=e.target.value; return; }
   const id=e.target.dataset && e.target.dataset.in; if(!id) return;
-  const f=TYPES[S.type].fields.find(x=>x.id===id); let nv=f.type==='num' ? (parseFloat(e.target.value)||0) : e.target.value;
+  const f=TYPES[S.type].fields.find(x=>x.id===id); let nv=f.type==='num' ? (parseFloat(e.target.value)||0) : e.target.value; if(f.type==='num' && nv<0){ nv=0; e.target.value=''; toast('0보다 큰 숫자로 입력해주세요'); } if(f.type==='num' && nv>1e7){ nv=1e7; e.target.value=String(1e7); toast('입력할 수 있는 최대값을 넘었어요'); }
   if(f.type==='num' && f.unit==='㎡' && S.unitPy) nv=Math.round(nv*3.3058*100)/100;
   S.vals[id]=nv;
   const py=document.getElementById('py-'+id); if(py) py.textContent = S.unitPy ? '= '+Math.round(S.vals[id]||0).toLocaleString()+'㎡' : '= '+((S.vals[id]||0)/3.3058).toFixed(1)+'평';
