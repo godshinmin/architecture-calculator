@@ -16,6 +16,19 @@ html[data-theme=dark] .pfc{background:var(--dk1);border-color:var(--dk3)}html[da
 html[data-theme=dark] .ro{background:var(--dk2);border-color:var(--dk3)}
 .or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;font-size:12px;color:var(--muted)}.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
 .lnk{background:none;border:0;padding:0 2px;color:var(--acc);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.cm2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmc{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer;min-height:118px}
+.cmc .cmc-i{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--tint);color:var(--ink2);margin-bottom:4px}
+.cmc.k .cmc-i{background:#FEE500}.cmc b{font-size:14.5px;line-height:1.3}.cmc small{font-size:11.5px;color:var(--muted);line-height:1.4}
+.cmc[aria-checked=true]{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 16%,transparent)}.cmc.k[aria-checked=true]{background:#fffbd1;border-color:#e0c200;box-shadow:0 0 0 3px rgba(254,229,0,.35)}
+.cmc-ck{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center}.cmc.k .cmc-ck{background:#191919;color:#FEE500}
+html[data-theme=dark] .cmc.k[aria-checked=true]{background:#2f2a05;border-color:#bfa500}
+.pick-main{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;padding:22px 20px;border:0;border-radius:22px;background:linear-gradient(150deg,var(--acc),color-mix(in srgb,var(--acc) 72%,#000));color:#fff;font:inherit;cursor:pointer;box-shadow:0 10px 26px color-mix(in srgb,var(--acc) 35%,transparent);margin-top:6px}
+.pick-main .pm-top{display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:6px}.pick-main .pm-ic{width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.pick-main .pm-badge{font-size:12px;font-weight:800;background:#fff;color:var(--acc);border-radius:99px;padding:4px 10px}.pick-main b{font-size:21px;letter-spacing:-.3px}.pick-main small{font-size:13.5px;color:rgba(255,255,255,.85)}
+.pick-main .pm-pts{display:flex;flex-direction:column;gap:5px;margin:8px 0 4px}.pick-main .pm-pts i{font-style:normal;font-size:13px;display:flex;align-items:center;gap:6px;color:#fff}
+.pick-main .pm-go{align-self:stretch;display:flex;align-items:center;justify-content:center;gap:4px;margin-top:10px;padding:13px;border-radius:14px;background:#fff;color:var(--acc);font-weight:800;font-size:15.5px}
+.ai-only{text-align:center;font-size:13px;color:var(--muted);margin:18px 0 6px}.ai-only .lnk{color:var(--muted);font-weight:600}
 </style></head><body>
 <title>건축ON 앱 시안 (테스트)</title><meta name="robots" content="noindex,nofollow">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1806,7 +1819,7 @@ const S = {cat:'permit', view:'home', type:null, vals:{}, est:null, addr:false, 
   ],
   selfType:null, selfAns:{}, adm:{ok:false, tab:'dash'}, sel:{}, cfg:null};
 function defaults(t){ const o={}; TYPES[t].fields.forEach(f=>{ o[f.id] = Array.isArray(f.def)? f.def.slice() : f.def; }); return o; }
-function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrEdit=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
+function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrEdit=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; S.cmode=null; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
 /* ---- 화면 이동: 브라우저 history를 단일 기준으로 (인증·개인정보는 history.state에 넣지 않음) ---- */
 let NAVI=0;
 const FLOW_VIEWS=['form','choose','result','gate','done','verify','chat'];
@@ -2118,12 +2131,14 @@ function vForm(){
 
 function vChoose(){
   const t=TYPES[S.type], c=CATS[t.cat];
-  const card=(act,icn,title,desc,pts,main)=>`<button class="pick${main?' main':''}" data-act="${act}"><span class="pk-ic">${ic(icn,26)}</span><span class="pk-tx"><b>${title}</b><small>${desc}</small><span class="pk-pts">${pts.map(x=>`<i>${ic('check',14,2.5)} ${x}</i>`).join('')}</span></span>${ic('chev',20)}</button>`;
-  return header({title:t.name+' 견적'}) + `<main class="wrap view">
+    return header({title:t.name+' 견적'}) + `<main class="wrap view">
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">어떻게 받아볼까요?</h1>
       <p class="help" style="font-size:13.5px;margin-top:6px">${esc(c.name)} · ${esc(t.name)} · 입력한 조건으로 진행해요</p></section>
-    ${card('submit','users','건축사 제안 받기 <em>무료</em>','등록 건축사사무소 최대 5곳이 실제 견적을 보내요',['AI 예상 비용도 함께 보여드려요','연락처는 고르신 사무소에만 전달','카카오톡으로 상담'],true)}
-    ${card('aiOnly','chart','AI 예상 비용만 보기','연락처 없이 바로 참고용 금액 범위를 봐요',['아무 정보도 전달되지 않아요','보고 나서 건축사 제안도 받을 수 있어요'],false)}
+    <button class="pick-main" data-act="submit"><span class="pm-top"><span class="pm-ic">${ic('users',26)}</span><span class="pm-badge">추천 · 무료</span></span>
+      <b>건축사 제안 받기</b><small>등록 건축사사무소 최대 5곳이 실제 견적을 보내드려요</small>
+      <span class="pm-pts"><i>${ic('check',15,2.5)} AI 예상 비용도 함께 보여드려요</i><i>${ic('check',15,2.5)} 연락처는 고르신 사무소에만 전달</i><i>${ic('check',15,2.5)} 상담은 카카오톡으로 편하게</i></span>
+      <span class="pm-go">제안 받으러 가기 ${ic('chev',18)}</span></button>
+    <p class="ai-only">견적 요청 없이 <button class="lnk" data-act="aiOnly">AI 예상 비용만 볼게요</button></p>
     <button class="btn line sm" data-act="back">${ic('back',16)} 조건 수정하기</button>
   </main>`;
 }
@@ -2224,21 +2239,23 @@ function vBrowse(){
   </div>`;
 }
 function vGate(){
-  const t=TYPES[S.type], r=S.est||compute(), q=S.req||(S.req={name:'',phone:'',consent:false,mkt:false}); if(S.cust){ q.name=S.cust.name; q.phone=S.cust.phone; }
+  const t=TYPES[S.type], r=S.est||compute(), q=S.req||(S.req={name:'',phone:'',consent:false,mkt:false}); if(S.cust){ q.name=S.cust.name; q.phone=S.cust.phone; } const cm=S.cmode||(S.cust?(S.cust.via==='kakao'?'kakao':'direct'):'');
   const items=['이름, 연락처', `${t.name} 요청 조건 ${t.fields.length}개 항목`].concat((S.photos||[]).length?[`현장 사진 ${S.photos.length}장`]:[]).concat((S.note||S.vals.memo||'').trim()?['특이사항·상황 설명']:[]).concat(S.reqSelf?['사전 점검 요약']:[]).concat(r.noPrice||needInfo().length?[]:['AI 예상 비용 범위']);
   return header({title:'건축사 제안 요청'}) + `<main class="wrap view">
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">${t.name} 제안을 요청할게요</h1>
       <p class="help" style="font-size:13.5px;margin-top:6px">등록 건축사사무소에 요청서를 보내 <b>최대 5곳</b>까지 제안을 받을 수 있어요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p></section>
-    <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 화면 안에서만 저장돼요.</span></div>
+    <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 브라우저에만 저장돼요(같은 주소의 사무소·관리자 탭에서 바로 확인 가능).</span></div>
     <section class="sec"><h3>${hic('pin')}${TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 위치':'건물 위치'} *</h3>${S.addr&&!S.addrEdit?`<div class="ro"><span><b>${esc(S.addrText)}</b><small>앞에서 입력한 주소로 보내요 · 사무소에는 ${esc(addrRegion(S.addrText))}까지만 보여요</small></span><button class="opt" data-act="addrEdit">변경</button></div>`:addrBox(TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 지번':'건물 주소')+(S.addr?'':'<p class="help" style="margin-top:6px;color:#b54708;font-weight:700">건축사 제안을 받으려면 주소를 적고 확인을 눌러주세요</p>')}</section>
     <section class="sec"><h3>${hic('users')}연락받을 정보</h3>
-      ${S.cust?`<div class="ro"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>${S.cust.via==='kakao'?'카카오 계정으로 로그인됨':'전화번호로 확인됨'} · 받은 제안은 이 계정으로 다시 볼 수 있어요</small></span><button class="opt" data-act="custOut">변경</button></div>`
-      :`<button class="btn kakao" data-act="kakaoLogin">${KAKAO_SVG} 카카오로 간편 입력</button>
-      <p class="help" style="text-align:center;margin-top:6px">카카오 계정의 이름·전화번호로 바로 채워요 · 나중에 카카오 로그인만 하면 받은 제안을 다시 볼 수 있어요</p>
-      <div class="or"><span>또는 직접 입력</span></div>
-      <div class="f"><label class="lbl" for="gn">이름 *</label><input id="gn" class="inp" placeholder="홍길동" autocomplete="name" value="${esc(q.name)}" data-rq="name"></div>
-      <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div>
-      <p class="help">제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 확인 링크를 보내드려요</p>`}</section>
+      <p class="help" style="margin:-4px 0 10px">둘 중 편한 방법을 골라주세요</p>
+      <div class="cm2" role="radiogroup" aria-label="연락처 입력 방법">
+        <button class="cmc k" role="radio" aria-checked="${cm==='kakao'}" data-act="cmode" data-m="kakao"><span class="cmc-i">${KAKAO_SVG}</span><b>카카오로 간편 입력</b><small>이름·번호 자동 · 다음엔 카카오 로그인만</small>${cm==='kakao'?'<i class="cmc-ck">✓</i>':''}</button>
+        <button class="cmc" role="radio" aria-checked="${cm==='direct'}" data-act="cmode" data-m="direct"><span class="cmc-i">${ic('phone',20)}</span><b>이름·전화번호 입력</b><small>직접 적기 · 다음엔 번호 인증으로 찾기</small>${cm==='direct'?'<i class="cmc-ck">✓</i>':''}</button>
+      </div>
+      ${cm==='kakao'&&S.cust?`<div class="ro" style="margin-top:12px"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>카카오 계정으로 로그인됨 · 받은 제안은 이 계정으로 다시 볼 수 있어요</small></span></div>`
+      :cm==='direct'?(S.cust&&S.cust.via==='phone'?`<div class="ro" style="margin-top:12px"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>지난 요청 때 쓴 정보예요</small></span><button class="opt" data-act="custOut">변경</button></div>`:`<div style="margin-top:12px"><div class="f"><label class="lbl" for="gn">이름 *</label><input id="gn" class="inp" placeholder="홍길동" autocomplete="name" value="${esc(q.name)}" data-rq="name"></div>
+      <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div></div>`):''}
+      ${cm?'<p class="help" style="margin-top:8px">제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 본인 전용 확인 링크를 보내드려요</p>':''}</section>
     <section class="sec"><h3>${hic('doc')}제출 전 확인: 누구에게 무엇을 보내나요</h3>
       <dl class="cond"><dt>받는 곳</dt><dd>요청 지역·분야에 맞는 건축ON 등록 건축사사무소 (최대 5곳)</dd>
         <dt>보내는 정보</dt><dd>${items.map(esc).join(', ')}</dd>
@@ -2499,7 +2516,7 @@ function seedProps(){ if(DB._ps) return; DB._ps=1; const byName=n=>DB.partners.f
 function submitRequest(){ const q=S.req; if(!q||q.busy||S._submitting) return; const n=(q.name||'').trim(), ph=(q.phone||'').trim(), d=ph.replace(/\D/g,'');
   const typedAddr=document.getElementById('addr'); if(S.addr && typedAddr && typedAddr.value.trim()!==S.addrText){ toast('주소가 바뀌었어요 · 옆의 \'변경\'을 눌러 다시 확인해 주세요'); typedAddr.focus(); typedAddr.scrollIntoView({block:'center'}); return; }
   if(!S.addr){ toast('건물 주소를 확인해 주세요'); const ae=document.getElementById('addr'); if(ae){ ae.focus(); ae.scrollIntoView({block:'center'}); } return; }
-  if(!n){ toast('이름을 입력해주세요'); document.getElementById('gn').focus(); return; }
+  if(!n){ toast(document.getElementById('gn')?'이름을 입력해주세요':'연락받을 방법을 골라주세요 (카카오 또는 이름·전화번호)'); const g=document.getElementById('gn'); if(g) g.focus(); return; }
   if(/[^0-9\-\s]/.test(ph) || !/^01[016789]\d{7,8}$/.test(d)){ toast('연락처를 정확히 입력해주세요'); document.getElementById('gp').focus(); return; }
   if(fakePhone(d) && q.warned!==d){ q.warned=d; toast('번호를 한 번 더 확인해 주세요 · 맞으면 다시 누르면 접수돼요'); document.getElementById('gp').focus(); return; }
   if(!q.consent){ toast('필수 동의에 체크해주세요'); return; }
@@ -2977,6 +2994,7 @@ AI 예상 범위 ${esc(rangeTxt(f0.brief))}${f0.brief.unk.length?` · 확인 필
 제안 시 ${cn(f0.brief)}코인 · 최대 5곳 중 현재 ${f0.n}곳 제안 · 마감 ${f0.dl}
 <button class="atk-btn" data-act="archPitch" data-id="${esc(f0.id)}">▶ 요청서 보고 바로 제안하기</button></div>`:''}
     ${F.length?'':'<section class="sec" style="text-align:center"><p class="help">지금 제안할 수 있는 요청이 없어요</p></section>'}
+    ${(()=>{ if(!pa) return ''; const out=allReqs().filter(r=>reqIsOpen(r)&&r.props.length<5&&!r.props.some(p=>p.partnerId===pa.id)&&!reqMatchesPartner(r.src.region,pa)).length; return out?`<p class="help" style="text-align:center;margin:-4px 0 4px">${esc(areasTxt(pa).replace(' 수신',''))} 수신 지역 밖 요청 ${out}건은 표시되지 않아요 · 지역은 내 사무소 설정에서 바꿀 수 있어요</p>`:''; })()}
     ${F.map(x=>{ const T=TYPES[x.type], C=CATS[T.cat], b=x.brief; return `<div class="req"><div style="flex:none;width:46px;height:46px;border-radius:12px;background:${C.t};color:${C.acc};display:flex;align-items:center;justify-content:center">${ic(T.icon,24)}</div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:11.5px"><b style="color:${C.acc}">${C.name} · ${T.name}</b><span style="color:#b45309;font-weight:700">${x.dl} 남음</span></div>
       <b style="font-size:15px">${esc(b.sub)}</b><span style="font-size:12.5px;color:var(--muted)">${esc(x.region)} · 접수 ${esc(x.at)}</span>
@@ -3067,7 +3085,17 @@ function vArchDash(){
 /* ===================== 렌더 & 이벤트 ===================== */
 function demoRole(){ if(S.adm&&S.adm.ok) return '관리자'; const pa=activePartner(); if(pa) return pa.name.replace('건축사사무소','사무소'); return '고객'; }
 function demoBar(){ const cur=demoRole(), R=[['cust','고객','요청서 작성 · 받은 제안 열람·상담 선택'],['p2','A건축사사무소','파트너 · 코인 '+DB.partners.find(p=>p.id==='p2').credit],['p3','B건축사사무소','파트너 · 코인 '+DB.partners.find(p=>p.id==='p3').credit],['p4','충청 E건축사사무소','파트너 · 코인 '+DB.partners.find(p=>p.id==='p4').credit],['admin','관리자','요청·제안·반환·코인 관리']];
-  return `<button class="demo-fab" data-act="demoOpen" aria-label="시연 역할 바꾸기">🎭 ${esc(cur)}</button>${S.demoOpen?`<div class="demo-sh" role="dialog" aria-label="시연 역할"><div class="demo-in"><b>시연 역할 바꾸기</b><p class="help" style="margin:2px 0 10px">혼자서 고객·사무소·관리자를 번갈아 테스트할 수 있어요. 데이터는 이 화면 안에서만 유지돼요(새로고침하면 초기화).</p>${R.map(([k,n,d])=>`<button class="demo-r" data-act="demoRole" data-r="${k}" aria-pressed="${(k==='cust'&&cur==='고객')||(k==='admin'&&cur==='관리자')||(S.partner&&S.partner.id===k&&!(S.adm&&S.adm.ok))}"><span><b>${n}</b><small>${esc(d)}</small></span></button>`).join('')}<button class="btn line sm" data-act="demoOpen" style="margin-top:8px">닫기</button></div></div>`:''}`; }
+  return `<button class="demo-fab" data-act="demoOpen" aria-label="시연 역할 바꾸기">🎭 ${esc(cur)}</button>${S.demoOpen?`<div class="demo-sh" role="dialog" aria-label="시연 역할"><div class="demo-in"><b>시연 역할 바꾸기</b><p class="help" style="margin:2px 0 10px">혼자서 고객·사무소·관리자를 번갈아 테스트할 수 있어요. 데이터는 이 브라우저에 저장돼요 · 새로고침해도 유지되고, 같은 주소를 연 다른 탭과도 맞춰져요. (claude.ai 시안과 테스트 페이지는 서로 따로 저장돼요)</p>${R.map(([k,n,d])=>`<button class="demo-r" data-act="demoRole" data-r="${k}" aria-pressed="${(k==='cust'&&cur==='고객')||(k==='admin'&&cur==='관리자')||(S.partner&&S.partner.id===k&&!(S.adm&&S.adm.ok))}"><span><b>${n}</b><small>${esc(d)}</small></span></button>`).join('')}<button class="btn line sm" data-act="demoOpen" style="margin-top:8px">닫기</button><button class="lnk" data-act="demoReset" style="display:block;margin:10px auto 0;font-size:12.5px">시연 데이터 처음으로 되돌리기</button></div></div>`:''}`; }
+const DEMO_KEY='kon_demo_v1';
+function demoData(noPhotos){ return {v:1, seq:DB.seq, pseq:DB.pseq, grants:[...DB.grants], leads:noPhotos?DB.leads.map(l=>Object.assign({},l,{photos:[]})):DB.leads, partners:DB.partners.map(p=>{ const o=Object.assign({},p); delete o.logo; return o; }), buys:DB.buys||[], apps:DB.apps, adminReq:DB.adminReq, samples:archSamples().map(x=>({id:x.id, props:x.props})), sess:{myReqs:S.myReqs||[], cust:S.cust||null}}; }
+let saveDemo; saveDemo=function(){ clearTimeout(saveDemo._t); saveDemo._t=setTimeout(()=>{ try{ localStorage.setItem(DEMO_KEY, JSON.stringify(demoData(false))); }catch(e){ try{ localStorage.setItem(DEMO_KEY, JSON.stringify(demoData(true))); }catch(e2){} } }, 250); };
+function loadDemo(){ try{ const d=JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); if(!d||typeof d!=='object'||d.v!==1) return;
+  ['leads','partners','buys','apps','adminReq'].forEach(k=>{ if(Array.isArray(d[k])) DB[k]=d[k].filter(x=>x&&typeof x==='object'); });
+  if(Number.isFinite(+d.seq)) DB.seq=+d.seq; if(Number.isFinite(+d.pseq)) DB.pseq=+d.pseq; if(Array.isArray(d.grants)) DB.grants=new Set(d.grants.map(String));
+  if(Array.isArray(d.samples)){ const A=archSamples(); d.samples.forEach(x=>{ const t=x&&A.find(y=>y.id===x.id); if(t&&Array.isArray(x.props)) t.props=x.props; }); }
+  if(d.sess){ S.myReqs=Array.isArray(d.sess.myReqs)?d.sess.myReqs:[]; S.cust=d.sess.cust&&typeof d.sess.cust==='object'?{via:String(d.sess.cust.via||''), name:String(d.sess.cust.name||''), phone:String(d.sess.cust.phone||'')}:null; }
+}catch(e){} }
+window.addEventListener('storage', e=>{ if(e.key===DEMO_KEY){ if(e.newValue==null){ clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); return; } loadDemo(); loadPLogos(); const ae=document.activeElement; if(!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) render(); } });
 function render(){
   if(S.view==='news') S.view='home';
   if(PARTNER_VIEWS.includes(S.view) && !activePartner()){ if(S.view==='archPitch'&&S.akId) S.pendingReq=S.akId; S.view='archLogin'; }
@@ -3083,6 +3111,7 @@ function render(){
     if(a0!==DB.pw){ toast('현재 비밀번호가 맞지 않아요'); return; } if(a1.length<8){ toast('새 비밀번호는 8자 이상이에요'); return; } if(a1!==a2){ toast('새 비밀번호가 서로 달라요'); return; }
     DB.pw=a1; try{ localStorage.removeItem('kon_admin_pw'); }catch(err){} pwf.reset(); toast('비밀번호를 바꿨어요 (시연 · 새로고침하면 초기화)'); });
   const cf=document.getElementById('cf'); if(cf) cf.addEventListener('submit', e=>{ e.preventDefault(); const m=document.getElementById('msg'); if(m.value.trim()){ (S.chat=S.chat||[]).push(m.value.trim()); render(); window.scrollTo(0,document.body.scrollHeight); } });
+  saveDemo();
 }
 function updateLive(){
   return;
@@ -3120,9 +3149,11 @@ document.addEventListener('click', e=>{
   else if(a==='addrClear'){ S.addr=false; S.addrText=''; S.addrTyping=''; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
   else if(a==='result'){ const ty=(S.addrTyping||'').trim(); if(ty.length>=4 && (!S.addr || ty!==S.addrText)){ S.addr=true; S.addrText=ty; } S.addrEdit=false; const rr=compute(); if(rr.noPrice||S.reqDone) go('result'); else go('choose'); }
   else if(a==='aiOnly'){ go('result'); }
+  else if(a==='demoReset'){ if(!b.dataset.ok){ b.dataset.ok='1'; b.textContent='한 번 더 누르면 모든 시연 요청·제안·코인이 처음으로 돌아가요'; return; } try{ localStorage.removeItem(DEMO_KEY); }catch(e){} clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); }
+  else if(a==='cmode'){ S.cmode=b.dataset.m; if(S.cmode==='kakao'&&!S.cust){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; toast('카카오 계정 정보로 채웠어요 (시연)'); } if(S.cmode==='direct'&&S.cust&&S.cust.via==='kakao'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } } const y=window.scrollY; render(); window.scrollTo(0,y); if(S.cmode==='direct'){ const el=document.getElementById('gn'); if(el) el.focus(); } }
   else if(a==='addrEdit'){ S.addrEdit=true; S.addrTyping=S.addrText; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
-  else if(a==='kakaoLogin'){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; const y=window.scrollY; render(); window.scrollTo(0,y); toast('카카오 계정 정보로 채웠어요 (시연)'); }
-  else if(a==='custOut'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } const y=window.scrollY; render(); window.scrollTo(0,y); }
+  else if(a==='kakaoLogin'){ S.cmode='kakao'; S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; const y=window.scrollY; render(); window.scrollTo(0,y); toast('카카오 계정 정보로 채웠어요 (시연)'); }
+  else if(a==='custOut'){ S.cust=null; S.cmode='direct'; if(S.req){ S.req.name=''; S.req.phone=''; } const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='custLogout'){ S.cust=null; S.myReqs=[]; S.viewReq=null; S.find=null; go('home'); toast('로그아웃했어요 (시연)'); }
   else if(a==='findKakao'){ const ph='010-4821-7365'; const ids=DB.leads.filter(l=>l.via==='kakao'||String(l.phone).replace(/\D/g,'')===ph.replace(/\D/g,'')).map(l=>l.id); S.cust={via:'kakao', name:'김건축', phone:ph}; if(!ids.length){ toast('이 카카오 계정으로 접수된 요청이 없어요'); render(); return; } S.myReqs=[...new Set((S.myReqs||[]).concat(ids))]; go('pitches',{viewReq:ids[0]},true); toast('카카오 로그인 완료 (시연)'); }
   else if(a==='findSend'){ const v=((document.getElementById('fp')||{}).value||'').trim(), d=v.replace(/\D/g,''); if(!/^01[016789]\d{7,8}$/.test(d)){ toast('전화번호를 정확히 입력해주세요'); return; } S.find={phone:v, sent:true}; render(); toast('인증번호를 보냈어요 (시연: 123456)'); const el=document.getElementById('fc'); if(el) el.focus(); }
@@ -3270,7 +3301,7 @@ document.addEventListener('change', e=>{ const d=e.target.dataset||{}; if(d.rq &
   if(e.target.dataset && e.target.dataset.js){ S.js[e.target.dataset.js]=e.target.value; return; } if(e.target.id==='ph' && e.target.files.length){ addPhotos(e.target.files); e.target.value=''; return; }
   if(e.target.id==='plogo' && e.target.files[0]){ const pid=e.target.dataset.id; loadImageFile(e.target.files[0],300,'image/png',1,(err,url)=>{ if(err){ toast(err); return; } const p=DB.partners.find(x=>x.id===pid); if(!p) return; p.logo=url; toast(savePLogos()?'로고를 올렸어요':'저장 공간이 부족해요'); render(); }); e.target.value=''; return; }
   if(e.target.id==='adimg' && e.target.files[0]){ loadImageFile(e.target.files[0],700,'image/webp',.85,(err,url)=>{ if(err){ toast(err); return; } S.cfg.ad.img=url; toast(saveCfg()?'모델 이미지를 넣었어요':'이미지가 너무 커서 저장은 안 됐어요'); render(); }); e.target.value=''; return; } if(e.target.id==='lg' && e.target.files.length){ addLogoFiles([...e.target.files]); return; } if(e.target.id==='ph'){ const n=e.target.files.length; document.getElementById('phn').textContent = n? `사진 ${n}장 선택됨`:'사진이 있으면 제안이 더 정확해져요'; } });
-S.cfg = loadCfg(); loadPLogos(); try{ S.unitPy=localStorage.getItem('kon_unit')==='p'; }catch(_){}
+S.cfg = loadCfg(); loadDemo(); loadPLogos(); try{ S.unitPy=localStorage.getItem('kon_unit')==='p'; }catch(_){}
 (function(){ let up=[], cleared=false; try{ up=JSON.parse(localStorage.getItem('kon_logos')||'[]')||[]; cleared=localStorage.getItem('kon_logos_cleared')==='1'; }catch(e){} S.logos=(cleared?[]:SAMPLE_LOGOS.slice()).concat(up); })();
 (function splash(){
   const el=document.getElementById('splash'); if(!el) return;
