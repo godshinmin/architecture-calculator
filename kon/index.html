@@ -1822,7 +1822,7 @@ const S = {cat:'permit', view:'home', type:null, vals:{}, est:null, addr:false, 
   selfType:null, selfAns:{}, adm:{ok:false, tab:'dash'}, sel:{}, cfg:null};
 function josa(w,a,b){ const c=String(w||'').charCodeAt(String(w||'').length-1); if(c<0xAC00||c>0xD7A3) return b; return (c-0xAC00)%28?a:b; }
 function defaults(t){ const o={}; TYPES[t].fields.forEach(f=>{ o[f.id] = f.type==='text' ? '' : Array.isArray(f.def)? f.def.slice() : f.def; }); return o; }
-function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrEdit=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; S.cmode=null; S.touched={}; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
+function startNew(k,opt){ S.draftEpoch=(S.draftEpoch||0)+1; S.vals=defaults(k); S.unk={}; S.note=''; S.photos=[]; S.photoPending=0; S.chat=null; S.req=null; S.reqDone=false; S.reqId=null; S.contact=null; S.est=null; S.addr=false; S.addrEdit=false; S.addrNeed=false; S.addrText=''; S.addrTyping=''; S.sampleSt=null; S.aiSeen=false; S.cmode=null; S.touched={}; if(!(opt&&opt.keepSelf)) S.reqSelf=null; }
 /* ---- 화면 이동: 브라우저 history를 단일 기준으로 (인증·개인정보는 history.state에 넣지 않음) ---- */
 let NAVI=0;
 const FLOW_VIEWS=['form','choose','result','gate','done','verify','chat'];
@@ -2082,7 +2082,12 @@ function footer(){
     <span style="display:block;margin-top:10px">건축ON은 건축주와 등록 파트너를 연결하는 서비스이며, 설계·인허가·시공 업무는 각 사무소·업체가 직접 수행합니다.</span>
   </footer>`;
 }
-function addrRegion(t){ const x=String(t||'').replace(/\s+/g,' ').trim(); const m=x.match(/(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)[^ ]*\s+([^ ]+(시|군|구))(\s+[^ ]+구)?\s+([^ ]+(동|읍|면|가|로|길))/); if(m) return (m[1]+' '+m[2]+(m[4]||'')+' '+m[5].replace(/\d.*$/,'')).replace(/\s+/g,' '); const g=x.match(/([^ ]+(구|군|시))\s+([^ ]+(동|읍|면|로|길))/); return g?(g[1]+' '+g[3].replace(/\d.*$/,'')):'지역 확인 필요'; }
+function addrRegion(t){ const x=String(t||'').replace(/\s+/g,' ').trim(); const m=x.match(/(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)[^ ]*\s+([^ ]+(시|군|구))(\s+[^ ]+구)?\s+([^ ]+(동|읍|면|가|로|길))/); if(m) return (m[1]+' '+m[2]+(m[4]||'')+' '+m[5].replace(/\d.*$/,'')).replace(/\s+/g,' '); const g=x.match(/([^ ]+(구|군|시))\s+([^ ]+(동|읍|면|로|길))/); if(g){ const gu=g[1].replace(/구$/,''); return ((g[2]==='구'&&SEOUL_GU.includes(gu))?'서울 ':'')+g[1]+' '+g[3].replace(/\d.*$/,''); }
+  const rd=x.match(/([가-힣]{2,})(대로|로|길)/); if(rd){ const gu=SEOUL_GU.find(n=>n.length>=2&&rd[1].startsWith(n)); if(gu) return '서울 '+gu+'구 '+rd[0]; }
+  const dn=x.match(/([가-힣]{1,4})(\d*)동/); if(dn){ const gu=DONG_GU[dn[1]]; if(gu) return '서울 '+gu+'구 '+dn[1]+(dn[2]||'')+'동'; }
+  return '지역 확인 필요'; }
+const DONG_GU={}; [['송파','가락 문정 장지 석촌 송파 삼전 잠실 신천 방이 오금 거여 마천 풍납'],['강남','역삼 삼성 대치 청담 압구정 신사 논현 도곡 개포 일원 수서 세곡 자곡 율현'],['강동','천호 성내 길 둔촌 명일 고덕 상일 암사 강일'],['서초','서초 잠원 반포 방배 양재 내곡 우면'],['마포','합정 망원 연남 서교 상수 공덕 아현 도화 용강 대흥 염리 성산 상암'],['성동','성수 왕십리 행당 금호 옥수 응봉 마장 사근 송정']].forEach(([g,l])=>l.split(' ').forEach(d=>{ DONG_GU[d]=g; }));
+const SEOUL_GU=['종로','중','용산','성동','광진','동대문','중랑','성북','강북','도봉','노원','은평','서대문','마포','양천','강서','구로','금천','영등포','동작','관악','서초','강남','송파','강동'];
 function addrBox(ph){
   return `<div class="addr"><label for="addr" style="position:absolute;left:-9999px">주소</label><input id="addr" class="inp" placeholder="${ph} (예: 서울 송파구 가락동 91-5)" value="${esc(S.addrTyping!=null&&S.addrTyping!==''?S.addrTyping:(S.addr?S.addrText:''))}" maxlength="100" autocomplete="street-address"><button data-act="lookup">${S.addr?'변경':'확인'}</button></div><p class="help" id="addrdirty" style="color:#b54708;font-weight:700;margin-top:6px;${S.addr&&(S.addrTyping||'').trim()&&S.addrTyping.trim()!==S.addrText?'':'display:none'}">주소를 고쳤어요 · '변경'을 눌러야 새 주소로 접수돼요</p>
   ${S.addr?`<div class="note" style="margin-top:8px"><span>${ic('check',16,2.5)} <b>${esc(S.addrText)}</b><br><small>사무소에는 <b>${esc(addrRegion(S.addrText))}</b>까지만 보이고, 상세 주소는 상담하기를 누른 사무소에만 전달돼요. · 건축물대장 자동 조회는 정식 서비스(서버 연결 후)에서 동작해요.</small></span></div><button class="btn line sm" data-act="addrClear" style="margin-top:6px">주소 지우기</button>`:''}`;
@@ -2118,7 +2123,7 @@ function vForm(){
   return header({title:t.name+' 견적', right:`<span class="pill" style="background:${c.t};color:${c.acc}">${c.name}</span>`}) + `<main class="wrap view">
     ${t.cat!=='permit'?`<div class="beta-note sm"><span><b><i class="beta">BETA</i> ${c.name} 견적은 준비 중이에요</b><small>견적은 참고용이며 상담은 건축사가 직접 도와드려요.</small></span></div>`:''}
     <div class="note ch-note"><span>${t.intro}</span>${chImg(TYPE_CH[S.type]||'clip','cn-img')}</div>
-    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}</section>
+    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}${(()=>{ const tx=(S.addrTyping||S.addrText||'').trim(); const bad=tx.length>=4&&!reqRegionOk(addrRegion(tx)); return S.addrNeed||bad?`<p class="help" style="margin-top:6px;color:var(--dl,#b45309);font-weight:700">${bad?'구(시·군)까지 적어주세요 · 예: 송파구 가락동 91-5 — 그래야 그 지역 건축사사무소에 요청이 가요':'건축사 제안을 받으려면 주소가 필요해요'}</p>`:`<p class="help" style="margin-top:6px">여기서 한 번만 입력하면 돼요 · 사무소에는 동까지만 보여요</p>`; })()}</section>
     <section class="sec"><h3>${hic('list')}상세 조건</h3><p class="help" style="margin:-4px 0 14px">모르는 항목은 <b>'모르겠어요'</b>를 누르면 <b>건축사 상담</b> 항목으로 바뀌어요. 그 항목은 견적에서 빠지고 범위가 넓어지며, 상담 때 건축사가 확인해 정해요. 건축사가 상담으로 채워드려요.</p>${t.fields.map(field).join('')}</section>
     ${t.fields.some(x=>x.id==='memo')?'':`<section class="sec"><h3>${hic('doc')}특이사항 · 요청사항 <small style="font-size:12px;color:var(--muted);font-weight:500">선택</small></h3>
       <label for="f-note" style="position:absolute;left:-9999px">특이사항</label><textarea id="f-note" class="inp" data-note="1" placeholder="예) 2층만 변경 예정이에요 / 다음 달 임대 계약이라 급해요 / 예전에 이행강제금 통지를 받았어요" maxlength="1000">${esc(S.note||'')}</textarea>
@@ -2248,7 +2253,7 @@ function vGate(){
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">${t.name} 제안을 요청할게요</h1>
       <p class="help" style="font-size:13.5px;margin-top:6px">등록 건축사사무소에 요청서를 보내 <b>최대 5곳</b>까지 제안을 받을 수 있어요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p></section>
     <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 브라우저에만 저장돼요(같은 주소의 사무소·관리자 탭에서 바로 확인 가능).</span></div>
-    <section class="sec"><h3>${hic('pin')}${TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 위치':'건물 위치'} *</h3>${S.addr&&!S.addrEdit?`<div class="ro"><span><b>${esc(S.addrText)}</b><small>앞에서 입력한 주소로 보내요 · 사무소에는 ${esc(addrRegion(S.addrText))}까지만 보여요</small></span><button class="opt" data-act="addrEdit">변경</button></div>`:addrBox(TYPES[S.type]&&TYPES[S.type].cat==='new'?'대지 지번':'건물 주소')+(S.addr?'':'<p class="help" style="margin-top:6px;color:#b54708;font-weight:700">건축사 제안을 받으려면 주소를 적고 확인을 눌러주세요</p>')}</section>
+    <p class="help" style="margin:-2px 2px 12px;display:flex;gap:6px;align-items:center">${ic('pin',15)} <span><b style="color:var(--ink)">${esc(S.addrText)}</b> · 사무소에는 ${esc(addrRegion(S.addrText))}까지만 보여요</span></p>
     <section class="sec"><h3>${hic('users')}연락받을 정보</h3>
       <p class="help" style="margin:-4px 0 10px">둘 중 편한 방법을 골라주세요</p>
       <div class="cm2" role="radiogroup" aria-label="연락처 입력 방법">
@@ -2301,6 +2306,7 @@ function vDone(){
         <dt>사전 점검</dt><dd>${S.reqSelf?esc(S.reqSelf.name):'없음'}</dd>
         <dt>동의</dt><dd>필수 ${S.req&&S.req.consent?'동의':'-'} · 마케팅 ${S.req&&S.req.mkt?'동의':'미동의'}</dd></dl></section>
     ${l&&l.brief&&!l.brief.noPrice?'<button class="btn line sm" data-act="aiOnly">AI 예상 비용 자세히 보기</button>':''}
+    ${l?(()=>{ const P=DB.partners.filter(pa=>pa.on&&reqMatchesPartner(l.region,pa)); return `<p class="help" style="text-align:center">시연: 이 요청(${esc(l.region)})을 받는 사무소 ${P.length}곳 — ${P.map(pa=>esc(pa.name.replace('건축사사무소',''))).join(' · ')}</p>`; })():''}
     <div class="atk"><div class="h">${ic('chat',16)} 고객님께 가는 카카오톡 알림 예시</div>[건축ON] ${esc(t.name)} 견적 요청이 접수됐어요.
 건축사 제안이 도착하면 바로 알려드릴게요.
 받은 제안 보기 ▶ kon.kr/r/${esc(l&&l.tok||'xxxxxx')}
@@ -3198,7 +3204,9 @@ document.addEventListener('click', e=>{
   else if(a==='browse'){ S.bCat=S.cat; S.bGrp=0; go('browse'); }
   else if(a==='want'){ const n=document.getElementById('gn'), ph=document.getElementById('gp'); S.gate.name=n.value; S.gate.phone=ph.value; S.gate.want=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='gateGo'){ submitRequest(); }
-  else if(a==='submit'){ if(S.reqDone){ go('done'); return; } S.req=S.req||{name:'',phone:'',consent:false,mkt:false}; go('gate'); }
+  else if(a==='submit'){ if(S.reqDone){ go('done'); return; } const ty=(S.addrTyping||'').trim(); if(ty.length>=4&&ty!==S.addrText){ S.addr=true; S.addrText=ty; }
+    if(!S.addr||!reqRegionOk(addrRegion(S.addrText))){ S.addrNeed=true; go('form'); toast(S.addr?'주소에 구(시·군)까지 적어주세요 · 예: 송파구 가락동 91-5':'건축사 제안을 받으려면 건물 주소가 필요해요'); setTimeout(()=>{ const el=document.getElementById('addr'); if(el){ el.focus(); el.scrollIntoView({block:'center'}); } },80); return; }
+    S.addrNeed=false; S.req=S.req||{name:'',phone:'',consent:false,mkt:false}; go('gate'); }
   else if(a==='verified'){ go('done',{},true); }
   else if(a==='toPitches'){ go('pitches',{viewReq:S.reqId}); }
   else if(a==='chat'){ window.open('https://pf.kakao.com/_ZEPPX/chat','_blank','noopener'); return; }
@@ -3302,7 +3310,7 @@ document.addEventListener('change', e=>{ if(e.target.classList&&e.target.classLi
   if(e.target.dataset && e.target.dataset.pck!=null){ const d=S.pdraft[String(S.akId)]; if(d){ d.items[+e.target.dataset.pck].on=e.target.checked; const y=window.scrollY; render(); window.scrollTo(0,y); } return; } if(e.target.dataset && e.target.dataset.pd){ const d=S.pdraft[String(S.akId)]; if(d) d[e.target.dataset.pd]=e.target.value; } });
 document.addEventListener('input', e=>{ if(e.target.id==='sgq'){ S.q=e.target.value; const h=document.getElementById('sgHits'); if(h) h.innerHTML=searchHits(S.q); return; }
   if(e.target.dataset && (e.target.dataset.pf||e.target.dataset.pfi!=null) && e.target.tagName!=='SELECT'){ const pa=activePartner(); if(pa&&S.partner.role==='대표'){ const x=e.target.dataset; let v=e.target.value; if(x.pf==='since'||x.pff==='y') v=v.replace(/\D/g,'').slice(0,4); if(x.pf) pa[x.pf]=v; else if(pa.portfolio[+x.pfi]) pa.portfolio[+x.pfi][x.pff]=v; } return; }
-  if(e.target.id==='addr'){ S.addrTyping=e.target.value; const h=document.getElementById('addrdirty'); if(h) h.style.display=(S.addr&&e.target.value.trim()!==S.addrText)?'':'none'; return; }
+  if(e.target.id==='addr'){ S.addrTyping=e.target.value; if(S.addrNeed&&reqRegionOk(addrRegion(e.target.value))) S.addrNeed=false; const h=document.getElementById('addrdirty'); if(h) h.style.display=(S.addr&&e.target.value.trim()!==S.addrText)?'':'none'; return; }
   if(e.target.dataset && (e.target.dataset.pia!=null||e.target.dataset.pen!=null||e.target.dataset.pea!=null)){ const d=S.pdraft[String(S.akId)]; if(d){ const x=e.target.dataset; if(x.pia!=null) d.items[+x.pia].amt=e.target.value; if(x.pen!=null) d.extra[+x.pen].n=e.target.value; if(x.pea!=null) d.extra[+x.pea].amt=e.target.value; pitchLive(); } return; }
   if(e.target.dataset && e.target.dataset.pd){ const k=String(S.akId); const d=S.pdraft[k]; if(d){ d[e.target.dataset.pd]=e.target.value; if(e.target.dataset.pd==='p1'||e.target.dataset.pd==='p2') pitchLive(); } return; }
   if(e.target.dataset && e.target.dataset.rf){ S.rf[e.target.dataset.rf]=e.target.value; const el=e.target.id; clearTimeout(S._rft); S._rft=setTimeout(()=>{ const y=window.scrollY; render(); window.scrollTo(0,y); const n=document.getElementById(el); if(n){ n.focus(); } },500); return; }
