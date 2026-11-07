@@ -2123,7 +2123,7 @@ function vForm(){
   return header({title:t.name+' 견적', right:`<span class="pill" style="background:${c.t};color:${c.acc}">${c.name}</span>`}) + `<main class="wrap view">
     ${t.cat!=='permit'?`<div class="beta-note sm"><span><b><i class="beta">BETA</i> ${c.name} 견적은 준비 중이에요</b><small>견적은 참고용이며 상담은 건축사가 직접 도와드려요.</small></span></div>`:''}
     <div class="note ch-note"><span>${t.intro}</span>${chImg(TYPE_CH[S.type]||'clip','cn-img')}</div>
-    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}${(()=>{ const tx=(S.addrTyping||S.addrText||'').trim(); const bad=tx.length>=4&&!reqRegionOk(addrRegion(tx)); return S.addrNeed||bad?`<p class="help" style="margin-top:6px;color:var(--dl,#b45309);font-weight:700">${bad?'구(시·군)까지 적어주세요 · 예: 송파구 가락동 91-5 — 그래야 그 지역 건축사사무소에 요청이 가요':'건축사 제안을 받으려면 주소가 필요해요'}</p>`:`<p class="help" style="margin-top:6px">여기서 한 번만 입력하면 돼요 · 사무소에는 동까지만 보여요</p>`; })()}</section>
+    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}${(()=>{ const tx=(S.addrTyping||S.addrText||'').trim(); const bad=false; return S.addrNeed&&!tx?`<p class="help" style="margin-top:6px;color:var(--dl,#b45309);font-weight:700">건축사 제안을 받으려면 주소가 필요해요</p>`:`<p class="help" style="margin-top:6px">여기서 한 번만 입력하면 돼요 · 사무소에는 동까지만 보여요</p>`; })()}</section>
     <section class="sec"><h3>${hic('list')}상세 조건</h3><p class="help" style="margin:-4px 0 14px">모르는 항목은 <b>'모르겠어요'</b>를 누르면 <b>건축사 상담</b> 항목으로 바뀌어요. 그 항목은 견적에서 빠지고 범위가 넓어지며, 상담 때 건축사가 확인해 정해요. 건축사가 상담으로 채워드려요.</p>${t.fields.map(field).join('')}</section>
     ${t.fields.some(x=>x.id==='memo')?'':`<section class="sec"><h3>${hic('doc')}특이사항 · 요청사항 <small style="font-size:12px;color:var(--muted);font-weight:500">선택</small></h3>
       <label for="f-note" style="position:absolute;left:-9999px">특이사항</label><textarea id="f-note" class="inp" data-note="1" placeholder="예) 2층만 변경 예정이에요 / 다음 달 임대 계약이라 급해요 / 예전에 이행강제금 통지를 받았어요" maxlength="1000">${esc(S.note||'')}</textarea>
@@ -2306,7 +2306,7 @@ function vDone(){
         <dt>사전 점검</dt><dd>${S.reqSelf?esc(S.reqSelf.name):'없음'}</dd>
         <dt>동의</dt><dd>필수 ${S.req&&S.req.consent?'동의':'-'} · 마케팅 ${S.req&&S.req.mkt?'동의':'미동의'}</dd></dl></section>
     ${l&&l.brief&&!l.brief.noPrice?'<button class="btn line sm" data-act="aiOnly">AI 예상 비용 자세히 보기</button>':''}
-    ${l?(()=>{ const P=DB.partners.filter(pa=>pa.on&&reqMatchesPartner(l.region,pa)); return `<p class="help" style="text-align:center">시연: 이 요청(${esc(l.region)})을 받는 사무소 ${P.length}곳 — ${P.map(pa=>esc(pa.name.replace('건축사사무소',''))).join(' · ')}</p>`; })():''}
+    ${l?(()=>{ const P=DB.partners.filter(pa=>pa.on&&reqMatchesPartner(l.region,pa)); return `<p class="help" style="text-align:center">등록된 건축사사무소 ${P.length}곳 모두에게 요청이 전달돼요 · 먼저 제안한 5곳까지 받아요</p>`; })():''}
     <div class="atk"><div class="h">${ic('chat',16)} 고객님께 가는 카카오톡 알림 예시</div>[건축ON] ${esc(t.name)} 견적 요청이 접수됐어요.
 건축사 제안이 도착하면 바로 알려드릴게요.
 받은 제안 보기 ▶ kon.kr/r/${esc(l&&l.tok||'xxxxxx')}
@@ -2543,7 +2543,7 @@ function submitRequest(){ const q=S.req; if(!q||q.busy||S._submitting) return; c
   }, 400); }
 function addLeadFrom(snap){ const ex=DB.leads.find(l=>l.idem===snap.idem); if(ex) return ex.id; const id=DB.seq++;
   DB.leads.unshift({id, idem:snap.idem, via:snap.via, tok:snap.tok, at:nowStr(), name:snap.contact.name, phone:snap.contact.phone, type:snap.type, region:snap.region, src:snap.src, kw:snap.kw, sub:snap.sub, std:snap.std, unk:snap.unk, want:true, cap:5, consent:Object.assign({at:nowStr(), ver:'시안 v1'}, snap.consent), selfSum:snap.selfSum, demo:true, photos:snap.photos, addrFull:snap.addrFull||'', note:snap.note, brief:snap.brief, stage:'미처리', closed:false, contract:0, props:[],
-    log:[[nowStr(), '시연 요청 저장 (실제 접수·알림 없음)'],[nowStr(), '수신 지역 맞는 파트너 '+DB.partners.filter(p=>p.on&&reqMatchesPartner(snap.region,p)).length+'곳에 새 요청 카톡 알림 (시연 · 목록과 같은 기준)']], memo:''});
+    log:[[nowStr(), '시연 요청 저장 (실제 접수·알림 없음)'],[nowStr(), '등록 파트너 전체 '+DB.partners.filter(p=>p.on&&reqMatchesPartner(snap.region,p)).length+'곳에 새 요청 카톡 알림 (시연 · 목록과 같은 기준)']], memo:''});
   return id; }
 function selOf(k){ return S.sel[k]||(S.sel[k]=[]); }
 function bulkBar(k, ids, actions){
@@ -2876,7 +2876,7 @@ function vOffice(){ const p=DB.partners.find(x=>x.id===S.officeId); if(!p) retur
   return header({title:'사무소 소개'}) + `<main class="wrap view">
     <section class="sec" style="text-align:center"><div style="display:flex;justify-content:center">${pav(p,72)}</div><h1 style="font-size:20px;margin:10px 0 4px">${esc(p.name)}</h1><p class="help" style="margin:0">대표 건축사 ${esc(p.ceo||'-')}${p.since?' · '+esc(p.since)+'년 개설':''}</p>
       <div class="chip-row" style="justify-content:center;margin-top:10px">${(p.fields.includes('전체')?['전 분야']:p.fields).map(f=>`<span class="pill" style="background:var(--p-l);color:var(--p)">${esc(f)}</span>`).join('')}</div>
-      <div class="lk"><div><small>소재지</small><b style="font-size:12.5px">${esc(p.office||'-')}</b></div><div><small>활동 지역</small><b style="font-size:12.5px">${esc(areasTxt(p).replace(' 수신',''))}</b></div><div><small>건축ON 계약</small><b>${p.won||0}건</b></div></div></section>
+      <div class="lk"><div><small>소재지</small><b style="font-size:12.5px">${esc(p.office||'-')}</b></div><div><small>활동 지역</small><b style="font-size:12.5px">${esc(areasTxt(p))}</b></div><div><small>건축ON 계약</small><b>${p.won||0}건</b></div></div></section>
     <section class="sec"><h3>${hic('users')}사무소 소개</h3><p style="margin:0;white-space:pre-wrap;line-height:1.7;font-size:14px">${p.intro?esc(p.intro):'<span class="help">아직 소개를 작성하지 않았어요</span>'}</p></section>
     <section class="sec"><h3>${hic('bld')}포트폴리오 ${pf.length}건</h3>${pf.filter(x=>x.t).length?`<div class="pfg">${pf.filter(x=>x.t).map(x=>`<div class="pfc">${safeImg(x.img)?`<img src="${esc(safeImg(x.img))}" alt="${esc(x.t)}">`:`<div class="pfi">${TYPES[x.k]?tIco(x.k,48):ic('bld',32)}</div>`}<b>${esc(x.t||'')}</b><small>${esc([x.y,TYPES[x.k]&&TYPES[x.k].name].filter(Boolean).join(' · '))}</small>${x.d?`<p>${esc(x.d)}</p>`:''}</div>`).join('')}</div>`:'<p class="help">아직 올린 포트폴리오가 없어요</p>'}</section>
     <p class="help" style="text-align:center">연락은 받은 제안에서 '이 사무소와 상담하기'를 누르면 카카오톡으로 이어져요.</p>
@@ -2904,7 +2904,7 @@ function vArchSet(){
       <p class="help" style="margin-top:6px">입력하면 바로 반영돼요 (시연 · 새로고침하면 초기화)</p>`:`<p class="help">소개·포트폴리오는 대표만 편집할 수 있어요</p><button class="btn line sm" data-act="office" data-id="${esc(p.id)}">소개 페이지 보기</button>`}</section>
 
     <section class="sec"><h3>${hic('pin')}활동 지역 · 상담 분야</h3>
-      <div class="lk" style="margin-top:0"><div><small>사무소 소재지</small><b style="font-size:12.5px">${esc(p.office||'-')}</b></div><div><small>요청 받는 지역</small><b style="font-size:12.5px">${esc(areasTxt(p))}</b></div><div><small>상담 분야</small><b style="font-size:12.5px">${p.fields.includes('전체')?'전체':p.fields.length+'개'}</b></div><div><small>계약</small><b>${p.won}건</b></div></div>
+      <div class="lk" style="margin-top:0"><div><small>사무소 소재지</small><b style="font-size:12.5px">${esc(p.office||'-')}</b></div><div><small>주 활동 지역</small><b style="font-size:12.5px">${esc(areasTxt(p))}</b></div><div><small>상담 분야</small><b style="font-size:12.5px">${p.fields.includes('전체')?'전체':p.fields.length+'개'}</b></div><div><small>계약</small><b>${p.won}건</b></div></div>
       ${boss?`<button class="btn line sm" style="margin-top:10px" data-act="toast" data-m="지역·분야 변경은 관리자 확인 후 반영돼요 (예시)">지역·분야 변경 요청</button>`:'<p class="help" style="margin-top:8px">사무소 설정은 대표만 바꿀 수 있어요</p>'}</section>
     <section class="sec"><h3>${hic('chat')}알림 설정</h3>
       ${[['kakao','카카오톡 알림','새 요청서가 오면 바로 알려줘요'],['sms','문자 알림','카카오톡을 못 받을 때'],['night','밤 10시 ~ 아침 8시에도 받기','꺼두면 아침에 모아서 알려줘요']].map(([k,l,d])=>`<div class="row" style="padding:12px 0"><span style="flex:1;min-width:0"><b style="font-size:14px">${l}</b><small>${d}</small></span><button class="tg2" data-act="pNoti" data-k="${k}" aria-pressed="${!!n[k]}" aria-label="${l}"></button></div>`).join('')}</section>
@@ -2928,9 +2928,10 @@ function archSamples(){ if(ARCH_S) return ARCH_S;
 /* 요청 조회 · 상태 */
 const AREA_ALIAS={'충청':['충북','충남','충청','대전','세종'],'경남':['경남','부산','울산','창원'],'서울 동부':['송파','강동','광진','성동']};
 function partnerAreas(p){ if(Array.isArray(p.areas)) return p.areas; const t=String(p.region||'').split(/[·,]/).map(x=>x.trim()).filter(Boolean); return t.includes('전국')?['전국']:t; }
-function areasTxt(p){ const a=partnerAreas(p); return a.includes('전국')?'전국 수신':a.join('·')+' 수신'; }
+function areasTxt(p){ const a=partnerAreas(p); return a.includes('전국')?'전국':a.join('·'); }
 function reqRegionOk(region){ return !!region && !/미입력|확인 필요|^-$/.test(region); }
-function reqMatchesPartner(region, p){ const a=partnerAreas(p); if(a.includes('전국')) return true; if(!reqRegionOk(region)) return false; return a.some(x=>(AREA_ALIAS[x]||[x]).some(y=>region.includes(y))); }
+/* 정책: 견적 요청은 지역과 관계없이 등록된 모든 사무소에 표시 · 사무소가 골라서 제안 */
+function reqMatchesPartner(region, p){ return true; }
 function findReq(id){ if(id==null||id==='') return null; const sid=String(id); const l=DB.leads.find(x=>String(x.id)===sid); if(l) return {kind:'lead', src:l, props:l.props, brief:briefOf(l)}; const s=archSamples().find(x=>x.id===sid); if(s) return {kind:'sample', src:s, props:s.props, brief:s.brief}; return null; }
 function reqIsOpen(r){ const x=r.src; if(x.closed||x.ended) return false; if(r.kind==='lead') return x.want!==false && !['계약','종료'].includes(x.stage); return true; }
 function activePartner(){ if(!S.partner) return null; return DB.partners.find(p=>p.id===S.partner.id)||null; }
@@ -3005,7 +3006,7 @@ AI 예상 범위 ${esc(rangeTxt(f0.brief))}${f0.brief.unk.length?` · 확인 필
 제안 시 ${cn(f0.brief)}코인 · 최대 5곳 중 현재 ${f0.n}곳 제안 · 마감 ${f0.dl}
 <button class="atk-btn" data-act="archPitch" data-id="${esc(f0.id)}">▶ 요청서 보고 바로 제안하기</button></div>`:''}
     ${F.length?'':'<section class="sec" style="text-align:center"><p class="help">지금 제안할 수 있는 요청이 없어요</p></section>'}
-    ${(()=>{ if(!pa) return ''; const out=allReqs().filter(r=>reqIsOpen(r)&&r.props.length<5&&!r.props.some(p=>p.partnerId===pa.id)&&!reqMatchesPartner(r.src.region,pa)).length; return out?`<p class="help" style="text-align:center;margin:-4px 0 4px">${esc(areasTxt(pa).replace(' 수신',''))} 수신 지역 밖 요청 ${out}건은 표시되지 않아요 · 지역은 내 사무소 설정에서 바꿀 수 있어요</p>`:''; })()}
+
     ${F.map(x=>{ const T=TYPES[x.type], C=CATS[T.cat], b=x.brief; return `<div class="req"><div style="flex:none;width:46px;height:46px;border-radius:12px;background:${C.t};color:${C.acc};display:flex;align-items:center;justify-content:center">${ic(T.icon,24)}</div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:11.5px"><b style="color:${C.acc}">${C.name} · ${T.name}</b><span style="color:var(--dl,#b45309);font-weight:700">${x.dl} 남음</span></div>
       <b style="font-size:15px">${esc(b.sub)}</b><span style="font-size:12.5px;color:var(--muted)">${esc(x.region)} · 접수 ${esc(x.at)}</span>
@@ -3205,7 +3206,7 @@ document.addEventListener('click', e=>{
   else if(a==='want'){ const n=document.getElementById('gn'), ph=document.getElementById('gp'); S.gate.name=n.value; S.gate.phone=ph.value; S.gate.want=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='gateGo'){ submitRequest(); }
   else if(a==='submit'){ if(S.reqDone){ go('done'); return; } const ty=(S.addrTyping||'').trim(); if(ty.length>=4&&ty!==S.addrText){ S.addr=true; S.addrText=ty; }
-    if(!S.addr||!reqRegionOk(addrRegion(S.addrText))){ S.addrNeed=true; go('form'); toast(S.addr?'주소에 구(시·군)까지 적어주세요 · 예: 송파구 가락동 91-5':'건축사 제안을 받으려면 건물 주소가 필요해요'); setTimeout(()=>{ const el=document.getElementById('addr'); if(el){ el.focus(); el.scrollIntoView({block:'center'}); } },80); return; }
+    if(!S.addr){ S.addrNeed=true; go('form'); toast('건축사 제안을 받으려면 건물 주소가 필요해요'); setTimeout(()=>{ const el=document.getElementById('addr'); if(el){ el.focus(); el.scrollIntoView({block:'center'}); } },80); return; }
     S.addrNeed=false; S.req=S.req||{name:'',phone:'',consent:false,mkt:false}; go('gate'); }
   else if(a==='verified'){ go('done',{},true); }
   else if(a==='toPitches'){ go('pitches',{viewReq:S.reqId}); }
@@ -3310,7 +3311,7 @@ document.addEventListener('change', e=>{ if(e.target.classList&&e.target.classLi
   if(e.target.dataset && e.target.dataset.pck!=null){ const d=S.pdraft[String(S.akId)]; if(d){ d.items[+e.target.dataset.pck].on=e.target.checked; const y=window.scrollY; render(); window.scrollTo(0,y); } return; } if(e.target.dataset && e.target.dataset.pd){ const d=S.pdraft[String(S.akId)]; if(d) d[e.target.dataset.pd]=e.target.value; } });
 document.addEventListener('input', e=>{ if(e.target.id==='sgq'){ S.q=e.target.value; const h=document.getElementById('sgHits'); if(h) h.innerHTML=searchHits(S.q); return; }
   if(e.target.dataset && (e.target.dataset.pf||e.target.dataset.pfi!=null) && e.target.tagName!=='SELECT'){ const pa=activePartner(); if(pa&&S.partner.role==='대표'){ const x=e.target.dataset; let v=e.target.value; if(x.pf==='since'||x.pff==='y') v=v.replace(/\D/g,'').slice(0,4); if(x.pf) pa[x.pf]=v; else if(pa.portfolio[+x.pfi]) pa.portfolio[+x.pfi][x.pff]=v; } return; }
-  if(e.target.id==='addr'){ S.addrTyping=e.target.value; if(S.addrNeed&&reqRegionOk(addrRegion(e.target.value))) S.addrNeed=false; const h=document.getElementById('addrdirty'); if(h) h.style.display=(S.addr&&e.target.value.trim()!==S.addrText)?'':'none'; return; }
+  if(e.target.id==='addr'){ S.addrTyping=e.target.value; if(S.addrNeed&&e.target.value.trim().length>=4) S.addrNeed=false; const h=document.getElementById('addrdirty'); if(h) h.style.display=(S.addr&&e.target.value.trim()!==S.addrText)?'':'none'; return; }
   if(e.target.dataset && (e.target.dataset.pia!=null||e.target.dataset.pen!=null||e.target.dataset.pea!=null)){ const d=S.pdraft[String(S.akId)]; if(d){ const x=e.target.dataset; if(x.pia!=null) d.items[+x.pia].amt=e.target.value; if(x.pen!=null) d.extra[+x.pen].n=e.target.value; if(x.pea!=null) d.extra[+x.pea].amt=e.target.value; pitchLive(); } return; }
   if(e.target.dataset && e.target.dataset.pd){ const k=String(S.akId); const d=S.pdraft[k]; if(d){ d[e.target.dataset.pd]=e.target.value; if(e.target.dataset.pd==='p1'||e.target.dataset.pd==='p2') pitchLive(); } return; }
   if(e.target.dataset && e.target.dataset.rf){ S.rf[e.target.dataset.rf]=e.target.value; const el=e.target.id; clearTimeout(S._rft); S._rft=setTimeout(()=>{ const y=window.scrollY; render(); window.scrollTo(0,y); const n=document.getElementById(el); if(n){ n.focus(); } },500); return; }
