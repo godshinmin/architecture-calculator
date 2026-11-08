@@ -1170,6 +1170,7 @@ html[data-theme=dark] .cmc.k[aria-checked=true]{background:#2f2a05;border-color:
 html[data-theme=dark] .pick-main{background:linear-gradient(150deg,#2d56c9,#1a3a96);box-shadow:0 10px 26px rgba(0,0,0,.45)}html[data-theme=dark] .pick-main .pm-badge,html[data-theme=dark] .pick-main .pm-go{color:#1a3a96}
 html[data-theme=dark] .stat b.st-n{color:var(--p-hi)!important}
 html[data-theme=dark]{--stp:var(--p-hi)}
+.kcta-ig{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:700;color:inherit;opacity:.9;text-decoration:underline;text-underline-offset:3px}
 .ai-only{text-align:center;font-size:13px;color:var(--muted);margin:18px 0 6px}.ai-only .lnk{color:var(--muted);font-weight:600}
 </style>
 
@@ -2065,15 +2066,17 @@ function vNews(){
       <div class="m" style="justify-content:space-between">${safeLink(n.url)?`<a href="${esc(safeLink(n.url))}" target="_blank" rel="noopener noreferrer" style="color:var(--muted)">출처 · ${esc(n.src)}</a>`:'<span></span>'}${n.calc?`<button class="opt" data-act="type" data-k="${n.calc}" style="min-height:36px;padding:0 12px">관련 견적 보기</button>`:''}</div></article>`).join(''):'<p class="help" style="padding:20px 0;text-align:center">아직 등록된 소식이 없어요</p>'}</section>
     <div class="band"></div>
     <section><h2 class="sec-t">인스타그램</h2><div style="display:flex;flex-direction:column;gap:8px">
+      <a class="ig" href="${IG_ON}" target="_blank" rel="noopener"><span class="ga">${ic('camera',22)}</span><span style="flex:1"><b style="font-size:15px">건축ON 공식</b><small style="display:block;font-size:12.5px;color:var(--muted)">@architecture_on · 건축 인허가 상담·이용 안내</small></span>${ic('chev',18)}</a>
       <a class="ig" href="https://www.instagram.com/God___mincheol/" target="_blank" rel="noopener"><span class="ga">${ic('camera',22)}</span><span style="flex:1"><b style="font-size:15px">신민철 건축사</b><small style="display:block;font-size:12.5px;color:var(--muted)">@God___mincheol</small></span>${ic('chev',18)}</a>
       <button class="ig" data-act="toast" data-m="today archi 계정 주소를 알려주시면 연결할게요" style="width:100%;background:#fff;text-align:left"><span class="ga">${ic('camera',22)}</span><span style="flex:1"><b style="font-size:15px">오늘의 건축 · today archi</b><small style="display:block;font-size:12.5px;color:var(--muted)">계정 주소 연결 예정</small></span>${ic('chev',18)}</button>
     </div></section>
     ${footer()}</main>${kfab()}`;
 }
 function kfab(){ return `<a class="kfab" href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener"><span class="kf-face"><img src="${CH('f_smile')}" alt=""></span>건축사에게 카톡 상담</a>`; }
+const IG_ON='https://www.instagram.com/architecture_on/';
 function footer(){
   return `<section class="kcta"><div class="kcta-t"><small>궁금한 건 바로 물어보세요</small><b>건축사가 카카오톡으로<br>직접 답해드려요</b>
-      <a class="kcta-b" href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="#191919" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7L5.6 21l4-2.6c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>카카오톡 문의하기</a></div><span class="kcta-face">${face('f_smile',72)}</span></section>
+      <a class="kcta-b" href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="#191919" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7L5.6 21l4-2.6c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>카카오톡 문의하기</a><a class="kcta-ig" href="${IG_ON}" target="_blank" rel="noopener">${ic('camera',16)} 인스타그램 @architecture_on</a></div><span class="kcta-face">${face('f_smile',72)}</span></section>
   <footer class="ft">
     <img class="ft-logo" src="logo_white.webp" alt="건축ON">
     <div class="lk2"><button data-act="go" data-v="archLogin" style="border:0;background:none;padding:0;font:inherit;color:inherit;font-weight:800">건축사사무소 로그인</button><span>이용약관</span><span>개인정보처리방침</span><button data-act="go" data-v="refund" style="border:0;background:none;padding:0;font:inherit;color:inherit">환불 규정</button><button data-act="admin" style="border:0;background:none;padding:0;font:inherit;color:inherit">관리자</button></div>
@@ -2082,6 +2085,7 @@ function footer(){
     서울특별시 송파구 가락동 91-5 6층<br>
     전화 070-4647-3376 · 이메일 dbym@dbym.kr<br>
     카카오톡 채널 <a href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener">디바이엠건축사사무소</a><br>
+    인스타그램 <a href="${IG_ON}" target="_blank" rel="noopener">@architecture_on</a><br>
     <span style="display:block;margin-top:10px">건축ON은 건축주와 등록 파트너를 연결하는 서비스이며, 설계·인허가·시공 업무는 각 사무소·업체가 직접 수행합니다.</span>
   </footer>`;
 }
