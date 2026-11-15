@@ -9,6 +9,8 @@
 
 export const config = { matcher: '/:path*' };
 
+// 기본 입장 비밀번호의 SHA-256 (원문은 소스에 없음 · 무작위 16자). GATE_PASSWORD 를 설정하면 더 이상 쓰이지 않는다.
+const BUILTIN_SHA256 = '388937bdb27b1f6f76b7d3f13c27a6eed58839b2df93aa55ad7d87641d45a182';
 const COOKIE = 'kon_gate';
 const DAYS = 30;
 const enc = new TextEncoder();
@@ -27,6 +29,20 @@ async function hmac(key: string, msg: string): Promise<string> {
   return out;
 }
 
+async function sha256(msg: string): Promise<string> {
+  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(msg)));
+  let out = '';
+  for (let i = 0; i < d.length; i++) out += d[i].toString(16).padStart(2, '0');
+  return out;
+}
+function builtinOn(): boolean {
+  const env: any = (globalThis as any).process ? (globalThis as any).process.env : {};
+  return !String(env.GATE_PASSWORD || '').trim();
+}
+async function builtinOk(pw: string): Promise<boolean> {
+  return builtinOn() && pw.length >= 16 && same(await sha256(pw), BUILTIN_SHA256);
+}
+
 function same(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let d = 0;
@@ -40,6 +56,7 @@ async function makeToken(pw: string): Promise<string> {
 }
 
 async function validToken(tok: string, pws: string[]): Promise<boolean> {
+  if ((tok || '').startsWith('b.')) return builtinOk(tok.slice(2));
   const m = /^(\d{13})\.([0-9a-f]{64})$/.exec(tok || '');
   if (!m || +m[1] < Date.now()) return false;
   for (const pw of pws) if (same(await hmac(pw, 'kon-gate:' + m[1]), m[2])) return true;
@@ -97,31 +114,33 @@ export default async function middleware(request: Request): Promise<Response> {
   const path = url.pathname;
 
   // 잠금 상태 확인용(비밀 정보 없음)
-  if (path === '/__gate/status') return json({ gate: 'on', configured: pws.length > 0 });
+  const ready = pws.length > 0 || builtinOn();
+  if (path === '/__gate/status') return json({ gate: 'on', configured: ready });
 
   if (path === '/__gate/logout') {
     return new Response(null, { status: 302, headers: { location: '/', 'set-cookie': `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`, ...noStore } });
   }
 
   if (path === '/__gate' && request.method === 'POST') {
-    if (!pws.length) return json({ error: '입장 비밀번호가 아직 설정되지 않았어요' }, 503);
+    if (!ready) return json({ error: '입장 비밀번호가 아직 설정되지 않았어요' }, 503);
     if (await tooMany(request)) return json({ error: '시도가 너무 많아요. 10분 뒤에 다시 해주세요' }, 429);
     let input = '';
     try { const b: any = await request.json(); input = String((b && b.password) || '').trim().slice(0, 64); } catch (e) {}
     let hit = '';
     const hi = await hmac('kon-compare', input);
     for (const pw of pws) if (same(await hmac('kon-compare', pw), hi)) hit = pw;
+    if (!hit && (await builtinOk(input.toLowerCase()))) return json({ ok: true }, 200, { 'set-cookie': `${COOKIE}=b.${input.toLowerCase()}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax` });
     if (!hit) return json({ error: '비밀번호가 맞지 않아요' }, 401);
     return json({ ok: true }, 200, { 'set-cookie': `${COOKIE}=${await makeToken(hit)}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax` });
   }
 
-  if (pws.length && (await validToken(cookieOf(request), pws))) {
+  if (ready && (await validToken(cookieOf(request), pws))) {
     // 통과: 연결 상태 요약(값은 노출하지 않고 설정 여부만)
     if (path === '/__status') {
       const env: any = (globalThis as any).process ? (globalThis as any).process.env : {};
       const has = (k: string) => !!env[k];
       return json({
-        입장비밀번호: has('GATE_PASSWORD') ? 'GATE_PASSWORD' : 'ADMIN_PASSWORD(임시)',
+        입장비밀번호: has('GATE_PASSWORD') ? 'GATE_PASSWORD' : '기본 비밀번호(임시)',
         건축물대장: has('BUILDING_API_KEY'),
         문자발송: has('NCP_ACCESS_KEY') && has('NCP_SECRET_KEY') && has('NCP_SERVICE_ID') && has('NCP_SENDER'),
         공용저장소: has('KV_REST_API_URL') && has('KV_REST_API_TOKEN'),
@@ -134,5 +153,5 @@ export default async function middleware(request: Request): Promise<Response> {
 
   // 잠김: API 는 JSON, 그 외는 잠금 화면
   if (path.startsWith('/api/')) return json({ error: '비공개 검토 중입니다' }, 401);
-  return lockPage(pws.length > 0);
+  return lockPage(ready);
 }
