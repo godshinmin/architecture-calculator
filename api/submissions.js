@@ -3,7 +3,7 @@
 // 필요 환경변수 (Vercel):
 //   KV_REST_API_URL     - Upstash Redis REST URL
 //   KV_REST_API_TOKEN   - Upstash Redis REST Token
-//   ADMIN_PASSWORD      - 관리자 페이지 비밀번호 (예: dbym2026!)
+//   ADMIN_PASSWORD      - 관리자 페이지 비밀번호 (Vercel 환경변수에만 보관)
 //
 // POST /api/submissions  → 견적 기록 저장 (누구나, 견적 제출 시 자동 호출)
 // GET  /api/submissions?password=xxx  → 전체 목록 조회 (관리자만)

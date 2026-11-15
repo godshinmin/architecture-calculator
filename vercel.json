@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/kon", "destination": "/", "permanent": false },
+    { "source": "/kon/(.*)", "destination": "/", "permanent": false }
+  ]
+}
