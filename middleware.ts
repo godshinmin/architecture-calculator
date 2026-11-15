@@ -9,8 +9,8 @@
 
 export const config = { matcher: '/:path*' };
 
-// 기본 입장 비밀번호의 SHA-256 (원문은 소스에 없음 · 무작위 16자). GATE_PASSWORD 를 설정하면 더 이상 쓰이지 않는다.
-const BUILTIN_SHA256 = '388937bdb27b1f6f76b7d3f13c27a6eed58839b2df93aa55ad7d87641d45a182';
+// 기본 입장 비밀번호의 SHA-256 (원문은 소스에 없음). GATE_PASSWORD 를 설정하면 더 이상 쓰이지 않는다.
+const BUILTIN_SHA256 = '0fc494e0ea474f8d15e673e3b057285cf8fb6e217a0000686b802c03c36c13eb';
 const COOKIE = 'kon_gate';
 const DAYS = 30;
 const enc = new TextEncoder();
@@ -40,7 +40,7 @@ function builtinOn(): boolean {
   return !String(env.GATE_PASSWORD || '').trim();
 }
 async function builtinOk(pw: string): Promise<boolean> {
-  return builtinOn() && pw.length >= 16 && same(await sha256(pw), BUILTIN_SHA256);
+  return builtinOn() && pw.length >= 4 && same(await sha256('kon-gate-v1:' + pw), BUILTIN_SHA256);
 }
 
 function same(a: string, b: string): boolean {
@@ -130,7 +130,7 @@ export default async function middleware(request: Request): Promise<Response> {
     const hi = await hmac('kon-compare', input);
     for (const pw of pws) if (same(await hmac('kon-compare', pw), hi)) hit = pw;
     if (!hit && (await builtinOk(input.toLowerCase()))) return json({ ok: true }, 200, { 'set-cookie': `${COOKIE}=b.${input.toLowerCase()}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax` });
-    if (!hit) return json({ error: '비밀번호가 맞지 않아요' }, 401);
+    if (!hit) { await new Promise((r) => setTimeout(r, 1200)); return json({ error: '비밀번호가 맞지 않아요' }, 401); }
     return json({ ok: true }, 200, { 'set-cookie': `${COOKIE}=${await makeToken(hit)}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax` });
   }
 
