@@ -10,7 +10,7 @@
 export const config = { matcher: '/:path*' };
 
 // 기본 입장 비밀번호의 SHA-256 (원문은 소스에 없음). GATE_PASSWORD 를 설정하면 더 이상 쓰이지 않는다.
-const BUILTIN_SHA256 = '0fc494e0ea474f8d15e673e3b057285cf8fb6e217a0000686b802c03c36c13eb';
+const BUILTIN_SHA256 = 'f031cb2776e0ee6aea0d72a181ed9cad8f98be903734fcaecba8176482b8af99';
 const COOKIE = 'kon_gate';
 const DAYS = 30;
 const enc = new TextEncoder();
