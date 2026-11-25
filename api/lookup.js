@@ -76,6 +76,7 @@ module.exports = async function handler(req, res) {
                     flrNoNm: f.flrNoNm || (f.flrNo ? f.flrNo + '층' : ''),
                     strct: f.strctCdNm || f.strct,
                     mainPurps: f.mainPurpsCdNm || f.mainPurps,
+                    etcPurps: f.etcPurps || '',
                     area: f.area
                 })).filter(f => f.flrNo || f.flrNoNm); // 빈 항목 제거
                 // 지상 위→아래, 지하 아래→위 정렬
