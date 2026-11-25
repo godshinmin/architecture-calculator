@@ -28,8 +28,9 @@ function mergeProp(a, b) {
 }
 
 // 요청 한 건. refunds: 자리가 없어 빠진 제안의 코인 반환 목록 [{pid, n}]
-function mergeLead(stored, inc, refunds) {
+function mergeLead(stored, inc, refunds, ev) {
     if (!stored) {
+        if (ev && !inc._del) ev.push({ t: 'lead', lead: inc });
         const o = Object.assign({}, inc);
         o.props = capProps(Array.isArray(inc.props) ? inc.props : [], [], refunds);
         o.log = Array.isArray(inc.log) ? inc.log : [];
@@ -46,6 +47,13 @@ function mergeLead(stored, inc, refunds) {
     const kept = sp.map(p => { const q = ip.find(x => x && x.id === p.id); return q ? mergeProp(p, q) : p; });
     const fresh = ip.filter(p => p && p.id && !sp.some(x => x.id === p.id));
     o.props = capProps(kept, fresh, refunds);
+    if (ev) {
+        o.props.forEach(p => {
+            const was = sp.find(x => x.id === p.id);
+            if (!was) ev.push({ t: 'prop', lead: o, prop: p });
+            else if (!was.chosen && p.chosen) ev.push({ t: 'chosen', lead: o, prop: p });
+        });
+    }
     // 기록: 합집합 (저장된 순서 유지 + 새 줄 뒤에)
     const sl = Array.isArray(stored.log) ? stored.log : [], seen = new Set(sl.map(x => JSON.stringify(x)));
     o.log = sl.concat((Array.isArray(inc.log) ? inc.log : []).filter(x => !seen.has(JSON.stringify(x))));
@@ -106,6 +114,7 @@ function mergeMisc(m, ops) {
     m.grants = [...g];
     m.members = m.members && typeof m.members === 'object' ? m.members : {};
     if (ops && ops.members && ops.members.set) Object.keys(ops.members.set).forEach(pid => { m.members[pid] = ops.members.set[pid]; });
+    if (ops && ops.notify) m.notify = { on: !!ops.notify.on };
     return m;
 }
 
@@ -145,16 +154,57 @@ async function withLock(store, fn) {
     finally { if (got) { try { if ((await store.call(['GET', K.LOCK])) === me) await store.call(['DEL', K.LOCK]); } catch (e) { /* 만료에 맡김 */ } } }
 }
 
-async function push(store, body) {
+/* ---------- 문자 알림 (관리자가 켠 경우에만) ---------- */
+const crypto = require('crypto');
+const mobile = (p) => { const d = String(p || '').replace(/\D/g, ''); return /^01[016789]\d{7,8}$/.test(d) ? d : ''; };
+
+async function sendSms(list) {
+    const ak = process.env.NCP_ACCESS_KEY, sk = process.env.NCP_SECRET_KEY, sid = process.env.NCP_SERVICE_ID, from = process.env.NCP_SENDER;
+    if (!ak || !sk || !sid || !from || !list.length) return 0;
+    let sent = 0;
+    for (const m of list.slice(0, 40)) {
+        try {
+            const ts = Date.now().toString(), path = '/sms/v2/services/' + sid + '/messages';
+            const sig = crypto.createHmac('sha256', sk).update('POST ' + path + '\n' + ts + '\n' + ak).digest('base64');
+            const r = await fetch('https://sens.apigw.ntruss.com' + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8', 'x-ncp-apigw-timestamp': ts, 'x-ncp-iam-access-key': ak, 'x-ncp-apigw-signature-v2': sig },
+                body: JSON.stringify({ type: 'LMS', contentType: 'COMM', countryCode: '82', from, subject: '[건축ON]', content: m.text, messages: m.to.map(t => ({ to: t })) })
+            });
+            if (r.ok) sent += m.to.length; else console.error('문자 발송 실패:', r.status);
+        } catch (e) { console.error('문자 발송 오류:', e && e.message); }
+    }
+    return sent;
+}
+
+function buildSms(events, partners, origin) {
+    const out = [];
+    const what = (l) => String((l.brief && l.brief.tname) || '견적 요청').slice(0, 20) + ' · ' + String(l.region || '').slice(0, 24);
+    events.slice(0, 20).forEach(e => {
+        if (e.t === 'lead') {
+            const to = [...new Set(partners.filter(p => p && !p._del && p.on).map(p => mobile(p.phone)).filter(Boolean))].slice(0, 50);
+            if (to.length) out.push({ to, text: '[건축ON] 새 견적 요청이 들어왔어요.\n' + what(e.lead) + '\n최대 5곳까지 제안할 수 있어요.\n요청서 보기: ' + origin + '/#req=' + e.lead.id });
+        } else if (e.t === 'prop') {
+            const to = mobile(e.lead.phone);
+            if (to) out.push({ to: [to], text: '[건축ON] ' + String(e.prop.p || '건축사사무소').slice(0, 30) + '에서 제안이 도착했어요.\n' + what(e.lead) + '\n받은 제안 보기: ' + origin + '/' });
+        } else if (e.t === 'chosen') {
+            const pa = partners.find(p => p && String(p.id) === String(e.prop.partnerId)), to = pa ? mobile(pa.phone) : '';
+            if (to) out.push({ to: [to], text: '[건축ON] 고객이 귀사 제안에 상담을 신청했어요.\n' + what(e.lead) + '\n사무소 로그인 > 내 현황에서 고객 연락처를 확인해 주세요.\n' + origin + '/' });
+        }
+    });
+    return out;
+}
+
+async function push(store, body, origin) {
     return withLock(store, async () => {
         const inL = (Array.isArray(body.leads) ? body.leads : []).filter(x => x && x.id != null).slice(0, 200);
         const inP = (Array.isArray(body.partners) ? body.partners : []).filter(x => x && (x.id != null || (x.rec && x.rec.id != null))).slice(0, 200);
-        const refunds = [];
+        const refunds = [], events = [];
         if (inL.length) {
             const cur = await hget(store, K.L, inL.map(x => x.id));
             const args = ['HSET', K.L];
             inL.forEach(l => {
-                const m = mergeLead(cur[String(l.id)], l, refunds);
+                const m = mergeLead(cur[String(l.id)], l, refunds, events);
                 let s = JSON.stringify(m);
                 if (s.length > 700000) { m.photos = []; m.photosCut = true; s = JSON.stringify(m); }
                 args.push(String(l.id), s);
@@ -181,7 +231,16 @@ async function push(store, body) {
             await store.call(['SET', K.M, JSON.stringify(m)]);
         }
         await store.call(['INCR', K.V]);
-        return readAll(store);
+        const all = await readAll(store);
+        if (events.length && all.misc && all.misc.notify && all.misc.notify.on && origin) {
+            try {
+                const hour = 'kon:sms:' + new Date().toISOString().slice(0, 13);
+                const n = +(await store.call(['INCR', hour])) || 0;
+                if (n === 1) await store.call(['EXPIRE', hour, '7200']);
+                if (n <= 60) all.sms = await (module.exports._sms || sendSms)(buildSms(events, all.partners, origin));
+            } catch (e) { console.error('알림 처리 오류:', e && e.message); }
+        }
+        return all;
     });
 }
 
@@ -200,7 +259,7 @@ async function handler(req, res, storeOverride) {
         if (req.method === 'POST') {
             let body = req.body; if (typeof body === 'string') body = parse(body);
             if (!body || typeof body !== 'object') return res.status(400).json({ ok: false, error: '잘못된 요청 형식' });
-            if (body.a === 'push') { const s = await push(store, body); return res.status(200).json(Object.assign({ ok: true }, s)); }
+            if (body.a === 'push') { const host = req.headers && (req.headers['x-forwarded-host'] || req.headers.host); const s = await push(store, body, host ? 'https://' + host : ''); return res.status(200).json(Object.assign({ ok: true }, s)); }
             if (body.a === 'admin' || body.a === 'reset') {
                 const pw = process.env.ADMIN_PASSWORD;
                 if (!pw) return res.status(500).json({ ok: false, error: 'ADMIN_PASSWORD 미설정' });
@@ -218,4 +277,4 @@ async function handler(req, res, storeOverride) {
 }
 
 module.exports = handler;
-module.exports._test = { mergeLead, mergePartner, mergeMisc, push, readAll };
+module.exports._test = { mergeLead, mergePartner, mergeMisc, push, readAll, buildSms };
