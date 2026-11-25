@@ -1175,6 +1175,7 @@ html[data-theme=dark]{--stp:var(--p-hi)}
 .flr-d{margin-top:10px;border-radius:12px;border:1px solid var(--line);overflow:hidden}.flr-d>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:rgba(47,84,208,.1);color:#2f54d0;font-size:14px;cursor:pointer}.flr-d>summary::-webkit-details-marker{display:none}.flr-d>summary span{display:inline-flex;align-items:center;gap:6px}.flr-d>summary b{font-weight:800}.flr-t{font-size:12.5px;font-weight:700}.flr-t u{text-decoration:none}.flr-d .o2,.flr-d[open] .o1{display:none}.flr-d[open] .o2{display:inline}.flr-t svg{transition:transform .15s;transform:rotate(90deg)}.flr-d[open] .flr-t svg{transform:rotate(-90deg)}html[data-theme=dark] .flr-d>summary{color:#a9bdff;background:rgba(120,150,255,.16)}
 .flr-lg{display:flex;flex-wrap:wrap;gap:6px 12px;padding:10px 14px 0;font-size:12px;color:var(--muted)}.flr-lg span{display:inline-flex;align-items:center;gap:5px}.flr-lg i,.flr-r i{flex:none;width:10px;height:10px;border-radius:3px;display:inline-block}.flrs{padding:2px 14px 8px}.flr{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:11px 0;border-top:1px solid var(--line)}.flr:first-child{border-top:0}.flr-n{align-self:start;text-align:center;font-size:13px;font-weight:800;padding:5px 4px;border-radius:8px;background:rgba(47,84,208,.12);color:#2f54d0;word-break:keep-all}.flr-n.ug{background:rgba(100,116,139,.18);color:#64748b}.flr-n.rf{background:rgba(245,158,11,.18);color:#b45309}html[data-theme=dark] .flr-n{color:#a9bdff}html[data-theme=dark] .flr-n.ug{color:#cbd5e1}html[data-theme=dark] .flr-n.rf{color:#fbbf24}.flr-i{min-width:0}.flr-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:3px 0 7px;gap:1px}.flr-bar i{display:block;min-width:3px}.flr-r{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;line-height:1.75}.flr-r span{display:inline-flex;align-items:center;gap:7px;min-width:0;word-break:keep-all}.flr-r em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.flr-s{text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
 .bldg .c1,.sec .c1{background:#16a34a}.bldg .c2{background:#2f6fed}.bldg .c3{background:#8b5cf6}.bldg .c4{background:#94a3b8}.bldg .c5{background:#f59e0b}
+.sybar{position:fixed;left:10px;bottom:96px;z-index:60;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(22,163,74,.92);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none}.sybar.bad{background:rgba(220,38,38,.94)}
 .bl-load{display:flex;align-items:center;gap:12px;margin-top:10px;padding:14px;border-radius:12px;border:1.5px solid #2f54d0;background:rgba(47,84,208,.08)}.bl-load .spin{flex:none;width:26px;height:26px;border-radius:50%;border:3px solid rgba(47,84,208,.25);border-top-color:#2f54d0;animation:spin .8s linear infinite}.bl-load b{display:block;font-size:15px;font-weight:800;color:#2f54d0}.bl-load small,.bl-err small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.5}html[data-theme=dark] .bl-load b{color:#a9bdff}
 .bl-err{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border-radius:12px;border:1.5px solid #f59e0b;background:rgba(245,158,11,.1)}.bl-err span{flex:1;min-width:0}.bl-err b{display:block;font-size:14.5px;font-weight:800;color:#b45309}html[data-theme=dark] .bl-err b{color:#fbbf24}.bl-err .btn{width:auto;flex:none;padding:0 14px;min-height:40px}
 .pc-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}.pc-box{width:100%;max-width:520px;height:86vh;background:#fff;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden}.pc-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #eee;color:#111}.pc-h button{border:0;background:none;font-size:20px;min-width:44px;min-height:44px;color:#111}.pc-embed{flex:1}
@@ -1837,6 +1838,77 @@ function bizCalc(v, key, perPyMid, extraChecks){
 /* ===================== 상태 ===================== */
 const ATTR=(function(){ try{ const q=new URLSearchParams(location.search), src=q.get('utm_source'), med=q.get('utm_medium'), term=q.get('utm_term'), ref=q.get('ref'); const nm={naver:'네이버',google:'구글',kakao:'카카오',instagram:'인스타그램'}; let label='유입 경로 미확인'; if(ref&&/^[A-Za-z0-9_-]{1,30}$/.test(ref)) label='부동산 QR · '+ref; else if(src) label=(nm[src]||src).slice(0,20)+(med==='cpc'?' 파워링크':med?' '+med.slice(0,12):''); return {src:label, kw:term?term.slice(0,40):''}; }catch(e){ return {src:'유입 경로 미확인', kw:''}; } })();
 const DEMO=true; /* 시연 빌드 표시 · 운영 빌드에서는 false (시연용 즉시 로그인 제거) */
+/* ===== 공용 저장소 동기화 (베타) =====
+   서버(/api/kon)에 요청·제안·코인·사무소를 모아 여러 기기가 같은 내용을 봅니다.
+   서버에 저장소가 없거나 미리보기 화면이면 꺼진 채(기존 시연 방식)로 동작합니다. */
+const SY={on:false, ready:false, sh:null, v:null, busy:false, again:false, err:'', applying:false, off:''};
+const SY_C=['credit','sent','chosen','won'];
+function syId(){ return Math.floor((Date.now()-Date.UTC(2026,10,1))/1000)*100+Math.floor(Math.random()*100); }
+function pidNew(){ return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36); }
+function codeNew(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<6;i++) c+=A[Math.floor(Math.random()*A.length)]; return 'ON-'+c; }
+function syP(p){ const o=Object.assign({},p), c={}; delete o.logo; SY_C.forEach(k=>{ if(typeof o[k]==='number'){ c[k]=o[k]; delete o[k]; } }); return {js:JSON.stringify(o), c}; }
+function syMisc(){ return JSON.stringify([DB.apps, DB.adminReq, DB.admins, DB.buys||[], DB.members]); }
+function sySnap(){ const L={}, P={}; DB.leads.forEach(l=>{ L[l.id]=JSON.stringify(l); }); DB.partners.forEach(p=>{ P[p.id]=syP(p); }); return {L, P, M:syMisc()}; }
+function syShadow(st){ const sh={L:{}, P:{}, M:{apps:{},adminReq:{},admins:{},buys:{}}, G:new Set((st.misc.grants||[]).map(String)), MB:{}};
+  st.leads.forEach(l=>{ if(!l._del) sh.L[l.id]=JSON.stringify(l); }); st.partners.forEach(p=>{ if(!p._del) sh.P[p.id]=syP(p); });
+  ['apps','adminReq','admins','buys'].forEach(k=>{ (st.misc[k]||[]).forEach(x=>{ sh.M[k][x.id]=JSON.stringify(x); }); }); Object.keys(st.misc.members||{}).forEach(pid=>{ sh.MB[pid]=JSON.stringify(st.misc.members[pid]); }); return sh; }
+function syLeadOut(l){ const o=Object.assign({},l); if(Array.isArray(o.photos)&&o.photos.length){ let tot=0; const keep=[]; o.photos.forEach(x=>{ const n=String(x).length; if(tot+n<=450000){ keep.push(x); tot+=n; } }); if(keep.length<o.photos.length){ o.photos=keep; o.photosCut=true; } } return o; }
+function syDiff(){ const sh=SY.sh, now=Date.now(), out={leads:[], partners:[], misc:{}}; let n=0; const seen={};
+  DB.leads.forEach(l=>{ seen[l.id]=1; if(!l.ts) l.ts=now; if(sh.L[l.id]!==JSON.stringify(l)){ l._u=now; out.leads.push(syLeadOut(l)); n++; } });
+  Object.keys(sh.L).forEach(id=>{ if(!seen[id]){ out.leads.push({id:isNaN(+id)?id:+id, _del:1, _u:now}); n++; } });
+  DB.partners.forEach(p=>{ if(!p.ts) p.ts=now; if(!p.code) p.code=codeNew(); const cur=syP(p), old=sh.P[p.id];
+    if(!old){ p._u=now; const o=Object.assign({},p); delete o.logo; out.partners.push({rec:o}); n++; return; }
+    const d={}; let dn=0; SY_C.forEach(k=>{ if(typeof cur.c[k]==='number'&&typeof old.c[k]==='number'&&cur.c[k]!==old.c[k]){ d[k]=cur.c[k]-old.c[k]; dn++; } });
+    const ch=cur.js!==old.js; if(ch) p._u=now; if(ch||dn){ const o=Object.assign({},p); delete o.logo; out.partners.push(ch?{rec:o, d}:{id:p.id, d}); n++; } });
+  ['apps','adminReq','admins','buys'].forEach(k=>{ const cur=DB[k]||[], old=sh.M[k], up=[], del=[], ids={}; cur.forEach(x=>{ ids[x.id]=1; if(old[x.id]!==JSON.stringify(x)) up.push(x); }); Object.keys(old).forEach(id=>{ if(!ids[id]) del.push(id); }); if(up.length||del.length){ out.misc[k]={up, del}; n++; } });
+  const ga=[...DB.grants].map(String).filter(g=>!sh.G.has(g)); if(ga.length){ out.misc.grants={add:ga}; n++; }
+  const ms={}; Object.keys(DB.members||{}).forEach(pid=>{ if(JSON.stringify(DB.members[pid])!==sh.MB[pid]) ms[pid]=DB.members[pid]; }); if(Object.keys(ms).length){ out.misc.members={set:ms}; n++; }
+  out.n=n; return out; }
+function syApply(st, pre){ SY.applying=true; try{
+  const curL={}; DB.leads.forEach(l=>{ curL[l.id]=l; }); const nextL=[];
+  st.leads.filter(l=>!l._del).sort((a,b)=>(b.ts||0)-(a.ts||0)||(+b.id||0)-(+a.id||0)).forEach(l=>{ const c=curL[l.id]; delete curL[l.id]; nextL.push(c&&pre.L[l.id]!==undefined&&JSON.stringify(c)!==pre.L[l.id]?c:l); });
+  Object.keys(curL).forEach(id=>{ if(pre.L[id]===undefined) nextL.unshift(curL[id]); });
+  DB.leads.length=0; nextL.forEach(l=>DB.leads.push(l));
+  const curP={}; DB.partners.forEach(p=>{ curP[p.id]=p; }); const nextP=[];
+  st.partners.filter(p=>!p._del).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(p=>{ const c=curP[p.id], pp=pre.P[p.id]; delete curP[p.id]; let o=p;
+    if(c&&pp){ const cur=syP(c); if(cur.js!==pp.js) o=Object.assign({},c); SY_C.forEach(k=>{ if(typeof p[k]==='number'){ o[k]=p[k]+((typeof cur.c[k]==='number'&&typeof pp.c[k]==='number')?cur.c[k]-pp.c[k]:0); } }); }
+    nextP.push(o); });
+  Object.keys(curP).forEach(id=>{ if(!pre.P[id]) nextP.push(curP[id]); });
+  DB.partners.length=0; nextP.forEach(p=>DB.partners.push(p));
+  if(syMisc()===pre.M){ const m=st.misc||{}; DB.apps=m.apps||[]; DB.adminReq=m.adminReq||[]; DB.admins=m.admins||[]; DB.buys=m.buys||[]; DB.members=m.members||{}; }
+  DB.grants=new Set([...(st.misc.grants||[]).map(String), ...[...DB.grants].map(String)]);
+  SY.sh=syShadow(st); const changed=SY.v!==st.v; SY.v=st.v;
+  if(S.partner&&!DB.partners.some(p=>p.id===S.partner.id&&p.on)){ S.partner=null; try{ localStorage.removeItem('kon_psess'); }catch(e){} }
+  try{ loadPLogos(); }catch(e){}
+  return changed; } finally { SY.applying=false; } }
+async function sySync(){ if(!SY.on) return; if(SY.busy){ SY.again=true; return; } SY.busy=true; SY.again=false; const was=SY.err;
+  try{ let r, d=null; const first=!SY.sh;
+    if(!first) d=syDiff(); const pre=sySnap();
+    if(d&&d.n) r=await fetch('/api/kon',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({a:'push', leads:d.leads, partners:d.partners, misc:d.misc})});
+    else r=await fetch('/api/kon?a=pull'+(first||SY.v==null?'':'&v='+SY.v));
+    const j=await r.json(); if(!r.ok||!j.ok) throw new Error(j.error||('서버 오류 '+r.status));
+    SY.err=''; SY.okAt=Date.now(); let ch=false; if(!j.same) ch=syApply(j, pre);
+    if(first){ SY.ready=true; try{ localStorage.setItem('kon_sync','1'); }catch(e){} ch=true; }
+    const ae=document.activeElement, typing=ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
+    if((ch||was)&&!typing){ const y=window.scrollY; render(); window.scrollTo(0,y); } else if(ch){ SY.stale=true; }
+  }catch(e){ SY.err=String(e&&e.message||e); if(!was){ const b=document.getElementById('sybar'); if(b){ b.className='sybar bad'; b.textContent='● 서버 연결 안 됨 · 다시 시도 중'; } } }
+  finally{ SY.busy=false; if(SY.again) setTimeout(sySync,60); } }
+function syQueue(){ if(!SY.on||SY.applying||!SY.sh) return; clearTimeout(syQueue._t); syQueue._t=setTimeout(sySync,350); }
+function syBar(){ return `<div id="sybar" class="sybar${SY.err?' bad':''}" role="status">${SY.err?'● 서버 연결 안 됨 · 다시 시도 중':(SY.ready?'● 실시간 연결됨':'● 서버 연결 중…')}</div>`; }
+function syEnter(firstEver){ SY.on=true; ARCH_S=[]; DB.leads=DB.leads.filter(l=>l.ts); DB.partners=DB.partners.filter(p=>p.ts);
+  if(firstEver){ S.partner=null; S.myReqs=[]; S.cust=null; DB.apps=[]; DB.adminReq=[]; DB.admins=[]; DB.buys=[]; DB.members={}; DB.grants=new Set(); }
+  else { try{ const ps=JSON.parse(localStorage.getItem('kon_psess')||'null'); if(ps&&ps.id&&DB.partners.some(p=>p.id===ps.id)) S.partner={id:ps.id, role:ps.role||'대표'}; }catch(e){} }
+  if(!syEnter._t){ syEnter._t=setInterval(()=>{ if(document.visibilityState==='visible') sySync(); }, 6000); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') sySync(); }); } }
+function syBoot(){ if(!bldgOk()) return; let flag=false; try{ flag=localStorage.getItem('kon_sync')==='1'; }catch(e){}
+  if(flag){ syEnter(false); sySync(); return; }
+  fetch('/api/kon?a=pull').then(r=>r.json().then(j=>({r,j}))).then(({r,j})=>{ if(r.ok&&j.ok){ syEnter(true); sySync(); render(); } else { SY.off=(j&&j.error)||'공용 저장소에 연결하지 못했어요'; render(); } }).catch(()=>{}); }
+function vArchLoginSync(){ return header({title:'사무소 로그인'}) + `<main class="wrap view">
+    <section><h1 style="font-size:22px;line-height:1.4;font-weight:800">건축ON 사무소 로그인</h1><p class="help" style="font-size:13.5px;margin-top:6px">건축ON에서 받은 사무소 코드를 입력해 주세요. 한 번 로그인하면 이 기기에서는 다시 묻지 않아요.</p></section>
+    ${S.pendingReq?`<div class="note"><span>${ic('alert',16)} 로그인하면 받으신 요청서로 바로 이동해요.</span></div>`:''}
+    <section class="sec"><label class="lbl" for="pcode">사무소 코드</label><input id="pcode" class="inp" placeholder="예: ON-AB12CD" maxlength="12" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:1px;font-weight:700"><button class="btn" data-act="pCode" style="margin-top:10px">로그인</button>
+      <p class="help" style="margin-top:10px">코드가 없으신가요? <button class="lnk" data-act="join">사무소 등록 신청</button> 후 승인되면 코드를 보내드려요.</p></section>
+    <p class="help">로그인하면 요청서 목록 · 내 현황 · 사무소 정보를 볼 수 있어요. 건축주 연락처는 고객이 귀사 제안을 열어보고 '상담하기'를 눌렀을 때만 공개돼요.</p></main>`; }
+
 const S = {cat:'permit', view:'home', type:null, vals:{}, est:null, addr:false, draftEpoch:0, reqId:null, pdraft:{}, sampleSt:null, photoPending:0,
   logos:[],
   news:[
@@ -2452,9 +2524,9 @@ function vPitches(){
       <div style="font-size:17px;font-weight:800;margin-top:4px">${t.name} · ${esc(l.sub||'')}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px">${dots(nReal)}<span style="font-size:13px;font-weight:700;white-space:nowrap">${nReal}/5 도착</span></div></div>
     ${aiCard(l)}
-    ${nReal?real.map(realCard).join(''):`<section class="sec" style="text-align:center"><p class="help">아직 도착한 제안이 없어요.</p>${l&&!l.ended&&!l.closed?`<button class="btn acc sm" data-act="demoPitches" style="margin-top:12px">${ic('users',18)} 시연: 사무소 제안 받아보기</button><p class="help" style="margin-top:6px">시연 사무소들이 실제 규칙(코인 차감·최대 5곳)대로 제안을 보내요</p>`:''}</section>`}
+    ${nReal?real.map(realCard).join(''):`<section class="sec" style="text-align:center"><p class="help">아직 도착한 제안이 없어요.</p>${!SY.on&&l&&!l.ended&&!l.closed?`<button class="btn acc sm" data-act="demoPitches" style="margin-top:12px">${ic('users',18)} 시연: 사무소 제안 받아보기</button><p class="help" style="margin-top:6px">시연 사무소들이 실제 규칙(코인 차감·최대 5곳)대로 제안을 보내요</p>`:''}</section>`}
     ${S.cust?`<p class="help" style="text-align:center">${S.cust.via==='kakao'?'카카오':'전화번호'}로 로그인됨 · ${esc(S.cust.name)} <button class="lnk" data-act="custLogout">로그아웃 (시연)</button></p>`:''}
-    ${l&&nReal&&nReal<5&&!l.ended&&!l.closed&&DB.partners.some(pa=>pa.on&&!l.props.some(x=>x.partnerId===pa.id)&&reqMatchesPartner(l.region,pa))?'<button class="btn line sm" data-act="demoPitches">시연: 다른 사무소 제안 더 받기</button>':''}
+    ${!SY.on&&l&&nReal&&nReal<5&&!l.ended&&!l.closed&&DB.partners.some(pa=>pa.on&&!l.props.some(x=>x.partnerId===pa.id)&&reqMatchesPartner(l.region,pa))?'<button class="btn line sm" data-act="demoPitches">시연: 다른 사무소 제안 더 받기</button>':''}
     <p class="help" style="text-align:center">'상담하기'를 누른 사무소에만 이름·연락처가 전달돼요. 열어보기만 해서는 전달되지 않아요. 여러 곳을 골라도 괜찮아요.</p>
     ${l.closed||l.ended?'':`<button class="btn line sm" data-act="closeReq">새 제안 받기 마감</button><p class="help" style="text-align:center;margin-top:-4px">새 사무소의 제안만 막아요. 이미 받은 제안·선택한 사무소와의 상담은 계속돼요.</p>`}`:''}
     ${l&&nReal?'':`<div class="note warn" style="margin-top:8px"><span><b>예시 화면이에요</b> · 아래 제안은 실제로 도착한 것이 아니라, 정식 오픈 후 화면을 보여주는 예시예요.</span></div>
@@ -2641,7 +2713,7 @@ function submitRequest(){ const q=S.req; if(!q||q.busy||S._submitting) return; c
     if(S.draftEpoch===snap.epoch){ S.reqId=id; S.viewReq=id; S.reqDone=true; S.contact=snap.contact; if(S.view==='gate') go('done',{},true); else { render(); toast('요청을 저장했어요 (시연)'); } }
     else toast('이전 요청을 저장했어요 (시연)');
   }, 400); }
-function addLeadFrom(snap){ const ex=DB.leads.find(l=>l.idem===snap.idem); if(ex) return ex.id; const id=DB.seq++;
+function addLeadFrom(snap){ const ex=DB.leads.find(l=>l.idem===snap.idem); if(ex) return ex.id; const id=SY.on?syId():DB.seq++;
   DB.leads.unshift({id, idem:snap.idem, bldg:snap.bldg, via:snap.via, tok:snap.tok, at:nowStr(), name:snap.contact.name, phone:snap.contact.phone, type:snap.type, region:snap.region, src:snap.src, kw:snap.kw, sub:snap.sub, std:snap.std, unk:snap.unk, want:true, cap:5, consent:Object.assign({at:nowStr(), ver:'시안 v1'}, snap.consent), selfSum:snap.selfSum, demo:true, photos:snap.photos, addrFull:snap.addrFull||'', note:snap.note, brief:snap.brief, stage:'미처리', closed:false, contract:0, props:[],
     log:[[nowStr(), '시연 요청 저장 (실제 접수·알림 없음)'],[nowStr(), '등록 파트너 전체 '+DB.partners.filter(p=>p.on&&reqMatchesPartner(snap.region,p)).length+'곳에 새 요청 카톡 알림 (시연 · 목록과 같은 기준)']], memo:''});
   return id; }
@@ -2773,10 +2845,10 @@ function vAdminLogin(){
   return header({title:'관리자 로그인'}) + `<main class="wrap view">
     <section style="padding-top:16px">
       <h1 style="font-size:22px;font-weight:800;margin-top:14px">건축ON 관리자</h1><p class="help" style="font-size:13.5px;margin-top:6px">요청·제안·상담·파트너를 관리하는 화면이에요</p></section>
-    <button class="btn kakao" data-act="admKakao">${KAKAO_SVG}카카오로 관리자 로그인</button>
+    ${SY.on?'':`<button class="btn kakao" data-act="admKakao">${KAKAO_SVG}카카오로 관리자 로그인</button>`}
     <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px"><span style="flex:1;height:1px;background:var(--line)"></span>또는 비밀번호로<span style="flex:1;height:1px;background:var(--line)"></span></div>
     <form id="alf" class="f"><label class="lbl" for="apw">비밀번호</label><input id="apw" class="inp" type="password" autocomplete="current-password" placeholder="관리자 비밀번호"><button class="btn" style="margin-top:8px">로그인</button></form>
-    <div class="note"><span><b>관리자 화면 들어가는 법</b><br>① 홈 맨 아래 회사 정보의 <b>'관리자'</b> 누르기<br>② 또는 주소 끝에 <b>#admin</b> 붙여서 열기<br>시안 초기 비밀번호: <b>kon-demo-admin</b> · 로그인 후 설정에서 바꿀 수 있어요</span></div></main>`;
+    ${SY.on?'':`<div class="note"><span><b>관리자 화면 들어가는 법</b><br>① 홈 맨 아래 회사 정보의 <b>'관리자'</b> 누르기<br>② 또는 주소 끝에 <b>#admin</b> 붙여서 열기<br>시안 초기 비밀번호: <b>kon-demo-admin</b> · 로그인 후 설정에서 바꿀 수 있어요</span></div>`}</main>`;
 }
 function admSide(){
   const nApp=DB.apps.filter(a=>a.status!=='승인'&&a.status!=='반려').length, nNew=DB.leads.filter(l=>l.stage==='미처리').length, nErr=runDiag().filter(x=>x.lv==='err').length;
@@ -2822,7 +2894,7 @@ function vAdmin(){
           <small>${l.at} · ${esc(l.region)}</small><small>유입 ${esc(l.src)}${l.kw?` · "${esc(l.kw)}"`:''} · 제안 ${l.props.length}곳${l.contract?` · 계약 ${man(l.contract)}원`:''}${l.want?'':' · 상담 원하지 않음'}</small></span><span class="ch">${ic('chev',16)}</span></button></div>`).join(''):'<p class="help" style="padding:20px 0;text-align:center">해당하는 요청이 없어요</p>'}</section>
       <button class="btn line sm" data-act="toast" data-m="CSV 파일 내려받기는 실제 서비스에서 동작해요">CSV 내려받기</button>`;
   } else if(tab==='partners'){
-    body=`${(DB.buys||[]).filter(x=>x.st==='대기').length?`<section class="sec"><h3>${hic('coin')}코인 구매 신청 · 확인 대기 ${(DB.buys||[]).filter(x=>x.st==='대기').length}건</h3>${(DB.buys||[]).filter(x=>x.st==='대기').map(x=>{ const pp=DB.partners.find(z=>z.id===x.pid)||{name:'-'}; return `<div class="row" style="padding:10px 0;flex-wrap:wrap;gap:6px"><span style="flex:1;min-width:0"><b style="font-size:14px">${esc(pp.name)} · ${esc(x.name)} ${won(x.price)}</b><small>${esc(x.at)} · ${x.pay==='bank'?'계좌이체 · 세금계산서 '+esc(x.tx||'이메일 미입력'):'카드 결제 링크'}</small></span><span style="flex-basis:100%;display:flex;gap:6px;justify-content:flex-end"><button class="opt" data-act="buyOk" data-id="${x.id}" style="flex:none;min-height:34px;padding:0 10px;font-size:12.5px">${x.pay==='bank'?'입금':'결제'} 확인 · ${x.n}코인 충전</button><button class="opt" data-act="buyNo" data-id="${x.id}" style="flex:none;min-height:34px;padding:0 10px;font-size:12.5px">취소</button></span></div>`; }).join('')}<p class="help">실제 입금·카드 결제를 확인한 뒤 눌러주세요. 충전 기록은 사무소 상세의 코인 기록에 남아요.</p></section>`:''}${bulkBar('partners', DB.partners.filter(p=>!p.own).map(p=>p.id), `<button data-act="bulkOn" data-v="1">권한 열기</button><button data-act="bulkOn" data-v="0">권한 닫기</button><button data-act="bulkCredit">10코인 지급</button>`)}<section>${DB.partners.map(p=>`<div style="display:flex;gap:10px;align-items:flex-start">${p.own?'<span style="width:20px;flex:none"></span>':ck('partners',p.id)}<button class="row" data-act="admPartner" data-id="${p.id}">${pav(p,40,p.on?'var(--p)':'#98a2b3')}
+    body=`${SY.on?`<section class="sec"><h3>${hic('users')}사무소 직접 등록</h3><p class="help" style="margin-top:0">등록하면 로그인 코드와 20코인이 바로 생겨요 · 코드는 사무소를 눌러 확인하고 전달하세요</p><input id="npN" class="inp" placeholder="사무소 이름" maxlength="40"><div style="display:flex;gap:8px;margin-top:8px"><input id="npC" class="inp" placeholder="대표 이름" maxlength="20"><input id="npP" class="inp" placeholder="연락처" maxlength="20" inputmode="tel"></div><button class="btn sm" data-act="npAdd" style="margin-top:8px">등록하고 코드 만들기</button></section>`:''}${(DB.buys||[]).filter(x=>x.st==='대기').length?`<section class="sec"><h3>${hic('coin')}코인 구매 신청 · 확인 대기 ${(DB.buys||[]).filter(x=>x.st==='대기').length}건</h3>${(DB.buys||[]).filter(x=>x.st==='대기').map(x=>{ const pp=DB.partners.find(z=>z.id===x.pid)||{name:'-'}; return `<div class="row" style="padding:10px 0;flex-wrap:wrap;gap:6px"><span style="flex:1;min-width:0"><b style="font-size:14px">${esc(pp.name)} · ${esc(x.name)} ${won(x.price)}</b><small>${esc(x.at)} · ${x.pay==='bank'?'계좌이체 · 세금계산서 '+esc(x.tx||'이메일 미입력'):'카드 결제 링크'}</small></span><span style="flex-basis:100%;display:flex;gap:6px;justify-content:flex-end"><button class="opt" data-act="buyOk" data-id="${x.id}" style="flex:none;min-height:34px;padding:0 10px;font-size:12.5px">${x.pay==='bank'?'입금':'결제'} 확인 · ${x.n}코인 충전</button><button class="opt" data-act="buyNo" data-id="${x.id}" style="flex:none;min-height:34px;padding:0 10px;font-size:12.5px">취소</button></span></div>`; }).join('')}<p class="help">실제 입금·카드 결제를 확인한 뒤 눌러주세요. 충전 기록은 사무소 상세의 코인 기록에 남아요.</p></section>`:''}${bulkBar('partners', DB.partners.filter(p=>!p.own).map(p=>p.id), `<button data-act="bulkOn" data-v="1">권한 열기</button><button data-act="bulkOn" data-v="0">권한 닫기</button><button data-act="bulkCredit">10코인 지급</button>`)}<section>${DB.partners.map(p=>`<div style="display:flex;gap:10px;align-items:flex-start">${p.own?'<span style="width:20px;flex:none"></span>':ck('partners',p.id)}<button class="row" data-act="admPartner" data-id="${p.id}">${pav(p,40,p.on?'var(--p)':'#98a2b3')}
       <span style="flex:1;min-width:0"><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b style="font-size:14.5px">${esc(p.name)}</b>${p.on?'<span class="pill" style="background:var(--ok-bg);color:var(--ok);font-size:11px;padding:2px 8px">권한 열림</span>':'<span class="pill" style="background:var(--band);color:var(--muted);font-size:11px;padding:2px 8px">권한 닫힘</span>'}</span>
       <small>${esc(p.region)} · 코인 ${p.credit}${typeof p.credit==='number'?'코인':''} · 제안 ${p.sent} · 계약 ${p.won}</small></span><span class="ch">${ic('chev',16)}</span></button></div>`).join('')}</section>`;
   } else if(tab==='apps'){
@@ -2939,7 +3011,7 @@ function vAdmPartner(){
       <div style="display:flex;align-items:center;gap:14px">${pav(p,72)}<div style="flex:1;min-width:0"><p class="help" style="font-size:13px;margin:0 0 8px">추천 건축사 카드, 파트너 로그인, 제안 카드에 이 로고가 보여요. 정사각형 PNG·JPG 권장</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn sm" for="plogo" style="width:auto;padding:0 16px;cursor:pointer">${ic('up',16)} ${p.logo?'로고 바꾸기':'로고 올리기'}</label>${p.logo?`<button class="btn line sm" data-act="plogoDel" data-id="${p.id}" style="width:auto;padding:0 16px">로고 빼기</button>`:''}</div>
         <input id="plogo" type="file" accept="image/*" hidden data-id="${p.id}"></div></div></section>
-    <section class="sec"><h3>${hic('users')}기본 정보</h3><p class="help" style="line-height:1.8;font-size:13.5px">대표 ${esc(p.ceo)} · ${esc(p.phone)}<br>지역 ${esc(p.region)}<br>분야 ${esc(p.fields.join(', '))}</p></section>
+    <section class="sec"><h3>${hic('users')}기본 정보</h3><p class="help" style="line-height:1.8;font-size:13.5px">대표 ${esc(p.ceo)} · ${esc(p.phone)}<br>지역 ${esc(p.region)}<br>분야 ${esc(p.fields.join(', '))}</p>${p.code?`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;background:var(--band);border-radius:8px;margin-top:8px"><span><small class="help">사무소 로그인 코드 · 이 사무소에만 전달하세요</small><b style="display:block;font-size:19px;letter-spacing:1px">${esc(p.code)}</b></span></div>`:''}</section>
     <section class="sec"><h3>${hic('lock')}제안 발송 권한</h3>
       <div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button class="opt" data-act="pOn" data-v="1" aria-pressed="${p.on}" style="--acc:var(--ok);--acc-t:var(--ok-bg);--acc-b:#a6f4c5">권한 열기</button><button class="opt" data-act="pOn" data-v="0" aria-pressed="${!p.on}" style="--acc:var(--muted);--acc-t:var(--band);--acc-b:var(--line)">권한 닫기</button></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><span style="font-size:13.5px">남은 코인</span><b style="font-size:20px;color:var(--navy)">${p.credit}${typeof p.credit==='number'?' 코인':''}</b></div>
@@ -2958,7 +3030,7 @@ function vAdmPartner(){
   </main>`;
 }
 
-function vArchLogin(){
+function vArchLogin(){ if(SY.on) return vArchLoginSync();
   const P=DB.partners.filter(p=>p.on);
   return header({title:'파트너 로그인'}) + `<main class="wrap view">
     <section><h1 style="font-size:22px;line-height:1.4;font-weight:800">건축ON 파트너 로그인</h1><p class="help" style="font-size:13.5px;margin-top:6px">승인된 사무소 대표와 소속 건축사가 들어오는 곳이에요. 가입할 때 쓴 카카오 계정으로 로그인해요.</p></section>
@@ -3016,7 +3088,7 @@ function vArchSet(){
 }
 let ARCH_S=null;
 const OTHER_P=['x1','x2','x3','x4'];
-function archSamples(){ if(ARCH_S) return ARCH_S;
+function archSamples(){ if(SY.on) return []; if(ARCH_S) return ARCH_S;
   const mk=(id,k,region,at,dl,n,patch,note,ph,self,sub)=>{ const br=briefSample(k,patch); if(self) br.self=self; if(sub) br.sub=sub; br.coin=coinOf(br);
     const props=Array.from({length:n},(_,i)=>({id:id+'_o'+i, partnerId:OTHER_P[i], p:'다른 사무소', other:true, lo:0, hi:0, mid:0, coin:br.coin, charged:0, at, opened:null, chosen:null, ret:null}));
     return {id, sample:true, type:k, region, at, dl, note, photoN:ph, brief:br, props, closed:false}; };
@@ -3076,7 +3148,7 @@ function createProposal(reqId, partnerId, input){
   const coin=cn(r.brief), unlimited=typeof pa.credit!=='number', charged=unlimited?0:coin;
   if(!unlimited && pa.credit<coin) return {err:'코인이 부족해요 ('+pa.credit+'/'+coin+') · 충전 후 제안할 수 있어요', code:'coin'};
   /* ---- 여기서부터 데이터 변경 ---- */
-  const pr={id:'pr'+(DB.pseq++), partnerId:pa.id, p:pa.name, lo:v.lo, hi:v.hi, mid:v.mid, amt:Math.round(v.lo/1e4)+'~'+Math.round(v.hi/1e4)+'만', period, comment, reason:(g&&g.off)?reason:'', items:Array.isArray(input.items)?input.items.filter(i=>i&&+i.amt>0).slice(0,20).map(i=>({n:String(i.n||'').slice(0,30), amt:Math.round(+i.amt), extra:!!i.extra})):[], coin, charged, ver:(r.brief&&Number.isFinite(+r.brief.ver))?+r.brief.ver:0, at:nowStr(), opened:null, chosen:null, ret:null, demo:true};
+  const pr={id:'pr'+(SY.on?Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36):(DB.pseq++)), partnerId:pa.id, p:pa.name, lo:v.lo, hi:v.hi, mid:v.mid, amt:Math.round(v.lo/1e4)+'~'+Math.round(v.hi/1e4)+'만', period, comment, reason:(g&&g.off)?reason:'', items:Array.isArray(input.items)?input.items.filter(i=>i&&+i.amt>0).slice(0,20).map(i=>({n:String(i.n||'').slice(0,30), amt:Math.round(+i.amt), extra:!!i.extra})):[], coin, charged, ver:(r.brief&&Number.isFinite(+r.brief.ver))?+r.brief.ver:0, at:nowStr(), opened:null, chosen:null, ret:null, demo:true};
   r.props.push(pr); if(!unlimited) pa.credit-=charged; pa.sent++;
   if(r.kind==='lead'){ const l=r.src; if(l.stage==='미처리') l.stage='제안중'; l.log.push([nowStr(), pa.name+' 제안 ('+coin+'코인'+(unlimited?' · 차감 없음':'')+') · 고객에게 제안 도착 알림 (시연)']); if(r.props.length<5) l.log.push([nowStr(), '다른 파트너에게 "'+(5-r.props.length)+'자리 남음" 카톡 알림 (시연)']); }
   return {ok:true, prop:pr, charged}; }
@@ -3225,7 +3297,7 @@ function loadDemo(){ try{ const d=JSON.parse(localStorage.getItem(DEMO_KEY)||'nu
   if(Array.isArray(d.samples)){ const A=archSamples(); d.samples.forEach(x=>{ const t=x&&A.find(y=>y.id===x.id); if(t&&Array.isArray(x.props)) t.props=x.props; }); }
   if(d.sess){ S.myReqs=Array.isArray(d.sess.myReqs)?d.sess.myReqs:[]; S.cust=d.sess.cust&&typeof d.sess.cust==='object'?{via:String(d.sess.cust.via||''), name:String(d.sess.cust.name||''), phone:String(d.sess.cust.phone||'')}:null; }
 }catch(e){} }
-window.addEventListener('storage', e=>{ if(e.key===DEMO_KEY){ if(e.newValue==null){ clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); return; } loadDemo(); loadPLogos(); const ae=document.activeElement; if(!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) render(); } });
+window.addEventListener('storage', e=>{ if(SY.on) return; if(e.key===DEMO_KEY){ if(e.newValue==null){ clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); return; } loadDemo(); loadPLogos(); const ae=document.activeElement; if(!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) render(); } });
 function render(){
   if(S.view==='news') S.view='home';
   if(PARTNER_VIEWS.includes(S.view) && !activePartner()){ if(S.view==='archPitch'&&S.akId) S.pendingReq=S.akId; S.view='archLogin'; }
@@ -3234,14 +3306,14 @@ function render(){
   const V = {archLogin:vArchLogin, archSet:vArchSet, office:vOffice, archBuy:vArchBuy, refund:vRefund, browse:vBrowse, join:vJoin, joinMember:()=>vJoinStep('member'), joinAdmin:()=>vJoinStep('admin'), joinOwner:vJoinOwner, gate:vGate, done:vDone, self:vSelf, news:vNews, verify:vVerify, home:vHome, bldg:vBldg, form:vForm, choose:vChoose, find:vFind, result:vResult, pitches:vPitches, chat:vChat, arch:vArch, archList:vArchList, archPitch:vArchPitch, archDash:vArchDash, admin:vAdmin}[S.view] || vHome;
   if(S.view==='news') S.view='home';
   const navOn = !PARTNER_VIEWS.includes(S.view) && !['admin','archLogin'].includes(S.view);
-  document.getElementById('app').innerHTML = V() + (navOn? bnav():'') + (S.palOpen? palSheet():'') + (DEMO? demoBar():'');
+  document.getElementById('app').innerHTML = V() + (navOn? bnav():'') + (S.palOpen? palSheet():'') + (SY.on? syBar() : (DEMO? demoBar():'')+(SY.off&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?`<div class="sybar bad" style="bottom:140px">● 공용 저장소 미연결 · 이 기기에만 저장돼요</div>`:''));
   document.getElementById('app').classList.toggle('has-nav', navOn);
-  const alf=document.getElementById('alf'); if(alf) alf.addEventListener('submit', e=>{ e.preventDefault(); const v=document.getElementById('apw').value; if(v===DB.pw){ S.adm.ok=true; S.adm.role='마스터'; S.adm.tab='dash'; render(); window.scrollTo(0,0); toast('관리자로 로그인했어요'); } else { toast('비밀번호가 맞지 않아요'); } });
+  const alf=document.getElementById('alf'); if(alf) alf.addEventListener('submit', e=>{ e.preventDefault(); const v=document.getElementById('apw').value; if(SY.on){ fetch('/api/kon',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({a:'admin', password:v})}).then(r=>r.json()).then(j=>{ if(j&&j.ok){ S.adm.ok=true; S.adm.role='마스터'; S.adm.tab='dash'; render(); window.scrollTo(0,0); toast('관리자로 로그인했어요'); } else toast((j&&j.error)||'비밀번호가 맞지 않아요'); }).catch(()=>toast('서버에 연결하지 못했어요')); return; } if(v===DB.pw){ S.adm.ok=true; S.adm.role='마스터'; S.adm.tab='dash'; render(); window.scrollTo(0,0); toast('관리자로 로그인했어요'); } else { toast('비밀번호가 맞지 않아요'); } });
   const pwf=document.getElementById('pwf'); if(pwf) pwf.addEventListener('submit', e=>{ e.preventDefault(); const a0=document.getElementById('pw0').value, a1=document.getElementById('pw1').value, a2=document.getElementById('pw2').value;
     if(a0!==DB.pw){ toast('현재 비밀번호가 맞지 않아요'); return; } if(a1.length<8){ toast('새 비밀번호는 8자 이상이에요'); return; } if(a1!==a2){ toast('새 비밀번호가 서로 달라요'); return; }
     DB.pw=a1; try{ localStorage.removeItem('kon_admin_pw'); }catch(err){} pwf.reset(); toast('비밀번호를 바꿨어요 (시연 · 새로고침하면 초기화)'); });
   const cf=document.getElementById('cf'); if(cf) cf.addEventListener('submit', e=>{ e.preventDefault(); const m=document.getElementById('msg'); if(m.value.trim()){ (S.chat=S.chat||[]).push(m.value.trim()); render(); window.scrollTo(0,document.body.scrollHeight); } });
-  saveDemo(); saveDraft();
+  saveDemo(); saveDraft(); if(SY.on) syQueue();
 }
 function updateLive(){
   return;
@@ -3328,8 +3400,10 @@ document.addEventListener('click', e=>{
   else if(a==='arch'){ S.appDone=false; go('arch'); }
   else if(a==='archList'){ S.partner ? go('archList') : go('archLogin'); }
   else if(a==='go'){ go(b.dataset.v); }
+  else if(a==='pCode'){ const c=((document.getElementById('pcode')||{}).value||'').trim().toUpperCase().replace(/\s/g,''); const pa=c.length>=5?DB.partners.find(x=>String(x.code||'').toUpperCase()===c):null; if(!pa){ toast(SY.ready?'코드가 맞지 않아요 · 다시 확인해주세요':'서버 연결 중이에요 · 잠시 후 다시 눌러주세요'); return; } if(!pa.on){ toast('제안 권한이 닫혀 있는 사무소예요 · 건축ON에 문의해주세요'); return; } S.partner={id:pa.id, role:'대표'}; try{ localStorage.setItem('kon_psess', JSON.stringify(S.partner)); }catch(e){} const pend=S.pendingReq; S.pendingReq=null; if(pend) go('archPitch',{akId:pend},true); else go('archList',{},true); toast(pa.name+' 로그인했어요'); }
+  else if(a==='npAdd'){ const g=id=>((document.getElementById(id)||{}).value||'').trim(), nm=g('npN'), ceo=g('npC'), ph=g('npP'); if(nm.length<2){ toast('사무소 이름을 입력해주세요'); return; } const pa={id:pidNew(), ts:Date.now(), code:codeNew(), name:nm.slice(0,40), ceo:ceo.slice(0,20)||'-', phone:ph.slice(0,20)||'-', region:'-', fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}; DB.partners.push(pa); render(); toast(nm+' 등록 · 코드 '+pa.code+' · 20코인 지급'); }
   else if(a==='pLogin'){ S.partner={id:b.dataset.id, role:b.dataset.r}; const pend=S.pendingReq; S.pendingReq=null; if(pend) go('archPitch',{akId:pend},true); else go('archList',{},true); toast(b.dataset.r+' 계정으로 로그인했어요 (시연)'); }
-  else if(a==='pLogout'){ S.partner=null; S.pdraft={}; go('home'); toast('로그아웃했어요'); }
+  else if(a==='pLogout'){ try{ localStorage.removeItem('kon_psess'); }catch(e){} S.partner=null; S.pdraft={}; go('home'); toast('로그아웃했어요'); }
   else if(a==='pNav'){ go(b.dataset.v); }
   else if(a==='pNoti'){ S.pNoti[b.dataset.k]=!S.pNoti[b.dataset.k]; const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='gapInc'){ S.gapInc=b.dataset.v==='1'; render(); }
@@ -3375,7 +3449,7 @@ document.addEventListener('click', e=>{
   else if(a==='bulkStage'){ const st=document.getElementById('bst').value, sel=selOf('leads'); DB.leads.forEach(l=>{ if(sel.includes(String(l.id))){ if(st==='종료'&&!l.ended) l.ended={at:nowStr(), reason:'관리자 일괄 종료', by:'관리자(마스터)'}; if(st!=='종료'&&l.ended) l.ended=null; l.stage=st; l.log.push([nowStr(),'일괄 상태 변경 → '+st+' · 처리자 관리자']); } }); const n=sel.length; S.sel.leads=[]; render(); toast(n+'건을 '+st+'(으)로 바꿨어요'); }
   else if(a==='bulkOn'){ const sel=selOf('partners'), on=b.dataset.v==='1'; DB.partners.forEach(p=>{ if(sel.includes(p.id)) p.on=on; }); const n=sel.length; S.sel.partners=[]; render(); toast(n+'곳 권한을 '+(on?'열었어요':'닫았어요')); }
   else if(a==='bulkCredit'){ const sel=selOf('partners'); DB.partners.forEach(p=>{ if(sel.includes(p.id) && typeof p.credit==='number') coinAdjust(p,10,'관리자 일괄 지급'); }); const n=sel.length; S.sel.partners=[]; render(); toast(n+'곳에 10코인씩 지급했어요'); }
-  else if(a==='bulkApp'){ const sel=selOf('apps'); let n=0; DB.apps.forEach(ap=>{ if(sel.includes(ap.id) && ap.status!=='승인' && ap.status!=='반려'){ ap.status=b.dataset.s; n++; if(ap.status==='승인') DB.partners.push({id:'p'+(DB.partners.length+1)+Date.now()%1000, name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}); } }); S.sel.apps=[]; render(); toast(n+'건 '+b.dataset.s+' 처리했어요'); }
+  else if(a==='bulkApp'){ const sel=selOf('apps'); let n=0; DB.apps.forEach(ap=>{ if(sel.includes(ap.id) && ap.status!=='승인' && ap.status!=='반려'){ ap.status=b.dataset.s; n++; if(ap.status==='승인') DB.partners.push({id:pidNew(), name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}); } }); S.sel.apps=[]; render(); toast(n+'건 '+b.dataset.s+' 처리했어요'); }
   else if(a==='join'){ go('join'); }
   else if(a==='joinMember'||a==='joinAdmin'){ S.js={}; go(a); }
   else if(a==='joinOwner'){ go('joinOwner'); }
@@ -3385,7 +3459,7 @@ document.addEventListener('click', e=>{
     if(k==='admin') DB.adminReq.push({id:'r'+Date.now()%100000, at:nowStr(), name:j.name, org:j.org||'디바이엠', want:j.want||'상담 담당', phone:j.phone});
     else { const code=String(j.code||'').trim().toUpperCase(); const pa=DB.partners.find(x=>x.on&&inviteOf(x).toUpperCase()===code); if(!pa){ toast('초대 코드가 맞지 않아요 · 사무소 대표에게 코드를 다시 확인해주세요'); return; } (DB.members[pa.id]=DB.members[pa.id]||[]).push({name:String(j.name).slice(0,30), role:'소속 건축사', st:'승인 대기'}); j.pname=pa.name; }
     j.done=true; render(); window.scrollTo(0,0); }
-  else if(a==='admKakao'){ if(!DEMO){ toast('관리자 권한 확인이 필요해요'); return; } S.adm.ok=true; S.adm.role='마스터'; S.adm.tab='dash'; render(); toast('(시연) 카카오 로그인 · 마스터 관리자 — 운영에서는 서버 권한 확인 후 로그인'); }
+  else if(a==='admKakao'){ if(!DEMO||SY.on){ toast('관리자 권한 확인이 필요해요'); return; } S.adm.ok=true; S.adm.role='마스터'; S.adm.tab='dash'; render(); toast('(시연) 카카오 로그인 · 마스터 관리자 — 운영에서는 서버 권한 확인 후 로그인'); }
   else if(a==='admReqOk'){ const i=DB.adminReq.findIndex(x=>x.id===b.dataset.id), r=DB.adminReq[i]; DB.admins.push({id:'m'+Date.now()%100000, name:r.name, org:r.org, role:b.dataset.r, via:'카카오'}); DB.adminReq.splice(i,1); render(); toast(r.name+'님을 '+b.dataset.r+'(으)로 지정했어요'); }
   else if(a==='admReqNo'){ DB.adminReq=DB.adminReq.filter(x=>x.id!==b.dataset.id); render(); toast('신청을 거절했어요'); }
   else if(a==='admRole'){ const m=DB.admins.find(x=>x.id===b.dataset.id); m.role=b.dataset.r; render(); toast(m.name+' → '+m.role); }
@@ -3398,7 +3472,7 @@ document.addEventListener('click', e=>{
   else if(a==='admPartner'){ admNav({lead:null, partner:b.dataset.id}); }
   else if(a==='admBack'){ back(); }
   else if(a==='admLogout'){ S.adm={ok:false, tab:'dash'}; pushRoute(true); render(); toast('로그아웃했어요'); }
-  else if(a==='appSt'){ const ap=DB.apps.find(x=>x.id===b.dataset.id); ap.status=b.dataset.s; if(ap.status==='승인'){ DB.partners.push({id:'p'+(DB.partners.length+1), name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}); toast(ap.office+' 승인 · 제안 발송 권한을 열었어요'); } else toast('상태를 '+ap.status+'(으)로 바꿨어요'); render(); }
+  else if(a==='appSt'){ const ap=DB.apps.find(x=>x.id===b.dataset.id); ap.status=b.dataset.s; if(ap.status==='승인'){ DB.partners.push({id:pidNew(), name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}); toast(ap.office+' 승인 · 제안 발송 권한을 열었어요'); } else toast('상태를 '+ap.status+'(으)로 바꿨어요'); render(); }
   else if(a==='leadSt'){ const l=leadOf(S.adm.lead); if(b.dataset.s==='종료'&&l.stage!=='종료'){ S.endAsk=l.id; const y=window.scrollY; render(); window.scrollTo(0,y); return; } if(l.ended&&b.dataset.s!=='종료'){ l.log.push([nowStr(),'관리자 종료 해제 (이전 사유: '+l.ended.reason+')']); l.ended=null; } l.stage=b.dataset.s; l.log.push([nowStr(),'상태 변경 → '+l.stage+' · 처리자 관리자']); render(); toast('상태를 바꿨어요'); }
   else if(a==='leadEnd'){ const l=leadOf(S.adm.lead); const sel=(document.getElementById('endr')||{}).value||'', memo=((document.getElementById('endm')||{}).value||'').trim(); const reason=memo?(sel+' · '+memo).slice(0,120):sel; if(!sel){ toast('종료 사유를 골라주세요'); return; } l.stage='종료'; l.ended={at:nowStr(), reason, by:'관리자(마스터)'}; l.log.push([nowStr(),'관리자 종료 · 사유: '+reason+' · 처리자 관리자(마스터)']); S.endAsk=null; render(); toast('요청을 종료했어요 · 고객 화면에도 종료로 표시돼요'); }
   else if(a==='leadEndCancel'){ S.endAsk=null; const y=window.scrollY; render(); window.scrollTo(0,y); }
@@ -3472,6 +3546,7 @@ window.addEventListener('popstate',e=>{ S.palOpen=false; const st=e.state; if(st
   pushRoute(true); })();
 /* 카카오 로그인(실제): 서버에 키가 등록돼 있을 때만 켜짐. 없으면 기존 화면 그대로 */
 function kakaoGo(intent){ try{ saveDraft(); sessionStorage.setItem('kon_kk_intent', intent); sessionStorage.setItem('kon_kk_view', S.view||''); }catch(e){} location.href='/api/kakao/start'; }
+syBoot();
 (function kakaoBoot(){ if(bldgOk()) fetch('/api/kakao/status').then(r=>r.ok?r.json():null).then(j=>{ S.kk=!!(j&&j.on); }).catch(()=>{});
   const h=location.hash||''; if(!/^#kk(err)?=/.test(h)) return; try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
   let intent='', view=''; try{ intent=sessionStorage.getItem('kon_kk_intent')||''; view=sessionStorage.getItem('kon_kk_view')||''; sessionStorage.removeItem('kon_kk_intent'); sessionStorage.removeItem('kon_kk_view'); }catch(e){}
