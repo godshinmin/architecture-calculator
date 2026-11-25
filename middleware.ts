@@ -144,7 +144,7 @@ export default async function middleware(request: Request): Promise<Response> {
         건축물대장: has('BUILDING_API_KEY'),
         문자발송: has('NCP_ACCESS_KEY') && has('NCP_SECRET_KEY') && has('NCP_SERVICE_ID') && has('NCP_SENDER'),
         공용저장소: has('KV_REST_API_URL') && has('KV_REST_API_TOKEN'),
-        카카오로그인: has('KAKAO_REST_API_KEY'),
+        카카오로그인: has('KAKAO_REST_API_KEY') || has('KAKAO_REST_KEY'),
         카카오알림톡: has('KAKAO_ALIMTALK_SENDER_KEY'),
       });
     }

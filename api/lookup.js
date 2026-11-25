@@ -23,8 +23,23 @@ module.exports = async function handler(req, res) {
     const floorUrl = `https://apis.data.go.kr/1613000/BldRgstHubService/getBrFlrOulnInfo?serviceKey=${keyForUrl}${commonParams}`;
 
     try {
+        // 공공데이터 서버가 첫 호출에서 빈 응답을 주는 일이 잦아, 표제부가 비면 잠깐 쉬고 다시 호출 (최대 3회)
+        const getTitle = async () => {
+            let last = '';
+            for (let i = 0; i < 3; i++) {
+                if (i) await new Promise(r => setTimeout(r, 500 * i));
+                try {
+                    last = await fetch(titleUrl).then(r => r.text());
+                    const d = JSON.parse(last);
+                    const code = d?.response?.header?.resultCode;
+                    if (code && code !== '00') continue;
+                    if (d?.response?.body?.items?.item) return last;
+                } catch (e) { /* 다음 시도 */ }
+            }
+            return last;
+        };
         const [titleResp, floorResp] = await Promise.all([
-            fetch(titleUrl).then(r => r.text()),
+            getTitle(),
             fetch(floorUrl).then(r => r.text()).catch(() => null)
         ]);
 
