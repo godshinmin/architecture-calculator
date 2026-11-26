@@ -158,6 +158,9 @@ async function withLock(store, fn) {
 const crypto = require('crypto');
 const mobile = (p) => { const d = String(p || '').replace(/\D/g, ''); return /^01[016789]\d{7,8}$/.test(d) ? d : ''; };
 
+// 한글 2바이트 기준 90바이트 이하면 단문(SMS)으로 보내 요금을 줄임
+const short = (t) => { let n = 0; for (const ch of String(t)) n += ch.charCodeAt(0) > 127 ? 2 : 1; return n <= 90; };
+
 async function sendSms(list) {
     const ak = process.env.NCP_ACCESS_KEY, sk = process.env.NCP_SECRET_KEY, sid = process.env.NCP_SERVICE_ID, from = process.env.NCP_SENDER;
     if (!ak || !sk || !sid || !from || !list.length) return 0;
@@ -169,7 +172,7 @@ async function sendSms(list) {
             const r = await fetch('https://sens.apigw.ntruss.com' + path, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8', 'x-ncp-apigw-timestamp': ts, 'x-ncp-iam-access-key': ak, 'x-ncp-apigw-signature-v2': sig },
-                body: JSON.stringify({ type: 'LMS', contentType: 'COMM', countryCode: '82', from, subject: '[건축ON]', content: m.text, messages: m.to.map(t => ({ to: t })) })
+                body: JSON.stringify(Object.assign({ type: short(m.text) ? 'SMS' : 'LMS', contentType: 'COMM', countryCode: '82', from, content: m.text, messages: m.to.map(t => ({ to: t })) }, short(m.text) ? {} : { subject: '[건축ON]' }))
             });
             if (r.ok) sent += m.to.length; else { const t = await r.text().catch(() => ''); sendSms.last = 'NCP ' + r.status + ' ' + t.slice(0, 160); console.error('문자 발송 실패:', r.status, t.slice(0, 200)); }
         } catch (e) { sendSms.last = String(e && e.message); console.error('문자 발송 오류:', e && e.message); }
@@ -255,7 +258,7 @@ async function push(store, body, origin) {
                 if (n === 1) await store.call(['EXPIRE', hour, '7200']);
                 const list = buildSms(evs, all.partners, origin);
                 if (!list.length) await smsLog(store, { t: '건너뜀', why: '받을 번호 없음 (' + evs.map(e => e.t === 'lead' ? '새 요청: 번호 등록된 사무소 없음' : e.t === 'prop' ? '제안 도착: 고객 번호 형식 오류' : e.t === 'chosen' ? '상담 신청: 사무소 번호 없음' : '가입 결과: 신청자 번호 오류').join(', ') + ')' });
-                else if (n > 60) await smsLog(store, { t: '건너뜀', why: '시간당 발송 한도 초과' });
+                else if (n > 400) await smsLog(store, { t: '건너뜀', why: '시간당 발송 한도 초과' });
                 else { sendSms.last = ''; all.sms = await (module.exports._sms || sendSms)(list); for (const m of list) await smsLog(store, { t: m.kind || '알림', to: m.to.map(maskP).join(', '), ok: !sendSms.last, why: sendSms.last || '' }); }
             } catch (e) { console.error('알림 처리 오류:', e && e.message); }
         }
@@ -326,7 +329,7 @@ async function handler(req, res, storeOverride) {
                 const code = String(crypto.randomInt(100000, 1000000));
                 await store.call(['SET', 'kon:otp:' + to, JSON.stringify({ c: code, n: 0 }), 'EX', '300']);
                 sendSms.last = '';
-                const sent = await (module.exports._sms || sendSms)([{ kind: '인증번호', to: [to], text: '[건축ON] 인증번호 ' + code + ' (5분 안에 입력해 주세요)' }]);
+                const sent = await (module.exports._sms || sendSms)([{ kind: '인증번호', to: [to], text: '[건축ON] 인증번호 ' + code + ' (5분 안에 입력)' }]);
                 await smsLog(store, { t: '인증번호', to: maskP(to), ok: !!sent, why: sent ? '' : (sendSms.last || '발송 실패') });
                 return res.status(200).json(sent ? { ok: true } : { ok: false, error: '인증번호를 보내지 못했어요. 잠시 후 다시 시도해 주세요.' });
             }
