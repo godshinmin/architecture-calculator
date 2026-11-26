@@ -244,6 +244,41 @@ async function push(store, body, origin) {
     });
 }
 
+/* ---------- 48시간 미열람 코인 자동 반환 ---------- */
+const RET_MS = 48 * 3600 * 1000;
+function kst(t) { const d = new Date(t + 9 * 3600 * 1000), z = n => String(n).padStart(2, '0'); return (d.getUTCMonth() + 1) + '.' + z(d.getUTCDate()) + ' ' + z(d.getUTCHours()) + ':' + z(d.getUTCMinutes()); }
+
+async function sweep(store, now) {
+    // 5분에 한 번만 검사
+    if ((await store.call(['SET', 'kon:sweep', '1', 'NX', 'EX', '300'])) !== 'OK') return 0;
+    return withLock(store, async () => {
+        const st = await readAll(store);
+        const back = {}, changed = [];
+        st.leads.forEach(l => {
+            if (l._del || !Array.isArray(l.props)) return;
+            let hit = false;
+            l.props.forEach(p => {
+                if (!p || !p.ts || p.ret || p.opened || p.chosen || now - p.ts < RET_MS) return;
+                const amt = Math.max(0, +p.charged || 0);
+                p.ret = '48시간 미열람'; p.retAt = kst(now); p.retBy = '자동'; p.refunded = amt;
+                if (amt > 0 && p.partnerId) back[p.partnerId] = (back[p.partnerId] || 0) + amt;
+                hit = true;
+            });
+            if (hit) { l.log = (Array.isArray(l.log) ? l.log : []).concat([[kst(now), '48시간 미열람 제안 코인 자동 반환']]); changed.push(l); }
+        });
+        if (!changed.length) return 0;
+        const la = ['HSET', K.L]; changed.forEach(l => la.push(String(l.id), JSON.stringify(l))); await store.call(la);
+        const pids = Object.keys(back);
+        if (pids.length) {
+            const pa = ['HSET', K.P];
+            st.partners.forEach(p => { if (p && !p._del && back[p.id] && typeof p.credit === 'number') { p.credit += back[p.id]; p.coinLog = [{ at: kst(now), d: back[p.id], why: '48시간 미열람 자동 반환', by: '자동', bal: p.credit }].concat(Array.isArray(p.coinLog) ? p.coinLog : []).slice(0, 200); pa.push(String(p.id), JSON.stringify(p)); } });
+            if (pa.length > 2) await store.call(pa);
+        }
+        await store.call(['INCR', K.V]);
+        return changed.length;
+    });
+}
+
 async function handler(req, res, storeOverride) {
     res.setHeader('Cache-Control', 'no-store');
     const url = process.env.KV_REST_API_URL, token = process.env.KV_REST_API_TOKEN;
@@ -251,6 +286,7 @@ async function handler(req, res, storeOverride) {
     if (!store) return res.status(503).json({ ok: false, error: '공용 저장소 환경변수 미설정 (KV_REST_API_URL / KV_REST_API_TOKEN)' });
     try {
         if (req.method === 'GET') {
+            try { await sweep(store, Date.now()); } catch (e) { console.error('자동 반환 검사 오류:', e && e.message); }
             const cv = req.query && req.query.v;
             if (cv != null && cv !== '') { const v = +(await store.call(['GET', K.V])) || 0; if (String(v) === String(cv)) return res.status(200).json({ ok: true, same: true, v }); }
             const s = await readAll(store);
@@ -277,4 +313,4 @@ async function handler(req, res, storeOverride) {
 }
 
 module.exports = handler;
-module.exports._test = { mergeLead, mergePartner, mergeMisc, push, readAll, buildSms };
+module.exports._test = { sweep, mergeLead, mergePartner, mergeMisc, push, readAll, buildSms };
