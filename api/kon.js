@@ -171,8 +171,8 @@ async function sendSms(list) {
                 headers: { 'Content-Type': 'application/json; charset=utf-8', 'x-ncp-apigw-timestamp': ts, 'x-ncp-iam-access-key': ak, 'x-ncp-apigw-signature-v2': sig },
                 body: JSON.stringify({ type: 'LMS', contentType: 'COMM', countryCode: '82', from, subject: '[건축ON]', content: m.text, messages: m.to.map(t => ({ to: t })) })
             });
-            if (r.ok) sent += m.to.length; else console.error('문자 발송 실패:', r.status);
-        } catch (e) { console.error('문자 발송 오류:', e && e.message); }
+            if (r.ok) sent += m.to.length; else { const t = await r.text().catch(() => ''); sendSms.last = 'NCP ' + r.status + ' ' + t.slice(0, 160); console.error('문자 발송 실패:', r.status, t.slice(0, 200)); }
+        } catch (e) { sendSms.last = String(e && e.message); console.error('문자 발송 오류:', e && e.message); }
     }
     return sent;
 }
@@ -296,10 +296,19 @@ async function handler(req, res, storeOverride) {
             let body = req.body; if (typeof body === 'string') body = parse(body);
             if (!body || typeof body !== 'object') return res.status(400).json({ ok: false, error: '잘못된 요청 형식' });
             if (body.a === 'push') { const host = req.headers && (req.headers['x-forwarded-host'] || req.headers.host); const s = await push(store, body, host ? 'https://' + host : ''); return res.status(200).json(Object.assign({ ok: true }, s)); }
-            if (body.a === 'admin' || body.a === 'reset') {
+            if (body.a === 'admin' || body.a === 'reset' || body.a === 'smstest') {
                 const pw = process.env.ADMIN_PASSWORD;
                 if (!pw) return res.status(500).json({ ok: false, error: 'ADMIN_PASSWORD 미설정' });
                 if (String(body.password || '') !== pw) { await new Promise(r => setTimeout(r, 800)); return res.status(401).json({ ok: false, error: '비밀번호가 올바르지 않습니다.' }); }
+                if (body.a === 'smstest') {
+                    const to = mobile(body.phone);
+                    if (!to) return res.status(400).json({ ok: false, error: '휴대폰 번호를 정확히 입력해 주세요.' });
+                    const miss = ['NCP_ACCESS_KEY', 'NCP_SECRET_KEY', 'NCP_SERVICE_ID', 'NCP_SENDER'].filter(k => !process.env[k]);
+                    if (miss.length) return res.status(200).json({ ok: false, error: '문자 설정이 빠져 있어요: ' + miss.join(', ') });
+                    sendSms.last = '';
+                    const n = await sendSms([{ to: [to], text: '[건축ON] 문자 알림 시험 발송입니다. 이 문자가 보이면 알림이 정상 동작합니다.' }]);
+                    return res.status(200).json(n ? { ok: true } : { ok: false, error: '발송 실패: ' + (sendSms.last || '원인 미상') });
+                }
                 if (body.a === 'reset') { await store.call(['DEL', K.L, K.P, K.M]); await store.call(['INCR', K.V]); }
                 return res.status(200).json({ ok: true });
             }
