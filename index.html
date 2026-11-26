@@ -3570,7 +3570,7 @@ syBoot();
   const h=location.hash||''; if(!/^#kk(err)?=/.test(h)) return; try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
   let intent='', view=''; try{ intent=sessionStorage.getItem('kon_kk_intent')||''; view=sessionStorage.getItem('kon_kk_view')||''; sessionStorage.removeItem('kon_kk_intent'); sessionStorage.removeItem('kon_kk_view'); }catch(e){}
   const back=()=>{ const d=loadDraft(); if(intent==='gate'&&d){ restoreDraft(d); S.view=['form','choose','result','gate'].includes(view)?view:'gate'; } else if(intent==='find') S.view='find'; pushRoute(true); };
-  if(/^#kkerr=/.test(h)){ back(); const c=h.slice(7); setTimeout(()=>toast(c==='cancel'?'카카오 로그인을 취소했어요':'카카오 로그인에 실패했어요 · 이름과 전화번호로 진행해주세요'),300); return; }
+  if(/^#kkerr=/.test(h)){ back(); const c=h.slice(7); const why=c==='cancel'?'카카오 로그인을 취소했어요':/KOE010/.test(c)?'카카오 설정 확인 필요: 클라이언트 시크릿 (KOE010)':/KOE006|KOE303/.test(c)?'카카오 설정 확인 필요: 리다이렉트 주소 ('+c.replace(/^token-/,'')+')':c==='state'?'카카오 로그인 확인값이 맞지 않아요 · 다시 눌러주세요':'카카오 로그인에 실패했어요 ('+decodeURIComponent(c).slice(0,30)+') · 이름과 전화번호로 진행해주세요'; setTimeout(()=>toast(why),300); S.kkErr=c; return; }
   let u=null; try{ const b64=h.slice(4).replace(/-/g,'+').replace(/_/g,'/'); u=JSON.parse(decodeURIComponent(escape(atob(b64)))); }catch(e){}
   if(!u||!u.id){ back(); return; } back(); const nm=String(u.n||'').slice(0,20), ph=String(u.p||'');
   if(ph){ S.cust={via:'kakao', name:nm||'카카오 사용자', phone:ph, kid:String(u.id)}; S.cmode='kakao'; S.req=S.req||{name:'',phone:'',consent:false,mkt:false}; S.req.name=S.cust.name; S.req.phone=ph;

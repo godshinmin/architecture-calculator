@@ -41,11 +41,11 @@ module.exports = async function handler(req, res) {
         const tj = await tr.json().catch(() => ({}));
         if (!tr.ok || !tj.access_token) {
             console.error('카카오 토큰 발급 실패:', tr.status, tj.error, tj.error_code);
-            return back(res, 'kkerr=token');
+            return back(res, 'kkerr=token-' + encodeURIComponent(String(tj.error_code || tj.error || tr.status).slice(0, 30)));
         }
         const ur = await fetch('https://kapi.kakao.com/v2/user/me', { headers: { Authorization: 'Bearer ' + tj.access_token } });
         const uj = await ur.json().catch(() => ({}));
-        if (!ur.ok || !uj.id) return back(res, 'kkerr=user');
+        if (!ur.ok || !uj.id) return back(res, 'kkerr=user-' + encodeURIComponent(String(uj.code || ur.status).slice(0, 30)));
         const acc = uj.kakao_account || {};
         const name = String(acc.name || (acc.profile && acc.profile.nickname) || '').slice(0, 20);
         const payload = { id: String(uj.id), n: name, p: normPhone(acc.phone_number) };
