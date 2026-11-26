@@ -185,13 +185,13 @@ function buildSms(events, partners, origin) {
     const what = (l) => String((l.brief && l.brief.tname) || '견적 요청').slice(0, 20) + ' · ' + String(l.region || '').slice(0, 24);
     events.slice(0, 20).forEach(e => {
         if (e.t === 'lead') {
-            const to = [...new Set(partners.filter(p => p && !p._del && p.on).map(p => mobile(p.phone)).filter(Boolean))].slice(0, 50);
+            const to = [...new Set(partners.filter(p => p && !p._del && p.on && !p.smsOff).map(p => mobile(p.phone)).filter(Boolean))].slice(0, 50);
             if (to.length) out.push({ kind: '새 요청→사무소', to, text: '[건축ON] 새 견적 요청이 들어왔어요.\n' + what(e.lead) + '\n최대 5곳까지 제안할 수 있어요.\n요청서 보기: ' + origin + '/#req=' + e.lead.id });
         } else if (e.t === 'prop') {
             const to = mobile(e.lead.phone);
             if (to) out.push({ kind: '제안 도착→고객', to: [to], text: '[건축ON] ' + String(e.prop.p || '건축사사무소').slice(0, 30) + '에서 제안이 도착했어요.\n' + what(e.lead) + '\n받은 제안 보기: ' + origin + '/' });
         } else if (e.t === 'chosen') {
-            const pa = partners.find(p => p && String(p.id) === String(e.prop.partnerId)), to = pa ? mobile(pa.phone) : '';
+            const pa = partners.find(p => p && String(p.id) === String(e.prop.partnerId)), to = pa && !pa.smsOff ? mobile(pa.phone) : '';
             if (to) out.push({ kind: '상담 신청→사무소', to: [to], text: '[건축ON] 고객이 귀사 제안에 상담을 신청했어요.\n' + what(e.lead) + '\n사무소 로그인 > 내 현황에서 고객 연락처를 확인해 주세요.\n' + origin + '/' });
         }
         else if (e.t === 'app') {
@@ -245,7 +245,7 @@ async function push(store, body, origin) {
         }
         await store.call(['INCR', K.V]);
         const all = await readAll(store);
-        const on = !!(all.misc && all.misc.notify && all.misc.notify.on);
+        const on = !(all.misc && all.misc.notify && all.misc.notify.on === false); // 기본값: 켜짐
         const evs = always.concat(on ? events : []);
         if (events.length && !on) await smsLog(store, { t: '건너뜀', why: '문자 알림이 꺼져 있음', n: events.length });
         if (evs.length && origin) {
