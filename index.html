@@ -1896,7 +1896,7 @@ async function sySync(){ if(!SY.on) return; if(SY.busy){ SY.again=true; return; 
   finally{ SY.busy=false; if(SY.again) setTimeout(sySync,60); } }
 function syQueue(){ if(!SY.on||SY.applying||!SY.sh) return; clearTimeout(syQueue._t); syQueue._t=setTimeout(sySync,350); }
 function syBar(){ return `<div id="sybar" class="sybar${SY.err?' bad':''}" role="status">${SY.err?'● 서버 연결 안 됨 · 다시 시도 중':(SY.ready?'● 실시간 연결됨':'● 서버 연결 중…')}</div>`; }
-function syEnter(firstEver){ SY.on=true; ARCH_S=[]; DB.leads=DB.leads.filter(l=>l.ts); DB.partners=DB.partners.filter(p=>p.ts);
+function syEnter(firstEver){ SY.on=true; ARCH_S=[]; if(S.cust&&S.cust.via==='kakao'&&!S.cust.kid){ S.cust=null; if(S.cmode==='kakao') S.cmode=null; if(S.req&&S.req.name==='김건축'){ S.req.name=''; S.req.phone=''; } } DB.leads=DB.leads.filter(l=>l.ts); DB.partners=DB.partners.filter(p=>p.ts);
   if(firstEver){ S.partner=null; S.myReqs=[]; S.cust=null; DB.apps=[]; DB.adminReq=[]; DB.admins=[]; DB.buys=[]; DB.members={}; DB.grants=new Set(); }
   else { try{ const ps=JSON.parse(localStorage.getItem('kon_psess')||'null'); if(ps&&ps.id&&DB.partners.some(p=>p.id===ps.id)) S.partner={id:ps.id, role:ps.role||'대표'}; }catch(e){} }
   if(!syEnter._t){ syEnter._t=setInterval(()=>{ if(document.visibilityState==='visible') sySync(); }, 6000); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') sySync(); }); } }
@@ -2425,7 +2425,7 @@ function vGate(){
   return header({title:'건축사 제안 요청'}) + `<main class="wrap view">
     <section style="padding-top:4px"><h1 style="font-size:21px;line-height:1.4;font-weight:800">${t.name} 제안을 요청할게요</h1>
       <p class="help" style="font-size:13.5px;margin-top:6px">요청 내용은 <b>건축ON에 등록된 모든 건축사사무소</b>에 전달되고, <b>최대 5곳</b>에서 견적 제안을 받을 수 있어요. 이름·연락처·상세 주소는 고객님이 상담을 선택한 사무소에만 공개돼요. 제안 수는 요청마다 다르며 5곳 제안을 보장하지는 않아요.</p></section>
-    <div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 브라우저에만 저장돼요(같은 주소의 사무소·관리자 탭에서 바로 확인 가능).</span></div>
+    ${SY.on?`<div class="note"><span><b>비공개 베타 테스트 중이에요</b><br>보낸 요청은 등록된 건축사사무소 화면에 바로 전달돼요. 테스트 기간에는 실제 고객 정보 대신 가상의 내용으로 입력해 주세요.</span></div>`:`<div class="note warn"><span><b>시연 화면이에요</b><br>지금은 서버가 연결되지 않아 실제로 접수되거나 문자가 발송되지 않아요. 제출하면 이 브라우저에만 저장돼요(같은 주소의 사무소·관리자 탭에서 바로 확인 가능).</span></div>`}
     <p class="help" style="margin:-2px 2px 12px;display:flex;gap:6px;align-items:center">${ic('pin',15)} <span><b style="color:var(--ink)">${esc(S.addrText)}</b> · 사무소에는 ${esc(addrRegion(S.addrText))}까지만 보여요</span></p>
     <section class="sec"><h3>${hic('users')}연락받을 정보</h3>
       <p class="help" style="margin:-4px 0 10px">둘 중 편한 방법을 골라주세요</p>
@@ -2436,7 +2436,7 @@ function vGate(){
       ${cm==='kakao'&&S.cust?`<div class="ro" style="margin-top:12px"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>카카오 계정으로 로그인됨 · 받은 제안은 이 계정으로 다시 볼 수 있어요</small></span></div>`
       :cm==='direct'?(S.cust&&S.cust.via==='phone'?`<div class="ro" style="margin-top:12px"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>지난 요청 때 쓴 정보예요</small></span><button class="opt" data-act="custOut">변경</button></div>`:`<div style="margin-top:12px"><div class="f"><label class="lbl" for="gn">이름 *</label><input id="gn" class="inp" placeholder="홍길동" autocomplete="name" value="${esc(q.name)}" data-rq="name"></div>
       <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div></div>`):''}
-      ${cm?'<p class="help" style="margin-top:8px">제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 본인 전용 확인 링크를 보내드려요</p>':''}</section>
+      ${cm?`<p class="help" style="margin-top:8px">${SY.on?`제안이 오면 하단 '받은 제안'에서 볼 수 있어요${DB.notify&&DB.notify.on?' · 이 번호로 문자 알림도 보내드려요':''}`:'제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 본인 전용 확인 링크를 보내드려요'}</p>`:''}</section>
     <section class="sec"><h3>${hic('doc')}제출 전 확인: 누구에게 무엇을 보내나요</h3>
       <dl class="cond"><dt>받는 곳</dt><dd>건축ON에 등록된 모든 건축사사무소 (그중 최대 5곳이 견적 제안 가능)</dd>
         <dt>보내는 정보</dt><dd>${items.map(esc).join(', ')}</dd>
@@ -2471,7 +2471,7 @@ function vDone(){
   return header({title:'제안 요청 (시연)'}) + `<main class="wrap view">
     <section style="text-align:center;padding-top:10px"><div class="ch-hero" aria-hidden="true">${chImg('b_thumb')}</div>
       <h1 style="font-size:21px;font-weight:800;margin-top:14px">요청 내용을 저장했어요 (시연)</h1>
-      <p class="help" style="font-size:13.5px;margin-top:6px">지금은 서버가 연결되지 않아 실제 접수·문자 발송은 되지 않았어요.<br>정식 오픈 후에는 등록된 모든 건축사사무소에 전달되고, 최대 5곳에서 견적 제안을 받을 수 있어요.</p></section>
+      <p class="help" style="font-size:13.5px;margin-top:6px">${SY.on?`등록된 모든 건축사사무소에 전달됐어요. 최대 5곳에서 견적 제안을 받을 수 있고, 제안이 오면 하단 '받은 제안'에서 확인할 수 있어요.`:`지금은 서버가 연결되지 않아 실제 접수·문자 발송은 되지 않았어요.<br>정식 오픈 후에는 등록된 모든 건축사사무소에 전달되고, 최대 5곳에서 견적 제안을 받을 수 있어요.`}</p></section>
     ${aiCard(l)}
     <section class="sec"><h3>${hic('doc')}저장된 요청 내용</h3>
       <dl class="cond"><dt>서비스</dt><dd>${esc(t.name)}</dd><dt>주소</dt><dd>${esc(l&&l.addrFull||'미입력')}</dd><dt>연락처</dt><dd>${esc(l?l.name+' · '+l.phone:'-')}</dd>
@@ -3237,7 +3237,7 @@ function vArchPitch(){
       <div class="f"><label class="lbl" for="p3">한 줄 의견 * <small>건축주가 가장 먼저 봐요 · 5~300자</small></label><textarea id="p3" class="inp" data-pd="comment" maxlength="300">${esc(d.comment)}</textarea></div></section>
     <button class="btn" data-act="sendPitch" data-id="${esc(key)}" ${S._sending?'disabled':''}>${ic('send',18)} 제안 보내기 · ${coin}코인 사용</button>
     <p class="help" style="text-align:center;font-weight:700;margin-top:-4px">${coinRule(coin)}</p>`}
-    <p class="help" style="text-align:center">${SY.on?`제안은 고객의 '받은 제안' 화면에 바로 보여요(베타 기간에는 문자·카톡 알림이 가지 않아요).`:`고객에게 '제안 도착' 알림이 가요.`} 고객이 제안을 열어보고 '상담하기'를 누른 경우에만 서로 연락처·명함이 공개돼요. ${coinRule(coin)} (시연 · 실제 발송은 서버 연결 후)</p></main>`;
+    <p class="help" style="text-align:center">${SY.on?`제안은 고객의 '받은 제안' 화면에 바로 보여요${DB.notify&&DB.notify.on?' · 고객에게 문자 알림도 가요':''}.`:`고객에게 '제안 도착' 알림이 가요.`} 고객이 제안을 열어보고 '상담하기'를 누른 경우에만 서로 연락처·명함이 공개돼요. ${coinRule(coin)} (시연 · 실제 발송은 서버 연결 후)</p></main>`;
 }
 function vArchBuy(){
   const p=DB.partners.find(x=>x.id===(S.partner&&S.partner.id))||DB.partners[1], sel=S.buy||'p10', pay=S.pay||'bank', P=PLANS.find(x=>x.id===sel);
@@ -3249,7 +3249,7 @@ function vArchBuy(){
       ${pay==='bank'?`<div class="f" style="margin-top:8px"><label class="lbl" for="tx">세금계산서 받을 이메일</label><input id="tx" class="inp" type="email" placeholder="tax@office.co.kr"></div>`:''}</section>
     <button class="btn" data-act="buyGo">${won(P.price)}${P.unit||''} · 구매 신청 (시연)</button>
     ${(DB.buys||[]).filter(x=>x.pid===p.id).length?`<section class="sec"><h3>${hic('doc')}내 구매 신청</h3>${(DB.buys||[]).filter(x=>x.pid===p.id).map(x=>`<div class="row" style="padding:10px 0"><span style="flex:1;min-width:0"><b style="font-size:14px">${esc(x.name)} · ${won(x.price)}</b><small>${esc(x.at)} · ${x.pay==='bank'?'계좌이체·세금계산서':'카드 결제'}${x.done?' · 처리 '+esc(x.done):''}</small></span><span class="st ${x.st==='충전 완료'?'ok':x.st==='대기'?'wait':'mute'}">${x.st==='대기'?'입금·결제 확인 대기':x.st}</span></div>`).join('')}</section>`:''}
-    <p class="help" style="text-align:center">시연 화면이에요 · 실제 결제·충전은 운영 시작 후 관리자가 확인해 처리해요</p>
+    <p class="help" style="text-align:center">${SY.on?'구매 신청을 보내면 건축ON 관리자가 입금 확인 후 코인을 충전해 드려요':'시연 화면이에요 · 실제 결제·충전은 운영 시작 후 관리자가 확인해 처리해요'}</p>
     ${refundRules()}</main>`+(S.partner?pnav():'');
 }
 function inviteOf(p){ return p?(p.invite||('KON-'+String(p.id).toUpperCase()+'-'+String(1000+((String(p.id).charCodeAt(1)||0)*37)%9000))):''; }
@@ -3382,12 +3382,12 @@ document.addEventListener('click', e=>{
     for(const pa of cand){ if(l.props.length>=5||n>=3) break; const f=F[l.props.length%F.length], lo=Math.max(10,Math.round(base*f[0]/1e4)), hi=Math.max(lo,Math.round(base*f[1]/1e4)); const res=createProposal(l.id, pa.id, {p1:String(lo), p2:hi>lo?String(hi):'', period:f[2], comment:f[3], reason:GAP_REASONS[0]}); if(res.ok) n++; else last=res.err; }
     render(); toast(n?('시연 사무소 '+n+'곳이 제안을 보냈어요 · 열어보면 코인 사용 확정'):(last||'이 지역을 받는 시연 사무소가 더 없어요')); }
   else if(a==='demoReset'){ if(!b.dataset.ok){ b.dataset.ok='1'; b.textContent='한 번 더 누르면 모든 시연 요청·제안·코인이 처음으로 돌아가요'; return; } try{ localStorage.removeItem(DEMO_KEY); }catch(e){} clearTimeout(saveDemo._t); saveDemo=()=>{}; location.reload(); }
-  else if(a==='cmode'){ if(b.dataset.m==='kakao'&&!S.cust&&S.kk){ kakaoGo('gate'); return; } S.cmode=b.dataset.m; if(S.cmode==='kakao'&&!S.cust){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; toast('카카오 계정 정보로 채웠어요 (시연)'); } if(S.cmode==='direct'&&S.cust&&S.cust.via==='kakao'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } } const y=window.scrollY; render(); window.scrollTo(0,y); if(S.cmode==='direct'){ const el=document.getElementById('gn'); if(el) el.focus(); } }
+  else if(a==='cmode'){ if(b.dataset.m==='kakao'&&SY.on&&!(S.cust&&S.cust.kid)){ if(S.kk){ S.cust=null; kakaoGo('gate'); } else toast('카카오 로그인은 준비 중이에요 · 이름과 전화번호로 진행해주세요'); return; } S.cmode=b.dataset.m; if(S.cmode==='kakao'&&!S.cust){ S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; toast('카카오 계정 정보로 채웠어요 (시연)'); } if(S.cmode==='direct'&&S.cust&&S.cust.via==='kakao'){ S.cust=null; if(S.req){ S.req.name=''; S.req.phone=''; } } const y=window.scrollY; render(); window.scrollTo(0,y); if(S.cmode==='direct'){ const el=document.getElementById('gn'); if(el) el.focus(); } }
   else if(a==='addrEdit'){ S.addrEdit=true; S.addrTyping=S.addrText; const y=window.scrollY; render(); window.scrollTo(0,y); const el=document.getElementById('addr'); if(el) el.focus(); }
-  else if(a==='kakaoLogin'){ if(S.kk){ kakaoGo('gate'); return; } S.cmode='kakao'; S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; const y=window.scrollY; render(); window.scrollTo(0,y); toast('카카오 계정 정보로 채웠어요 (시연)'); }
+  else if(a==='kakaoLogin'){ if(S.kk){ kakaoGo('gate'); return; } if(SY.on){ toast('카카오 로그인은 준비 중이에요 · 이름과 전화번호로 진행해주세요'); return; } S.cmode='kakao'; S.cust={via:'kakao', name:'김건축', phone:'010-4821-7365'}; S.req=S.req||{}; S.req.name=S.cust.name; S.req.phone=S.cust.phone; const y=window.scrollY; render(); window.scrollTo(0,y); toast('카카오 계정 정보로 채웠어요 (시연)'); }
   else if(a==='custOut'){ S.cust=null; S.cmode='direct'; if(S.req){ S.req.name=''; S.req.phone=''; } const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='custLogout'){ S.cust=null; S.myReqs=[]; S.viewReq=null; S.find=null; go('home'); toast('로그아웃했어요 (시연)'); }
-  else if(a==='findKakao'){ if(S.kk){ kakaoGo('find'); return; } const ph='010-4821-7365'; const ids=DB.leads.filter(l=>l.via==='kakao'||String(l.phone).replace(/\D/g,'')===ph.replace(/\D/g,'')).map(l=>l.id); S.cust={via:'kakao', name:'김건축', phone:ph}; if(!ids.length){ toast('이 카카오 계정으로 접수된 요청이 없어요'); render(); return; } S.myReqs=[...new Set((S.myReqs||[]).concat(ids))]; go('pitches',{viewReq:ids[0]},true); toast('카카오 로그인 완료 (시연)'); }
+  else if(a==='findKakao'){ if(S.kk){ kakaoGo('find'); return; } if(SY.on){ toast('카카오 로그인은 준비 중이에요 · 전화번호로 찾아주세요'); return; } const ph='010-4821-7365'; const ids=DB.leads.filter(l=>l.via==='kakao'||String(l.phone).replace(/\D/g,'')===ph.replace(/\D/g,'')).map(l=>l.id); S.cust={via:'kakao', name:'김건축', phone:ph}; if(!ids.length){ toast('이 카카오 계정으로 접수된 요청이 없어요'); render(); return; } S.myReqs=[...new Set((S.myReqs||[]).concat(ids))]; go('pitches',{viewReq:ids[0]},true); toast('카카오 로그인 완료 (시연)'); }
   else if(a==='findSend'){ const v=((document.getElementById('fp')||{}).value||'').trim(), d=v.replace(/\D/g,''); if(!/^01[016789]\d{7,8}$/.test(d)){ toast('전화번호를 정확히 입력해주세요'); return; } S.find={phone:v, sent:true}; render(); toast('인증번호를 보냈어요 (시연: 123456)'); const el=document.getElementById('fc'); if(el) el.focus(); }
   else if(a==='findVerify'){ const c=((document.getElementById('fc')||{}).value||'').trim(); if(c!=='123456'){ toast('인증번호가 맞지 않아요'); return; } const d=String(S.find&&S.find.phone||'').replace(/\D/g,''); const L=DB.leads.filter(l=>String(l.phone).replace(/\D/g,'')===d); if(!L.length){ toast('이 번호로 접수된 요청이 없어요'); return; } S.cust={via:'phone', name:L[0].name, phone:S.find.phone}; S.myReqs=[...new Set((S.myReqs||[]).concat(L.map(l=>l.id)))]; go('pitches',{viewReq:L[0].id},true); toast('확인됐어요 · 요청 '+L.length+'건'); }
   else if(a==='cap'){ const n=document.getElementById('gn'), ph=document.getElementById('gp'); S.gate=S.gate||{want:'예'}; if(n){ S.gate.name=n.value; S.gate.phone=ph.value; } S.gate.cap=b.dataset.o; const y=window.scrollY; render(); window.scrollTo(0,y); if(b.dataset.more) toast(b.dataset.o==='무제한'?'무제한으로 열었어요 · 건축사에게 무제한 요청으로 표시돼요':'제안을 '+b.dataset.o+'곳까지 받아요'); }
