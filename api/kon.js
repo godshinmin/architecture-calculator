@@ -177,19 +177,28 @@ async function sendSms(list) {
     return sent;
 }
 
+const maskP = (p) => String(p).replace(/^(\d{3})\d+(\d{4})$/, '$1-****-$2');
+async function smsLog(store, o) { try { o.at = kst(Date.now()); await store.call(['LPUSH', 'kon:smslog', JSON.stringify(o)]); await store.call(['LTRIM', 'kon:smslog', '0', '29']); } catch (e) { /* 기록 실패는 무시 */ } }
+
 function buildSms(events, partners, origin) {
     const out = [];
     const what = (l) => String((l.brief && l.brief.tname) || '견적 요청').slice(0, 20) + ' · ' + String(l.region || '').slice(0, 24);
     events.slice(0, 20).forEach(e => {
         if (e.t === 'lead') {
             const to = [...new Set(partners.filter(p => p && !p._del && p.on).map(p => mobile(p.phone)).filter(Boolean))].slice(0, 50);
-            if (to.length) out.push({ to, text: '[건축ON] 새 견적 요청이 들어왔어요.\n' + what(e.lead) + '\n최대 5곳까지 제안할 수 있어요.\n요청서 보기: ' + origin + '/#req=' + e.lead.id });
+            if (to.length) out.push({ kind: '새 요청→사무소', to, text: '[건축ON] 새 견적 요청이 들어왔어요.\n' + what(e.lead) + '\n최대 5곳까지 제안할 수 있어요.\n요청서 보기: ' + origin + '/#req=' + e.lead.id });
         } else if (e.t === 'prop') {
             const to = mobile(e.lead.phone);
-            if (to) out.push({ to: [to], text: '[건축ON] ' + String(e.prop.p || '건축사사무소').slice(0, 30) + '에서 제안이 도착했어요.\n' + what(e.lead) + '\n받은 제안 보기: ' + origin + '/' });
+            if (to) out.push({ kind: '제안 도착→고객', to: [to], text: '[건축ON] ' + String(e.prop.p || '건축사사무소').slice(0, 30) + '에서 제안이 도착했어요.\n' + what(e.lead) + '\n받은 제안 보기: ' + origin + '/' });
         } else if (e.t === 'chosen') {
             const pa = partners.find(p => p && String(p.id) === String(e.prop.partnerId)), to = pa ? mobile(pa.phone) : '';
-            if (to) out.push({ to: [to], text: '[건축ON] 고객이 귀사 제안에 상담을 신청했어요.\n' + what(e.lead) + '\n사무소 로그인 > 내 현황에서 고객 연락처를 확인해 주세요.\n' + origin + '/' });
+            if (to) out.push({ kind: '상담 신청→사무소', to: [to], text: '[건축ON] 고객이 귀사 제안에 상담을 신청했어요.\n' + what(e.lead) + '\n사무소 로그인 > 내 현황에서 고객 연락처를 확인해 주세요.\n' + origin + '/' });
+        }
+        else if (e.t === 'app') {
+            const a = e.app, to = mobile(a.phone), nm = String(a.office || '사무소').slice(0, 30);
+            if (!to) return;
+            if (a.status === '승인') { const pa = partners.find(p => p && String(p.id) === String(a.pid)); out.push({ kind: '가입 승인→신청자', to: [to], text: '[건축ON] ' + nm + ' 가입이 승인되었습니다.' + (pa && pa.code ? '\n사무소 코드: ' + pa.code : '') + '\n홈 맨 아래 [건축사사무소 로그인]에서 코드를 입력해 주세요.\n' + origin + '/' }); }
+            else out.push({ kind: '가입 반려→신청자', to: [to], text: '[건축ON] ' + nm + ' 가입 신청이 반려되었습니다.' + (a.reason ? '\n사유: ' + String(a.reason).slice(0, 60) : '') + '\n문의는 건축ON 카카오톡 채널로 부탁드립니다.' });
         }
     });
     return out;
@@ -226,18 +235,28 @@ async function push(store, body, origin) {
             });
             if (args.length > 2) await store.call(args);
         }
+        const always = [];
         if (body.misc && typeof body.misc === 'object') {
-            const m = mergeMisc(parse(await store.call(['GET', K.M])) || {}, body.misc);
+            const prevM = parse(await store.call(['GET', K.M])) || {};
+            const up = (body.misc.apps && Array.isArray(body.misc.apps.up)) ? body.misc.apps.up : [];
+            up.forEach(a => { if (!a || a.id == null) return; const old = (prevM.apps || []).find(x => String(x.id) === String(a.id)); if ((a.status === '승인' || a.status === '반려') && (!old || old.status !== a.status)) always.push({ t: 'app', app: a }); });
+            const m = mergeMisc(prevM, body.misc);
             await store.call(['SET', K.M, JSON.stringify(m)]);
         }
         await store.call(['INCR', K.V]);
         const all = await readAll(store);
-        if (events.length && all.misc && all.misc.notify && all.misc.notify.on && origin) {
+        const on = !!(all.misc && all.misc.notify && all.misc.notify.on);
+        const evs = always.concat(on ? events : []);
+        if (events.length && !on) await smsLog(store, { t: '건너뜀', why: '문자 알림이 꺼져 있음', n: events.length });
+        if (evs.length && origin) {
             try {
                 const hour = 'kon:sms:' + new Date().toISOString().slice(0, 13);
                 const n = +(await store.call(['INCR', hour])) || 0;
                 if (n === 1) await store.call(['EXPIRE', hour, '7200']);
-                if (n <= 60) all.sms = await (module.exports._sms || sendSms)(buildSms(events, all.partners, origin));
+                const list = buildSms(evs, all.partners, origin);
+                if (!list.length) await smsLog(store, { t: '건너뜀', why: '받을 번호 없음 (' + evs.map(e => e.t === 'lead' ? '새 요청: 번호 등록된 사무소 없음' : e.t === 'prop' ? '제안 도착: 고객 번호 형식 오류' : e.t === 'chosen' ? '상담 신청: 사무소 번호 없음' : '가입 결과: 신청자 번호 오류').join(', ') + ')' });
+                else if (n > 60) await smsLog(store, { t: '건너뜀', why: '시간당 발송 한도 초과' });
+                else { sendSms.last = ''; all.sms = await (module.exports._sms || sendSms)(list); for (const m of list) await smsLog(store, { t: m.kind || '알림', to: m.to.map(maskP).join(', '), ok: !sendSms.last, why: sendSms.last || '' }); }
             } catch (e) { console.error('알림 처리 오류:', e && e.message); }
         }
         return all;
@@ -296,10 +315,34 @@ async function handler(req, res, storeOverride) {
             let body = req.body; if (typeof body === 'string') body = parse(body);
             if (!body || typeof body !== 'object') return res.status(400).json({ ok: false, error: '잘못된 요청 형식' });
             if (body.a === 'push') { const host = req.headers && (req.headers['x-forwarded-host'] || req.headers.host); const s = await push(store, body, host ? 'https://' + host : ''); return res.status(200).json(Object.assign({ ok: true }, s)); }
-            if (body.a === 'admin' || body.a === 'reset' || body.a === 'smstest') {
+            if (body.a === 'otp') {
+                const to = mobile(body.phone);
+                if (!to) return res.status(400).json({ ok: false, error: '휴대폰 번호를 정확히 입력해 주세요.' });
+                const miss = ['NCP_ACCESS_KEY', 'NCP_SECRET_KEY', 'NCP_SERVICE_ID', 'NCP_SENDER'].filter(k => !process.env[k]);
+                if (miss.length && !module.exports._sms) return res.status(200).json({ ok: false, error: '문자 발송이 설정되지 않았어요.' });
+                const rk = 'kon:otpn:' + to, n = +(await store.call(['INCR', rk])) || 0;
+                if (n === 1) await store.call(['EXPIRE', rk, '600']);
+                if (n > 5) return res.status(429).json({ ok: false, error: '인증번호 요청이 많아요. 10분 뒤 다시 시도해 주세요.' });
+                const code = String(crypto.randomInt(100000, 1000000));
+                await store.call(['SET', 'kon:otp:' + to, JSON.stringify({ c: code, n: 0 }), 'EX', '300']);
+                sendSms.last = '';
+                const sent = await (module.exports._sms || sendSms)([{ kind: '인증번호', to: [to], text: '[건축ON] 인증번호 ' + code + ' (5분 안에 입력해 주세요)' }]);
+                await smsLog(store, { t: '인증번호', to: maskP(to), ok: !!sent, why: sent ? '' : (sendSms.last || '발송 실패') });
+                return res.status(200).json(sent ? { ok: true } : { ok: false, error: '인증번호를 보내지 못했어요. 잠시 후 다시 시도해 주세요.' });
+            }
+            if (body.a === 'otpv') {
+                const to = mobile(body.phone), key = 'kon:otp:' + to, o = parse(await store.call(['GET', key]));
+                if (!to || !o) return res.status(200).json({ ok: false, error: '인증번호가 만료됐어요. 다시 받아 주세요.' });
+                if (o.n >= 5) { await store.call(['DEL', key]); return res.status(200).json({ ok: false, error: '여러 번 틀렸어요. 인증번호를 다시 받아 주세요.' }); }
+                if (String(body.code || '').trim() !== o.c) { o.n++; await store.call(['SET', key, JSON.stringify(o), 'EX', '300']); return res.status(200).json({ ok: false, error: '인증번호가 맞지 않아요.' }); }
+                await store.call(['DEL', key]);
+                return res.status(200).json({ ok: true });
+            }
+            if (body.a === 'admin' || body.a === 'reset' || body.a === 'smstest' || body.a === 'smslog') {
                 const pw = process.env.ADMIN_PASSWORD;
                 if (!pw) return res.status(500).json({ ok: false, error: 'ADMIN_PASSWORD 미설정' });
                 if (String(body.password || '') !== pw) { await new Promise(r => setTimeout(r, 800)); return res.status(401).json({ ok: false, error: '비밀번호가 올바르지 않습니다.' }); }
+                if (body.a === 'smslog') { const L = await store.call(['LRANGE', 'kon:smslog', '0', '29']); return res.status(200).json({ ok: true, log: (Array.isArray(L) ? L : []).map(parse).filter(Boolean) }); }
                 if (body.a === 'smstest') {
                     const to = mobile(body.phone);
                     if (!to) return res.status(400).json({ ok: false, error: '휴대폰 번호를 정확히 입력해 주세요.' });
