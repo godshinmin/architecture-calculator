@@ -1189,6 +1189,19 @@ html[data-theme=dark]{--stp:var(--p-hi)}
 html[data-theme=dark] .bnav button{color:#b5b5b5}
 .bnav button[aria-current="page"],.sg-nav button[aria-current="page"]{color:var(--p)}
 html[data-theme=dark] .bnav button[aria-current="page"]{color:var(--p-hi)}
+/* v103 가독성: 글 줄이기 · 버튼 글자 키우기 · 간격 조이기 · 정렬 */
+.sec{padding:14px}.sec>h3{font-size:16.5px;margin-bottom:10px}
+.btn{min-height:50px;font-size:17px;font-weight:800;padding:0 14px;letter-spacing:-.02em}.btn.sm{min-height:42px;font-size:15px;font-weight:800}
+.opt{font-size:14.5px;font-weight:700;padding:6px 4px;min-height:42px}.opt small{font-weight:500}
+.lbl{font-size:14.5px}.cond{font-size:14px;gap:5px 12px}.cond dd{font-weight:700;color:var(--ink)}
+.help{font-size:12.5px;line-height:1.45}
+.help.hc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+.help.hm{position:relative;padding-right:46px;cursor:pointer;text-align:left!important}
+.help.hm::after{content:'더보기';position:absolute;right:0;top:0;font-weight:800;color:var(--p)}
+.help.ho{display:block;-webkit-line-clamp:unset;overflow:visible}.help.ho::after{content:'접기'}
+html[data-theme=dark] .help.hm::after{color:var(--p-hi)}
+.row b{font-size:15.5px}.stat b,.ctab .n,.it3 .n,.cond dd.n{font-variant-numeric:tabular-nums}
+details.sec.acc>summary h3{margin:0}
 .ai-only{text-align:center;font-size:13px;color:var(--muted);margin:18px 0 6px}.ai-only .lnk{color:var(--muted);font-weight:600}
 </style>
 
@@ -2473,13 +2486,13 @@ function vGate(){
       :cm==='direct'?(S.cust&&S.cust.via==='phone'?`<div class="ro" style="margin-top:12px"><span><b>${esc(S.cust.name)} · ${esc(S.cust.phone)}</b><small>지난 요청 때 쓴 정보예요</small></span><button class="opt" data-act="custOut">변경</button></div>`:`<div style="margin-top:12px"><div class="f"><label class="lbl" for="gn">이름 *</label><input id="gn" class="inp" placeholder="홍길동" autocomplete="name" value="${esc(q.name)}" data-rq="name"></div>
       <div class="f"><label class="lbl" for="gp">연락처 *</label><input id="gp" class="inp" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" value="${esc(q.phone)}" data-rq="phone"></div></div>`):''}
       ${cm?`<p class="help" style="margin-top:8px">${SY.on?`제안이 오면 하단 '받은 제안'에서 볼 수 있어요${notifyOn()?' · 이 번호로 문자 알림도 보내드려요':''}`:'제안이 오면 이 번호로 카카오톡(안 되면 문자) 알림과 본인 전용 확인 링크를 보내드려요'}</p>`:''}</section>
-    <section class="sec"><h3>${hic('doc')}제출 전 확인: 누구에게 무엇을 보내나요</h3>
+    <details class="sec acc"><summary><h3>${hic('doc')}누구에게 무엇을 보내나요</h3><span class="acc-ch">${ic('chev',18)}</span></summary>
       <dl class="cond"><dt>받는 곳</dt><dd>건축ON에 등록된 모든 건축사사무소 (그중 최대 5곳이 견적 제안 가능)</dd>
         <dt>보내는 정보</dt><dd>${items.map(esc).join(', ')}</dd>
         <dt>연락처 전달</dt><dd>요청 내용(이름·연락처 제외)을 먼저 보내고, 이름·연락처는 고객님이 받은 제안 중 '상담하기'를 누른 사무소에만 전달</dd>
         <dt>목적</dt><dd>견적 제안과 상담 연락</dd>
         <dt>보관 기간</dt><dd>개인정보처리방침 확정 후 안내 (미정)</dd></dl>
-      ${S.reqSelf?`<details class="cp" style="margin-top:8px"><summary>함께 보낼 사전 점검 요약 보기</summary><p style="white-space:pre-wrap;font-size:13px;line-height:1.6;margin:8px 0 0">${esc(S.reqSelf.text)}</p></details>`:''}</section>
+      ${S.reqSelf?`<details class="cp" style="margin-top:8px"><summary>함께 보낼 사전 점검 요약 보기</summary><p style="white-space:pre-wrap;font-size:13px;line-height:1.6;margin:8px 0 0">${esc(S.reqSelf.text)}</p></details>`:''}</details>
     <section class="sec"><h3>${hic('check')}동의</h3>
       <label class="agree"><input type="checkbox" data-rq="consent" ${q.consent?'checked':''}><span><b>[필수]</b> 요청 내용(주소는 동까지·사진·특이사항)을 건축ON에 등록된 모든 건축사사무소에 견적 제안 목적으로 제공하고, 이름·연락처·상세 주소는 제가 상담을 선택한 사무소에만 제공하는 데 동의합니다</span></label>
       <label class="agree"><input type="checkbox" data-rq="mkt" ${q.mkt?'checked':''}><span><b>[선택]</b> 건축ON 소식·이벤트 안내를 문자로 받겠습니다</span></label>
@@ -2518,22 +2531,22 @@ function vDone(){
       <button class="row" data-act="go" data-v="bldg"><span class="rc ico">${icoImg('bldg-register',36)}</span><span><b>건축물대장 확인하기</b><small>용도·면적·층별 용도를 미리 봐두세요</small></span><span class="ch">${ic('chev',18)}</span></button>
       <button class="row" data-act="nav" data-v="self"><span class="rc ico">${icoImg('nav-check',36)}</span><span><b>셀프 점검 해보기</b><small>상담 전에 확인할 것을 정리해 드려요</small></span><span class="ch">${ic('chev',18)}</span></button></section>`:''}
     ${aiCard(l)}
-    <section class="sec"><h3>${hic('doc')}저장된 요청 내용</h3>
+    <details class="sec acc"><summary><h3>${hic('doc')}보낸 요청 내용</h3><span class="acc-ch">${ic('chev',18)}</span></summary>
       <dl class="cond"><dt>서비스</dt><dd>${esc(t.name)}</dd><dt>주소</dt><dd>${esc(l&&l.addrFull||'미입력')}</dd><dt>연락처</dt><dd>${esc(l?l.name+' · '+l.phone:'-')}</dd>
         <dt>사진</dt><dd>${l?(l.photos||[]).length:0}장</dd><dt>특이사항</dt><dd>${esc((l&&l.note||'').trim()||'없음')}</dd>
         <dt>사전 점검</dt><dd>${l&&l.selfSum?'있음':'없음'}</dd>
         <dt>동의</dt><dd>필수 ${l&&l.consent&&l.consent.consult?'동의':'-'} · 마케팅 ${l&&l.consent&&l.consent.marketing?'동의':'미동의'}</dd></dl>
-      <p class="help" style="margin-top:8px">보낸 요청은 수정할 수 없어요. 바꿀 내용이 있으면 <button class="lnk" data-act="newFromDone">같은 조건으로 새 요청</button>을 보내거나, 상담하실 때 건축사에게 알려주세요.</p></section>
+      <p class="help" style="margin-top:8px">보낸 요청은 수정할 수 없어요. 바꿀 내용이 있으면 <button class="lnk" data-act="newFromDone">같은 조건으로 새 요청</button>을 보내거나, 상담하실 때 건축사에게 알려주세요.</p></details>
     ${l&&l.brief&&!l.brief.noPrice?'<button class="btn line sm" data-act="aiOnly">AI 예상 비용 자세히 보기</button>':''}
     ${l?(()=>{ const P=DB.partners.filter(pa=>pa.on&&reqMatchesPartner(l.region,pa)); return `<p class="help" style="text-align:center">요청 내용은 등록된 건축사사무소 ${P.length}곳 모두에게 전달되고, 최대 5곳에서 견적 제안을 받을 수 있어요 (제안 수는 보장되지 않아요)</p>`; })():''}
-    <div class="atk"><div class="h">${ic('chat',16)} 고객님께 가는 카카오톡 알림 예시</div>[건축ON] ${esc(t.name)} 견적 요청이 접수됐어요.
+    ${SY.on?'':`<div class="atk"><div class="h">${ic('chat',16)} 고객님께 가는 카카오톡 알림 예시</div>[건축ON] ${esc(t.name)} 견적 요청이 접수됐어요.
 건축사 제안이 도착하면 바로 알려드릴게요.
 받은 제안 보기 ▶ kon.kr/r/${esc(l&&l.tok||'xxxxxx')}
 (로그인 없이 바로 열려요 · 본인 전용 링크)
-<button class="atk-btn" data-act="toPitches">▶ 받은 제안 보기</button></div>
-    <section class="sec"><h3>${hic('list')}나중에 다시 보려면</h3><ul class="chk">
+<button class="atk-btn" data-act="toPitches">▶ 받은 제안 보기</button></div>`}
+    ${SY.on?'':`<section class="sec"><h3>${hic('list')}나중에 다시 보려면</h3><ul class="chk">
       <li>${ic('check',18,2.5)}<span><b>카톡·문자로 온 링크</b>를 누르면 로그인 없이 바로 열려요</span></li>
-      <li>${ic('check',18,2.5)}<span>건축ON 하단 <b>'받은 제안'</b> → <b>카카오 로그인</b> 또는 <b>전화번호 인증</b>으로 언제든 찾을 수 있어요</span></li></ul></section>
+      <li>${ic('check',18,2.5)}<span>건축ON 하단 <b>'받은 제안'</b> → <b>카카오 로그인</b> 또는 <b>전화번호 인증</b>으로 언제든 찾을 수 있어요</span></li></ul></section>`}
   </main>`;
 }
 function cmpTable(real, r, l){ const L=real.filter(p=>!p.canceled); if(L.length<2) return '';
@@ -3283,9 +3296,9 @@ function vArchPitch(){
       ${b.unk.length?`<p style="font-size:12px;color:rgba(255,255,255,.7);margin:10px 0 0">모르겠어요 항목이 있어 범위를 ±20%로 넓게 보여줬어요</p>`:''}</div>
     <section class="sec"><h3>${hic('list')}고객이 입력한 조건</h3>${b.legacy?'<p class="help" style="margin:0 0 8px">이전 방식으로 접수된 요청이라 요약만 있어요</p>':''}<dl class="cond">${b.conds.map(([k,vv,u])=>`<dt>${esc(k)}</dt><dd${u?' style="color:var(--dl,#b45309)"':''}>${esc(String(vv))}</dd>`).join('')}</dl></section>
     ${b.unk.length?`<div class="note warn"><span>${ic('alert',16)} <b>고객이 모르겠다고 한 항목 ${b.unk.length}개</b><br>${esc(b.unk.join(', '))} — 상담 때 확인이 필요해요</span></div>`:''}
-    <section class="sec"><h3>${hic('list')}특이사항</h3>${x.note?`<p style="margin:0;white-space:pre-wrap;line-height:1.6">${esc(x.note)}</p>`:'<p class="help">작성하지 않았어요</p>'}</section>
+    ${x.note?`<section class="sec"><h3>${hic('list')}특이사항</h3><p style="margin:0;white-space:pre-wrap;line-height:1.6">${esc(x.note)}</p></section>`:''}
     ${x.bldg?`<section class="sec">${bldgCard(x.bldg,{src:'고객이 고른 주소로 자동 조회'})}</section>`:''}
-    <section class="sec"><h3>${hic('camera')}현장 사진 ${x.photoN}장</h3>${x.photos.length?`<div class="phg">${x.photos.map((u,i)=>{ const su=safeImg(u); return su?`<button class="pht" data-act="lbx" data-i="${i}" aria-label="현장 사진 ${i+1} 크게 보기"><img src="${esc(su)}" alt="현장 사진 ${i+1}"></button>`:''; }).join('')}</div>`:x.photoN?`<p class="help">예시 요청서라 사진 자리만 표시해요</p>`:'<p class="help">올린 사진이 없어요</p>'}</section>
+    <section class="sec"${x.photoN?'':' hidden'}><h3>${hic('camera')}현장 사진 ${x.photoN}장</h3>${x.photos.length?`<div class="phg">${x.photos.map((u,i)=>{ const su=safeImg(u); return su?`<button class="pht" data-act="lbx" data-i="${i}" aria-label="현장 사진 ${i+1} 크게 보기"><img src="${esc(su)}" alt="현장 사진 ${i+1}"></button>`:''; }).join('')}</div>`:x.photoN?`<p class="help">예시 요청서라 사진 자리만 표시해요</p>`:'<p class="help">올린 사진이 없어요</p>'}</section>
     ${b.self?`<section class="sec"><h3>${hic('check')}셀프 점검 결과</h3><p style="margin:0 0 8px;font-weight:700">${esc(b.self.title||'')}</p>${b.self.text?`<p class="help" style="margin:0 0 8px">${esc(b.self.text)}</p>`:''}<dl class="cond">${(b.self.answers||[]).map(([q,a])=>`<dt style="white-space:normal">${esc(q)}</dt><dd>${esc(a)}</dd>`).join('')}</dl></section>`:''}
     <section class="sec">${x.contact?`<h3>${hic('users')}고객 연락처 <span class="st ok">상담 선택됨</span></h3><dl class="cond"><dt>이름</dt><dd>${esc(x.contact.name)}</dd><dt>연락처</dt><dd>${esc(x.contact.phone)}</dd><dt>상세 주소</dt><dd>${esc(x.contact.addr||'미입력')}</dd></dl><p class="help" style="margin-top:6px">고객이 귀사 제안을 선택해서 공개된 정보예요.</p>`:`<div class="lk"><div><small>건축주</small><b>${ic('lock',12)} 상담 선택 시 공개</b></div><div><small>연락처</small><b>${ic('lock',12)} 상담 선택 시 공개</b></div><div><small>상세 주소</small><b>${ic('lock',12)} 상담 선택 시 공개</b></div></div>`}</section>
     ${blocked==='mine'?`<section class="sec"><h3>${hic('send')}내 제안 <span class="st ${st==='선택됨'?'ok':st==='열람'?'ret':st==='미열람'?'wait':'mute'}">${st}</span></h3><dl class="cond"><dt>금액</dt><dd>${x.mine.hi>x.mine.lo?man(x.mine.lo)+' ~ '+man(x.mine.hi):man(x.mine.lo)+'원'}</dd>${(x.mine.items||[]).map(i=>`<dt style="padding-left:8px">· ${esc(i.n)}</dt><dd>${man(i.amt)}</dd>`).join('')}<dt>예상 기간</dt><dd>${esc(x.mine.period||'-')}</dd><dt>한 줄 의견</dt><dd>${esc(x.mine.comment||'-')}</dd>${x.mine.reason?`<dt>가격 차이 사유</dt><dd>${esc(x.mine.reason)}</dd>`:''}<dt>사용 코인</dt><dd>${x.mine.charged}코인${x.mine.ret?' · 반환됨 ('+esc(x.mine.ret)+')':''}</dd></dl><p class="help" style="margin-top:6px">같은 요청에는 한 번만 제안할 수 있어요.</p></section>`
@@ -3661,6 +3674,9 @@ window.addEventListener('popstate',e=>{ S.palOpen=false; const st=e.state; if(st
   pushRoute(true); })();
 /* 카카오 로그인(실제): 서버에 키가 등록돼 있을 때만 켜짐. 없으면 기존 화면 그대로 */
 function kakaoGo(intent){ try{ saveDraft(); sessionStorage.setItem('kon_kk_intent', intent); sessionStorage.setItem('kon_kk_view', S.view||''); }catch(e){} location.href='/api/kakao/start'; }
+function clampHelps(){ document.querySelectorAll('main p.help').forEach(el=>{ if(el.classList.contains('hc')||el.querySelector('button,a,input')||el.textContent.trim().length<34) return; el.classList.add('hc'); if(el.scrollHeight>el.clientHeight+2) el.classList.add('hm'); else el.classList.remove('hc'); }); }
+{ const r0=render; render=function(){ const o=r0.apply(this,arguments); try{ clampHelps(); }catch(e){} return o; }; try{ clampHelps(); }catch(e){} }
+document.addEventListener('click',e=>{ const h=e.target.closest&&e.target.closest('p.help.hm'); if(h) h.classList.toggle('ho'); });
 syBoot();
 (function kakaoBoot(){ if(bldgOk()) fetch('/api/kakao/status').then(r=>r.ok?r.json():null).then(j=>{ S.kk=!!(j&&j.on); }).catch(()=>{});
   const h=location.hash||''; if(!/^#kk(err)?=/.test(h)) return; try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
