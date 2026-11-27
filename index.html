@@ -2303,7 +2303,7 @@ function bldgCard(b, opts){ opts=opts||{}; if(!b) return ''; const f=(v,u)=>v==n
     <dl class="cond"><dt>구조</dt><dd>${f(b.strct)}</dd><dt>대지 면적</dt><dd>${f(b.platArea,'㎡')}</dd><dt>건축 면적</dt><dd>${f(b.archArea,'㎡')}</dd><dt>건폐율·용적률</dt><dd>${f(b.bcRat,'%')} · ${f(b.vlRat,'%')}</dd><dt>주차</dt><dd>${b.parking!=null?b.parking+'대':'-'}</dd></dl>
     ${(b.floors||[]).length?`<details class="flr-d"${opts.open?' open':''}><summary><span>${ic('grid',16)} <b>층별 용도</b> ${b.floors.length}개 층</span><span class="flr-t"><u class="o1">펼쳐 보기</u><u class="o2">접기</u> ${ic('chev',16)}</span></summary>${floorsHtml(b.floors)}</details>`:''}</div></div>`; }
 function addrBox(ph){
-  return `<div class="addr"><label for="addr" style="position:absolute;left:-9999px">주소</label><input id="addr" class="inp" placeholder="${ph} (예: 서울 송파구 가락동 91-5)" value="${esc(S.addrTyping!=null&&S.addrTyping!==''?S.addrTyping:(S.addr?S.addrText:''))}" maxlength="100" autocomplete="street-address"><button data-act="lookup">${S.addr?'변경':'검색'}</button></div><label for="addr2" style="position:absolute;left:-9999px">상세주소</label><input id="addr2" class="inp" style="margin-top:8px" placeholder="상세주소 (동·층·호수, 선택)" value="${esc(S.addr2||'')}" maxlength="40"><p class="help" style="margin-top:6px">주소를 고르면 건축물대장(용도·면적·층수)을 자동으로 불러와요 · 상세주소는 상담을 선택한 사무소에만 보여요</p><p class="help" id="addrdirty" style="color:#b54708;font-weight:700;margin-top:6px;${S.addr&&(S.addrTyping||'').trim()&&S.addrTyping.trim()!==S.addrText?'':'display:none'}">주소를 고쳤어요 · '변경'을 눌러야 새 주소로 접수돼요</p>
+  return `<div class="addr"><label for="addr" style="position:absolute;left:-9999px">주소</label><input id="addr" class="inp" placeholder="${ph} (예: 서울 송파구 가락동 91-5)" value="${esc(S.addrTyping!=null&&S.addrTyping!==''?S.addrTyping:(S.addr?S.addrText:''))}" maxlength="100" autocomplete="street-address"><button data-act="lookup">${S.addr?'변경':'검색'}</button></div><label for="addr2" style="position:absolute;left:-9999px">상세주소</label><input id="addr2" class="inp" style="margin-top:8px" placeholder="상세주소 (동·층·호수, 선택)" value="${esc(S.addr2||'')}" maxlength="40"><p class="help" id="addrdirty" style="color:#b54708;font-weight:700;margin-top:6px;${S.addr&&(S.addrTyping||'').trim()&&S.addrTyping.trim()!==S.addrText?'':'display:none'}">주소를 고쳤어요 · '변경'을 눌러야 새 주소로 접수돼요</p>
   ${S.addr?`<div class="note" style="margin-top:8px"><span>${ic('check',16,2.5)} <b>${esc(S.addrText)}</b><br><small>사무소에는 <b>${esc(addrRegion(S.addrText))}</b>까지만 보이고, 상세 주소는 상담하기를 누른 사무소에만 전달돼요.</small></span></div>
   ${S.bldgSt==='loading'?blLoad():S.bldgSt==='ok'&&S.bldg?bldgCard(S.bldg)+((S.bldgFilled||[]).length?`<p class="help" style="margin-top:6px">${ic('check',14,2.5)} ${esc(S.bldgFilled.join('·'))} 칸을 대장 값으로 채웠어요 · 다르면 고쳐주세요</p>`:'')+(BLDG_HINT[S.type]&&S.bldg.totArea>0&&S.vals[BLDG_HINT[S.type]]!==S.bldg.totArea?`<button class="btn line sm" data-act="bldgFill" data-f="${BLDG_HINT[S.type]}" style="margin-top:6px">건물 전체 ${S.bldg.totArea.toLocaleString()}㎡를 면적 칸에 넣기</button>`:''):S.bldgSt==='err'?blErr(S.bldgErr,'bldgRetry')+`<p class="help" style="margin-top:6px">안 나와도 괜찮아요 · 아래 항목을 직접 입력하면 돼요</p>`:S.bldgSt==='off'?`<p class="help" style="margin-top:8px">건축물대장 자동 조회는 건축ON 웹사이트에서 열었을 때 동작해요</p>`:(S.addrCodes?'':`<p class="help" style="margin-top:8px">직접 입력한 주소예요 · <button class="lnk" data-act="addrSearch">주소 검색</button>으로 고르면 건축물대장을 불러와요</p>`)}<button class="btn line sm" data-act="addrClear" style="margin-top:6px">주소 지우기</button>`:''}`;
 }
@@ -2322,7 +2322,6 @@ function field(f){
     const n=opts.length, cols = n<=3?n:(n===4?(opts.some(o=>o.length>5)?2:4):3);
     h+=`<div class="seg" role="group" aria-labelledby="l-${f.id}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${opts.map(o=>{ const on = f.type==='multi' ? (v||[]).includes(o) : v===o; return `<button class="opt" data-act="${f.type}" data-f="${f.id}" data-o="${esc(o)}" aria-pressed="${on}">${o===UNK?(on?'✓ 건축사 상담':'모르겠어요'):esc(o)}${o===UNK?`<small>${on?'보통 기준으로 추정':'눌러서 상담으로'}</small>`:(OD[o]?`<small>${OD[o]}</small>`:'')}</button>`; }).join('')}</div>`;
     if(GRADE_HELP[f.id]) h+=`<p class="help" style="background:var(--band);padding:10px 12px;border-radius:8px;line-height:1.7">${GRADE_HELP[f.id].split(' · ').join('<br>')}</p>`;
-    if(f.type==='multi') h+=`<p class="help">여러 개 선택 가능</p>`;
   } else if(f.type==='sel'){
     h+=`<label for="f-${f.id}" style="position:absolute;left:-9999px">${f.label}</label><select id="f-${f.id}" class="inp" data-in="${f.id}">${f.opts.map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('')}<option value="${UNK}"${v===UNK?' selected':''}>${v===UNK?'✓ 건축사 상담 (보통 기준으로 추정)':'모르겠어요'}</option></select>`;
   } else if(f.type==='num'){
@@ -2333,7 +2332,7 @@ function field(f){
   } else if(f.type==='text'){
     h+=`<label for="f-${f.id}" style="position:absolute;left:-9999px">${f.label}</label><textarea id="f-${f.id}" class="inp" data-in="${f.id}" maxlength="1000" placeholder="${esc(f.def?'예) '+f.def:'')}">${esc(v)}</textarea>`;
   }
-  if(f.help) h+=`<p class="help">${f.help}</p>`;
+
   const isU = f.type==='num' ? !!(S.unk&&S.unk[f.id]) : (f.type==='multi' ? (v||[]).includes(UNK) : v===UNK);
   if(isU) h+=`<p class="unk-note">${ic('users',15)}<span><b>건축사 상담으로 결정</b> · 이 항목은 <b>보통 기준(${esc(unkDefTxt(f))})으로 추정</b>해서 금액에 넣고, 대신 예상 범위를 넓게 잡아요. 상담 때 건축사가 현장·서류로 확인해서 확정해요.</span></p>`;
   return h+`</div>`;
@@ -2345,16 +2344,15 @@ function vForm(){
   return header({title:t.name+' 견적', right:`<span class="pill" style="background:${c.t};color:${c.acc}">${c.name}</span>`}) + `<main class="wrap view">
     ${t.cat!=='permit'?`<div class="beta-note sm"><span><b><i class="beta">BETA</i> ${c.name} 견적은 준비 중이에요</b><small>견적은 참고용이며 상담은 건축사가 직접 도와드려요.</small></span></div>`:''}
     <div class="note ch-note"><span>${t.intro}</span>${chImg(TYPE_CH[S.type]||'clip','cn-img')}</div>
-    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}${(()=>{ const tx=(S.addrTyping||S.addrText||'').trim(); const bad=false; return S.addrNeed&&!tx?`<p class="help" style="margin-top:6px;color:var(--dl,#b45309);font-weight:700">건축사 제안을 받으려면 주소가 필요해요</p>`:`<p class="help" style="margin-top:6px">여기서 한 번만 입력하면 돼요 · 사무소에는 동까지만 보여요</p>`; })()}</section>
-    <section class="sec"><h3>${hic('list')}상세 조건</h3><p class="help" style="margin:-4px 0 14px">모르는 항목은 <b>'모르겠어요'</b>를 누르면 <b>건축사 상담</b> 항목으로 바뀌어요. 그 항목은 견적에서 빠지고 범위가 넓어지며, 상담 때 건축사가 확인해 정해요.</p>${formFields(t)}</section>
+    <section class="sec"><h3>${hic('pin')}${t.cat==='new'?'대지 위치':'건물 위치'}</h3>${addrBox(t.cat==='new'?'대지 지번 검색':'도로명주소 검색')}${(()=>{ const tx=(S.addrTyping||S.addrText||'').trim(); const bad=false; return S.addrNeed&&!tx?`<p class="help" style="margin-top:6px;color:var(--dl,#b45309);font-weight:700">건축사 제안을 받으려면 주소가 필요해요</p>`:''; })()}</section>
+    <section class="sec">${formFields(t)}</section>
     ${t.fields.some(x=>x.id==='memo')?'':`<section class="sec"><h3>${hic('doc')}특이사항 · 요청사항 <small style="font-size:12px;color:var(--muted);font-weight:500">선택</small></h3>
-      <label for="f-note" style="position:absolute;left:-9999px">특이사항</label><textarea id="f-note" class="inp" data-note="1" placeholder="예) 2층만 변경 예정이에요 / 다음 달 임대 계약이라 급해요 / 예전에 이행강제금 통지를 받았어요" maxlength="1000">${esc(S.note||'')}</textarea>
-      <p class="help" style="margin-top:6px">요청서와 함께 등록 사무소들이 보고 제안해요. <b>이름·전화번호는 적지 마세요</b> — 연락처는 상담하기를 누른 사무소에만 따로 전달돼요.</p></section>`}
+      <label for="f-note" style="position:absolute;left:-9999px">특이사항</label><textarea id="f-note" class="inp" data-note="1" placeholder="건축사에게 전할 내용 (연락처는 적지 마세요)" maxlength="1000">${esc(S.note||'')}</textarea>
+</section>`}
     <section class="sec"><h3>${hic('camera')}현장 사진 <small style="font-size:12px;color:var(--muted);font-weight:500">선택</small></h3>
-      <p class="help" style="margin:-4px 0 10px;font-size:13px">올린 사진은 요청서를 보는 <b>등록 사무소 건축사가 직접 확인</b>해요(AI 분석 없음). 사진에 이름·전화번호·서류 개인정보가 보이지 않게 해주세요.</p>
       ${(S.photos||[]).length?`<div class="phg">${S.photos.map((u,i)=>`<span class="pht"><img src="${esc(safeImg(u))}" alt="현장 사진 ${i+1}"><button data-act="photoDel" data-i="${i}" aria-label="사진 ${i+1} 삭제">×</button></span>`).join('')}</div>`:''}
       ${(S.photos||[]).length<10?`<label class="btn line sm" for="ph" style="cursor:pointer;margin-top:8px">${ic('up',18)} 사진 올리기 <small style="font-weight:500;color:var(--muted)">${(S.photos||[]).length}/10</small></label>`:''}<input id="ph" type="file" accept="image/*" multiple hidden>
-      <p class="help" style="margin-top:8px">외관·내부·문제 부분을 2~3장 올리면 건축사가 더 정확하게 제안할 수 있어요</p></section>
+</section>
   </main>
   <div class="sbar"><div class="in wrap"><div class="est">${false?`<small>예상 비용</small><b id="live">${r.noPrice?'건축사 제안':(r.fixed?man(r.total)+'원':man(r.lo)+' ~ '+man(r.hi)+'원')}</b>`:`<small>${r.noPrice?'건축사 검토 요청':'AI 예상 비용'}</small><b style="font-size:13.5px;color:var(--ink)">${r.noPrice?'다음 화면에서 내용을 확인해요':'다음 화면에서 받는 방법을 골라요'}</b>`}</div><button class="btn acc" data-act="result">다음</button></div></div>`;
 }
