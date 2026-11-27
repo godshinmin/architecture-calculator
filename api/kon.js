@@ -280,7 +280,7 @@ async function sweep(store, now) {
             if (l._del || !Array.isArray(l.props)) return;
             let hit = false;
             l.props.forEach(p => {
-                if (!p || !p.ts || p.ret || p.opened || p.chosen || now - p.ts < RET_MS) return;
+                if (!p || !p.ts || p.ret || p.opened || p.chosen || p.pay === 'open' || now - p.ts < RET_MS) return; // 열람 시 차감 방식의 제안은 반환할 코인이 없음
                 const amt = Math.max(0, +p.charged || 0);
                 p.ret = '48시간 미열람'; p.retAt = kst(now); p.retBy = '자동'; p.refunded = amt;
                 if (amt > 0 && p.partnerId) back[p.partnerId] = (back[p.partnerId] || 0) + amt;
