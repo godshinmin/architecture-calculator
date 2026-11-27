@@ -1898,7 +1898,7 @@ async function sySync(){ if(!SY.on) return; if(SY.busy){ SY.again=true; return; 
     else r=await fetch('/api/kon?a=pull'+(first||SY.v==null?'':'&v='+SY.v));
     const j=await r.json(); if(!r.ok||!j.ok) throw new Error(j.error||('서버 오류 '+r.status));
     SY.err=''; SY.okAt=Date.now(); let ch=false; if(!j.same) ch=syApply(j, pre);
-    if(first){ SY.ready=true; try{ localStorage.setItem('kon_sync','1'); }catch(e){} ch=true; }
+    if(first){ SY.ready=true; try{ localStorage.setItem('kon_sync','1'); }catch(e){} ch=true; codeTry(); }
     const ae=document.activeElement, typing=ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
     if((ch||was)&&!typing){ const y=window.scrollY; render(); window.scrollTo(0,y); } else if(ch){ SY.stale=true; }
   }catch(e){ SY.err=String(e&&e.message||e); if(!was){ const b=document.getElementById('sybar'); if(b){ b.className='sybar bad'; b.textContent='● 서버 연결 안 됨 · 다시 시도 중'; } } }
@@ -1912,10 +1912,14 @@ function syEnter(firstEver){ SY.on=true; ARCH_S=[]; if(S.cust&&S.cust.via==='kak
 function syBoot(){ if(!bldgOk()) return; let flag=false; try{ flag=localStorage.getItem('kon_sync')==='1'; }catch(e){}
   if(flag){ syEnter(false); sySync(); return; }
   fetch('/api/kon?a=pull').then(r=>r.json().then(j=>({r,j}))).then(({r,j})=>{ if(r.ok&&j.ok){ syEnter(true); sySync(); render(); } else { SY.off=(j&&j.error)||'공용 저장소에 연결하지 못했어요'; render(); } }).catch(()=>{}); }
+function pLoginAs(pa){ S.partner={id:pa.id, role:'대표'}; try{ localStorage.setItem('kon_psess', JSON.stringify(S.partner)); }catch(e){} const pend=S.pendingReq; S.pendingReq=null; if(pend) go('archPitch',{akId:pend},true); else go('archList',{},true); toast(pa.name+' 로그인했어요'); }
+function codeFind(c){ c=String(c||'').toUpperCase().replace(/[\s-]/g,''); return c.length>=5?DB.partners.find(x=>String(x.code||'').toUpperCase().replace(/-/g,'')===c):null; }
+function codeTry(){ const c=S.autoCode; if(!c||!SY.ready) return; S.autoCode=null; const pa=codeFind(c); if(pa&&pa.on){ pLoginAs(pa); } else { S.view='archLogin'; toast(pa?'제안 권한이 닫혀 있는 사무소예요 · 건축ON에 문의해주세요':'링크의 코드가 맞지 않아요 · 코드를 직접 입력해주세요'); } }
+function myApp(){ let id=S.appId; if(!id){ try{ id=localStorage.getItem('kon_appid')||''; }catch(e){} } return id?DB.apps.find(a=>a.id===id):null; }
 function vArchLoginSync(){ return header({title:'사무소 로그인'}) + `<main class="wrap view">
-    <section><h1 style="font-size:22px;line-height:1.4;font-weight:800">건축ON 사무소 로그인</h1><p class="help" style="font-size:13.5px;margin-top:6px">건축ON에서 받은 사무소 코드를 입력해 주세요. 한 번 로그인하면 이 기기에서는 다시 묻지 않아요.</p></section>
+    <section><h1 style="font-size:22px;line-height:1.4;font-weight:800">건축ON 사무소 로그인</h1><p class="help" style="font-size:13.5px;margin-top:6px">${S.autoCode?'<b>문자 링크의 코드로 로그인하는 중이에요…</b> ':''}건축ON에서 받은 사무소 코드를 입력해 주세요. 한 번 로그인하면 이 기기에서는 다시 묻지 않아요.</p></section>
     ${S.pendingReq?`<div class="note"><span>${ic('alert',16)} 로그인하면 받으신 요청서로 바로 이동해요.</span></div>`:''}
-    <section class="sec"><label class="lbl" for="pcode">사무소 코드</label><input id="pcode" class="inp" placeholder="숫자 5자리 (예: 48215)" maxlength="12" inputmode="numeric" autocomplete="off" style="letter-spacing:3px;font-weight:800;font-size:20px;text-align:center"><button class="btn" data-act="pCode" style="margin-top:10px">로그인</button>
+    <section class="sec"><label class="lbl" for="pcode">사무소 코드</label><input id="pcode" class="inp" value="${esc(S.autoCode||'')}" placeholder="숫자 5자리 (예: 48215)" maxlength="12" inputmode="numeric" autocomplete="off" style="letter-spacing:3px;font-weight:800;font-size:20px;text-align:center"><button class="btn" data-act="pCode" style="margin-top:10px">로그인</button>
       <p class="help" style="margin-top:10px">코드가 없으신가요? <button class="lnk" data-act="join">사무소 등록 신청</button> 후 승인되면 코드를 보내드려요.</p></section>
     <p class="help">로그인하면 요청서 목록 · 내 현황 · 사무소 정보를 볼 수 있어요. 건축주 연락처는 고객이 귀사 제안을 열어보고 '상담하기'를 눌렀을 때만 공개돼요.</p></main>`; }
 
@@ -2803,18 +2807,19 @@ function nowStr(){ const d=new Date(); return `${d.getMonth()+1}.${String(d.getD
 /* --------- 파트너 가입 문의 --------- */
 function vArch(){
   const f=S.app||(S.app={fields:[], type:'건축사사무소'});
-  if(S.appDone) return header({title:'파트너 가입 문의'}) + `<main class="wrap view">
-    <section style="text-align:center;padding-top:16px"><div style="width:64px;height:64px;border-radius:32px;background:var(--ok-bg);color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto">${ic('check',32,2.5)}</div>
-      <h1 style="font-size:21px;font-weight:800;margin-top:14px">가입 문의가 접수됐어요</h1>
-      <p class="help" style="font-size:13.5px;margin-top:6px">담당자가 1영업일 안에 연락드려 이용 조건을 안내해 드립니다</p></section>
-    <section class="sec"><h3>${hic('list')}다음 순서</h3>
-      ${[['chat','카카오톡으로 서류 보내기','건축사 자격·등록 확인서, 사무소 개설신고필증, 사업자등록증'],['phone','담당자 상담','이용 조건·상담 분야·활동 지역 확정'],['check','승인 · 제안 발송 권한 열림',SY.on?'건축ON에서 사무소 로그인 코드를 보내드려요 · 그 코드로 로그인하면 요청서가 보여요':'카카오톡으로 새 요청 알림을 받기 시작해요']].map((x,i)=>`<div class="row"><span class="rc">${ic(x[0],20)}</span><span><b>${i+1}. ${x[1]}</b><small>${x[2]}</small></span></div>`).join('')}</section>
-    <a class="btn kakao" href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener" style="text-decoration:none">${KAKAO_SVG}카카오톡으로 서류 보내기</a>
-    <button class="btn line sm" data-act="home">홈으로</button></main>`;
+  if(S.appDone){ const ap=myApp(), okd=!!(ap&&ap.status==='승인'), rej=!!(ap&&ap.status==='반려'), pa=okd?DB.partners.find(x=>x.id===ap.pid):null;
+    return header({title:'파트너 가입 문의'}) + `<main class="wrap view">
+    <section style="text-align:center;padding-top:16px"><div style="width:64px;height:64px;border-radius:32px;background:${rej?'var(--band)':'var(--ok-bg)'};color:${rej?'var(--muted)':'var(--ok)'};display:flex;align-items:center;justify-content:center;margin:0 auto">${ic(okd?'check':rej?'alert':'clock',32,2.5)}</div>
+      <h1 style="font-size:21px;font-weight:800;margin-top:14px">${okd?'가입이 승인됐어요':rej?'가입 신청이 반려됐어요':'가입 문의가 접수됐어요'}</h1>
+      <p class="help" style="font-size:13.5px;margin-top:6px">${okd?'지금 바로 요청서를 보고 제안을 보낼 수 있어요':rej?'자세한 내용은 건축ON으로 문의해주세요':'승인되면 <b>이 화면이 바로 바뀌고</b>, 남기신 번호로 <b>로그인 링크 문자</b>도 가요'}</p></section>
+    ${okd?`${pa&&pa.code?`<div class="note ok"><span>${ic('check',16,2.5)} <b>사무소 코드 ${esc(pa.code)}</b><br><small>다른 기기에서는 문자로 받은 링크를 누르면 바로 로그인돼요</small></span></div>`:''}<button class="btn" data-act="appEnter">사무소 화면으로 들어가기</button>`
+      :rej?'':`<section class="sec"><h3>${hic('list')}다음 순서</h3>
+      ${[['check','가입 문의 접수','방금 완료했어요'],['clock','건축ON 승인','확인되는 대로 바로 승인해요 · 이 화면을 켜두면 자동으로 바뀌어요'],['lock','로그인 · 제안 시작','문자의 링크를 누르면 코드 입력 없이 바로 들어가요']].map((x,i)=>`<div class="row"><span class="rc">${ic(x[0],20)}</span><span><b>${i+1}. ${x[1]}</b><small>${x[2]}</small></span></div>`).join('')}</section>`}
+    <button class="btn line sm" data-act="home">홈으로</button></main>`; }
   return header({title:'사무소 가입 문의'}) + `<main class="wrap view">
-    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${['가입 문의','카톡으로 서류','마스터 승인'].map((x,i)=>`<div style="text-align:center"><div style="height:5px;border-radius:3px;background:${i<1?'var(--navy)':'var(--band)'}"></div><small style="display:block;margin-top:6px;font-size:11.5px;font-weight:700;color:${i<1?'var(--navy)':'var(--muted)'}">${i+1}. ${x}</small></div>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${['가입 문의','건축ON 승인','바로 로그인'].map((x,i)=>`<div style="text-align:center"><div style="height:5px;border-radius:3px;background:${i<1?'var(--navy)':'var(--band)'}"></div><small style="display:block;margin-top:6px;font-size:11.5px;font-weight:700;color:${i<1?'var(--navy)':'var(--muted)'}">${i+1}. ${x}</small></div>`).join('')}</div>
     <section><h1 style="font-size:22px;line-height:1.4;font-weight:800">건축ON 파트너가 되어<br>내 지역 문의를 받아보세요</h1>
-      <p class="help" style="font-size:13.5px;margin-top:8px">가입 문의를 남기시면 담당자가 연락드려 <b>이용 조건은 상담 후 결정</b>합니다.</p></section>
+      <p class="help" style="font-size:13.5px;margin-top:8px">가입 문의를 남기시면 건축ON이 확인하고 승인해요. <b>승인되면 문자로 로그인 링크</b>를 보내드려요.</p></section>
     <section class="sec"><h3>${hic('users')}파트너 유형</h3><div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))">${['건축사사무소','인테리어 업체'].map(o=>`<button class="opt" data-act="appType" data-o="${o}" aria-pressed="${f.type===o}">${o}<small>${o==='건축사사무소'?'인허가 · 신축':'시공 · 디자인'}</small></button>`).join('')}</div></section>
     <section class="sec"><h3>${hic('doc')}기본 정보</h3>
       <div class="f"><label class="lbl" for="ap1">${f.type==='건축사사무소'?'사무소명':'업체명'} *</label><input id="ap1" class="inp" data-app="office" value="${esc(f.office||'')}" placeholder="${f.type==='건축사사무소'?'OO건축사사무소':'OO인테리어'}"></div>
@@ -2827,9 +2832,8 @@ function vArch(){
       <p class="help" style="margin-top:8px">선택한 분야의 요청만 카카오톡 알림으로 받아요. 나중에 바꿀 수 있어요.</p></section>
     <section class="sec"><h3>${hic('chat')}문의 내용 <small style="font-size:12px;color:var(--muted);font-weight:500">선택</small></h3>
       <label for="ap5" style="position:absolute;left:-9999px">문의 내용</label><textarea id="ap5" class="inp" data-app="msg" placeholder="궁금한 점이나 원하는 조건을 적어주세요">${esc(f.msg||'')}</textarea></section>
-    <div class="note"><span>${ic('chat',16)} <b>인증 서류는 카카오톡으로</b> 보내주세요. 건축사 자격·등록 확인서, 사무소 개설신고필증, 사업자등록증을 확인한 뒤 승인합니다.</span></div>
+    <div class="note"><span>${ic('check',16)} <b>문의 후 따로 하실 일은 없어요.</b> 승인되면 이 화면과 문자로 바로 알려드려요.</span></div>
     <button class="btn" data-act="appSubmit">가입 문의하기</button>
-    <a class="btn kakao sm" href="https://pf.kakao.com/_ZEPPX/chat" target="_blank" rel="noopener" style="text-decoration:none">${KAKAO_SVG}카카오톡으로 바로 문의</a>
     <div class="band"></div>
     <button class="row" data-act="archList"><span class="rc">${ic('lock',20)}</span><span><b>이미 승인된 파트너이신가요?</b><small>파트너 화면으로 들어가기 (카카오 로그인)</small></span><span class="ch">${ic('chev',18)}</span></button>
   </main>`;
@@ -3454,7 +3458,8 @@ document.addEventListener('click', e=>{
   else if(a==='arch'){ S.appDone=false; go('arch'); }
   else if(a==='archList'){ S.partner ? go('archList') : go('archLogin'); }
   else if(a==='go'){ go(b.dataset.v); }
-  else if(a==='pCode'){ const c=((document.getElementById('pcode')||{}).value||'').trim().toUpperCase().replace(/[\s-]/g,''); const pa=c.length>=5?DB.partners.find(x=>String(x.code||'').toUpperCase().replace(/-/g,'')===c):null; if(!pa){ toast(SY.ready?'코드가 맞지 않아요 · 다시 확인해주세요':'서버 연결 중이에요 · 잠시 후 다시 눌러주세요'); return; } if(!pa.on){ toast('제안 권한이 닫혀 있는 사무소예요 · 건축ON에 문의해주세요'); return; } S.partner={id:pa.id, role:'대표'}; try{ localStorage.setItem('kon_psess', JSON.stringify(S.partner)); }catch(e){} const pend=S.pendingReq; S.pendingReq=null; if(pend) go('archPitch',{akId:pend},true); else go('archList',{},true); toast(pa.name+' 로그인했어요'); }
+  else if(a==='pCode'){ const pa=codeFind((document.getElementById('pcode')||{}).value); if(!pa){ toast(SY.ready?'코드가 맞지 않아요 · 다시 확인해주세요':'서버 연결 중이에요 · 잠시 후 다시 눌러주세요'); return; } if(!pa.on){ toast('제안 권한이 닫혀 있는 사무소예요 · 건축ON에 문의해주세요'); return; } S.autoCode=null; pLoginAs(pa); }
+  else if(a==='appEnter'){ const ap=myApp(), pa=ap&&DB.partners.find(x=>x.id===ap.pid); if(!pa||!pa.on){ toast('아직 준비 중이에요 · 잠시 후 다시 눌러주세요'); return; } pLoginAs(pa); }
   else if(a==='codeGuide'){ const pp=DB.partners.find(x=>x.id===b.dataset.id); if(!pp) return; const tx='[건축ON 베타 테스트 안내]\n'+pp.name+' 대표님, 건축ON 파트너로 등록되었습니다.\n\n1) 접속: '+location.origin+'/\n2) 입장 비밀번호: (별도 안내)\n3) 홈 맨 아래 "건축사사무소 로그인" → 사무소 코드 입력\n   사무소 코드: '+pp.code+'\n\n· 코인 '+(typeof pp.credit==='number'?pp.credit:'무제한')+'개가 지급되어 있습니다. 제안 1건에 1~5코인이 쓰이고, 고객이 48시간 안에 열어보지 않으면 돌려드립니다.\n· 베타 기간에는 실제 고객 정보 대신 가상의 건으로 테스트해 주세요.\n· 문의: 건축ON 카카오톡 채널'; copyText(tx,'안내 문구를 복사했어요 · 카톡에 붙여넣으세요'); }
   else if(a==='syReset'){ if(!S.adm.pw){ toast('관리자 비밀번호로 다시 로그인한 뒤 눌러주세요'); return; } if(!confirm('등록된 사무소, 요청, 제안, 코인 기록을 모두 지웁니다. 되돌릴 수 없어요. 진행할까요?')) return; fetch('/api/kon',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({a:'reset', password:S.adm.pw})}).then(r=>r.json()).then(j=>{ if(j&&j.ok){ S.adm.partner=null; S.adm.lead=null; sySync(); toast('모두 지웠어요 · 새로 등록해 주세요'); } else toast((j&&j.error)||'초기화하지 못했어요'); }).catch(()=>toast('서버에 연결하지 못했어요')); }
   else if(a==='pDel'){ const pp=DB.partners.find(x=>x.id===b.dataset.id); if(!pp) return; if(DB.leads.some(l=>(l.props||[]).some(x=>x.partnerId===pp.id))){ toast('제안을 보낸 적이 있는 사무소는 삭제 대신 권한 닫기를 써주세요'); return; } if(!confirm(pp.name+'을(를) 삭제할까요?')) return; DB.partners.splice(DB.partners.indexOf(pp),1); S.adm.partner=null; render(); toast('삭제했어요'); }
@@ -3539,7 +3544,7 @@ document.addEventListener('click', e=>{
   else if(a==='admPartner'){ admNav({lead:null, partner:b.dataset.id}); }
   else if(a==='admBack'){ back(); }
   else if(a==='admLogout'){ S.adm={ok:false, tab:'dash'}; pushRoute(true); render(); toast('로그아웃했어요'); }
-  else if(a==='appSt'){ const ap=DB.apps.find(x=>x.id===b.dataset.id); ap.status=b.dataset.s; if(ap.status==='승인'){ const np={id:pidNew(), ts:Date.now(), code:codeNew(), name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}; DB.partners.push(np); ap.pid=np.id; toast(SY.on?ap.office+' 승인 · 로그인 코드 '+np.code+' · 파트너 탭에서 안내 문구를 복사해 보내주세요':ap.office+' 승인 · 제안 발송 권한을 열었어요'); } else toast('상태를 '+ap.status+'(으)로 바꿨어요'); render(); }
+  else if(a==='appSt'){ const ap=DB.apps.find(x=>x.id===b.dataset.id); ap.status=b.dataset.s; if(ap.status==='승인'){ const np={id:pidNew(), ts:Date.now(), code:codeNew(), name:ap.office, ceo:ap.ceo, phone:ap.phone, region:ap.region||'-', fields:ap.fields.length?ap.fields:['전체'], on:true, credit:20, sent:0, chosen:0, won:0}; DB.partners.push(np); ap.pid=np.id; toast(SY.on?ap.office+' 승인 · 코드 '+np.code+' · 신청자 화면과 문자로 로그인 링크가 바로 가요':ap.office+' 승인 · 제안 발송 권한을 열었어요'); } else toast('상태를 '+ap.status+'(으)로 바꿨어요'); render(); }
   else if(a==='leadSt'){ const l=leadOf(S.adm.lead); if(b.dataset.s==='종료'&&l.stage!=='종료'){ S.endAsk=l.id; const y=window.scrollY; render(); window.scrollTo(0,y); return; } if(l.ended&&b.dataset.s!=='종료'){ l.log.push([nowStr(),'관리자 종료 해제 (이전 사유: '+l.ended.reason+')']); l.ended=null; } l.stage=b.dataset.s; l.log.push([nowStr(),'상태 변경 → '+l.stage+' · 처리자 관리자']); render(); toast('상태를 바꿨어요'); }
   else if(a==='leadEnd'){ const l=leadOf(S.adm.lead); const sel=(document.getElementById('endr')||{}).value||'', memo=((document.getElementById('endm')||{}).value||'').trim(); const reason=memo?(sel+' · '+memo).slice(0,120):sel; if(!sel){ toast('종료 사유를 골라주세요'); return; } l.stage='종료'; l.ended={at:nowStr(), reason, by:'관리자(마스터)'}; l.log.push([nowStr(),'관리자 종료 · 사유: '+reason+' · 처리자 관리자(마스터)']); S.endAsk=null; render(); toast('요청을 종료했어요 · 고객 화면에도 종료로 표시돼요'); }
   else if(a==='leadEndCancel'){ S.endAsk=null; const y=window.scrollY; render(); window.scrollTo(0,y); }
@@ -3555,7 +3560,7 @@ document.addEventListener('click', e=>{
   else if(a==='appAll'){ S.app.fields = S.app.fields.length===FIELDS_ALL.length ? [] : FIELDS_ALL.slice(); const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='appField'){ const o=b.dataset.o, i=S.app.fields.indexOf(o); i>=0?S.app.fields.splice(i,1):S.app.fields.push(o); const y=window.scrollY; render(); window.scrollTo(0,y); }
   else if(a==='appSubmit'){ const f=S.app; if(!f.office||!f.ceo||!f.phone){ toast('사무소명·대표·연락처를 입력해주세요'); return; } if(fakePhone((f.phone||'').replace(/\D/g,''))){ toast('연락처를 정확히 입력해주세요'); return; }
-    DB.apps.unshift({id:'a'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36), at:nowStr(), office:f.office, ceo:f.ceo, phone:f.phone, region:f.region||'', fields:f.fields.slice(), msg:f.msg||'', status:'신규'}); S.appDone=true; render(); window.scrollTo(0,0); }
+    S.appId='a'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36); try{ localStorage.setItem('kon_appid',S.appId); }catch(e){} DB.apps.unshift({id:S.appId, at:nowStr(), office:f.office, ceo:f.ceo, phone:f.phone, region:f.region||'', fields:f.fields.slice(), msg:f.msg||'', status:'신규'}); S.appDone=true; render(); window.scrollTo(0,0); }
   else if(a==='toast') toast(b.dataset.m);
 });
 function pitchLive(){ const r=findReq(S.akId), d=S.pdraft[String(S.akId)]; if(!r||!d) return; const di=d.items?draftInput(d):d, tt=d.items?draftTotal(d):null, v=di.itemErr?{err:di.itemErr}:checkAmount(di), g=gapOf(v,r.brief), er=document.getElementById('amterr'), w=document.getElementById('gapw'), gr=document.getElementById('gapr'), gt=document.getElementById('gapt'), tot=document.getElementById('pitot');
@@ -3609,6 +3614,7 @@ document.addEventListener('drop',e=>{ if(e.target.closest&&e.target.closest('.lg
 window.addEventListener('popstate',e=>{ S.palOpen=false; const st=e.state; if(st&&st.kon===2){ NAVI=Math.max(NAVI, st.i); applyRoute(st.r); } else applyRoute({view:'home'}); if(S._staleFlow){ S._staleFlow=false; pushRoute(true); toast('이전 요청서는 새 요청을 시작하면서 닫혔어요'); } render(); window.scrollTo(0,0); });
 (function initRoute(){ syncThemeColor(); seedProps(); const st=history.state; const dr=loadDraft(); if(dr&&st&&st.kon===2&&st.r&&['form','choose','result','gate'].includes(st.r.view)&&+st.r.ep===+dr.ep){ restoreDraft(dr); NAVI=st.i||0; applyRoute(st.r); pushRoute(true); return; } const SAFE=['home','bldg','self','browse','join','arch','office','archLogin','archList','archPitch','archDash','archBuy','archSet','admin','refund'];
   if(st&&st.kon===2&&st.r&&SAFE.includes(st.r.view)){ NAVI=st.i||0; applyRoute(st.r); }
+  try{ const mc=location.hash.match(/^#c=([A-Za-z0-9]{5,12})$/); if(mc){ S.autoCode=mc[1]; S.view='archLogin'; history.replaceState(history.state,'',location.pathname+location.search); } }catch(_){}
   try{ const mh=location.hash.match(/^#req=([A-Za-z0-9_]{1,40})$/); if(mh){ S.view='archPitch'; S.akId=mh[1]; if(!S.partner) S.pendingReq=mh[1]; } }catch(_){}
   pushRoute(true); })();
 /* 카카오 로그인(실제): 서버에 키가 등록돼 있을 때만 켜짐. 없으면 기존 화면 그대로 */

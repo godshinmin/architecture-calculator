@@ -200,7 +200,7 @@ function buildSms(events, partners, origin) {
         else if (e.t === 'app') {
             const a = e.app, to = mobile(a.phone), nm = String(a.office || '사무소').slice(0, 30);
             if (!to) return;
-            if (a.status === '승인') { const pa = partners.find(p => p && String(p.id) === String(a.pid)); out.push({ kind: '가입 승인→신청자', to: [to], text: '[건축ON] ' + nm + ' 가입이 승인되었습니다.' + (pa && pa.code ? '\n사무소 코드: ' + pa.code : '') + '\n홈 맨 아래 [건축사사무소 로그인]에서 코드를 입력해 주세요.\n' + origin + '/' }); }
+            if (a.status === '승인') { const pa = partners.find(p => p && String(p.id) === String(a.pid)); out.push({ kind: '가입 승인→신청자', to: [to], text: '[건축ON] ' + nm + ' 가입이 승인되었습니다.' + (pa && pa.code ? '\n아래 링크를 누르면 바로 로그인됩니다.\n' + origin + '/#c=' + pa.code + '\n(사무소 코드: ' + pa.code + ')' : '\n' + origin + '/') }); }
             else out.push({ kind: '가입 반려→신청자', to: [to], text: '[건축ON] ' + nm + ' 가입 신청이 반려되었습니다.' + (a.reason ? '\n사유: ' + String(a.reason).slice(0, 60) : '') + '\n문의는 건축ON 카카오톡 채널로 부탁드립니다.' });
         }
     });
