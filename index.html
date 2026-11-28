@@ -2087,11 +2087,6 @@ function vHome(){
         ${activePartner()?`<button class="sg-off" data-act="pNav" data-v="archList">🏢 내 사무소</button>`:`<button class="sg-off" data-act="go" data-v="archLogin">사무소 로그인</button>`}
         <button class="sg-ic" data-act="join" aria-label="가입·로그인"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button></div>
     </div>
-    <div class="sg-search">
-      <label class="sg-q"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="sgq" type="search" placeholder="어떤 공사·인허가가 필요하세요?" value="${esc(q)}" autocomplete="off"></label>
-      <button class="sg-ai" data-act="type" data-k="${unk?unk[0]:'unknown'}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="aig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--p-m)"/><stop offset="1" style="stop-color:var(--p-d)"/></linearGradient></defs><path d="M10 2l2.2 6.3L18.5 10.5l-6.3 2.2L10 19l-2.2-6.3L1.5 10.5l6.3-2.2z" fill="url(#aig)"/><path d="M19 1l.9 2.6L22.5 4.5l-2.6.9L19 8l-.9-2.6L15.5 4.5l2.6-.9z" style="fill:var(--p)"/></svg>AI 견적 요청</button>
-    </div>
-    <div id="sgHits">${searchHits(q)}</div>
     ${(()=>{ const d=loadDraft(); return d&&!(S.type===d.type&&S.reqDone)?`<div class="note" style="align-items:center"><span style="flex:1"><b>작성 중인 ${esc(TYPES[d.type].name)} 요청이 있어요</b><br><small>${esc(d.addrText||d.addrTyping||'주소 미입력')}</small></span><button class="btn sm" data-act="resumeDraft" style="width:auto;flex:none;padding:0 14px;min-height:38px">이어서 작성</button><button class="lnk" data-act="dropDraft" style="flex:none;font-size:12px">지우기</button></div>`:''; })()}
     ${S.cfg.notice.trim()?`<div class="note" style="background:#fffbeb;border-color:#f59e0b;color:#78350f"><span><b>📢 공지</b><br>${esc(S.cfg.notice).replace(/\n/g,'<br>')}</span></div>`:''}
     ${S.cfg.yh.on?`<button class="sg-yh" data-act="yhGo"><span class="b">특별법</span><span class="t">${esc(S.cfg.yh.label)}</span><span class="d">${yhDday()}</span></button>`:''}
